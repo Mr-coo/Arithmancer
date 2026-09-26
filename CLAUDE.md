@@ -9,3 +9,46 @@
 - The message is a single short line with no body.
 - Do not add `Co-Authored-By` or any other trailer.
 - Make one commit only has 1 feature
+
+## Game design
+Arithmancer is an endless co-op browser game. Players survive enemies by solving math questions shown above the enemies' heads. All numbers here are starting values to tune during development.
+
+### Core loop
+- 2D top-down. Move with WASD or the arrow keys. Type answers with the digit keys, Backspace and Enter.
+- Enemies spawn continuously, chase the nearest player who is not downed, and deal contact damage.
+- Each enemy shows a math question above its head. When a player submits a number, the enemy whose answer matches takes a hit. If several match, the enemy nearest that player is hit.
+- A player can only hit enemies inside their own view.
+- Questions are shared: all players see the same question on an enemy, and the first correct answer lands the hit.
+- A wrong answer locks that player's input for about 1 second.
+- There is no win condition. The run ends when every player is downed.
+
+### Enemies
+- Basic enemies die after 1 correct answer. Tougher types appear over time and need 2–3 answers. Each hit gives the enemy a new question.
+- Spawn rate, enemy speed and the share of tougher types increase over time.
+
+### Math
+- Answers are always whole numbers ≥ 0.
+- Difficulty scales over time. Runs start with small + and −, then × and ÷ and larger numbers are added.
+
+### Players
+- 1–4 players per room.
+- A player at 0 HP is downed. A teammate who stays next to them for a moment revives them.
+
+### Map
+- A large fixed-size world, several screens wide, with walls at the edges.
+- Each player's camera follows them, and players can split up.
+- Enemies spawn just outside the players' views.
+
+### Rooms
+- A player creates a room and gets a short room code. Others use the code to join the lobby.
+- The host starts the run. Nobody can join mid-run.
+
+### Scores
+- There are no accounts. Players enter a nickname.
+- When a run ends, the team's score is saved to a leaderboard: time survived, kills and player nicknames.
+
+## Architecture
+- The server is authoritative. For each room, the Spring Boot backend runs the simulation (movement, spawning, questions, answer checks, damage, revives) at about 20 ticks per second and broadcasts the state over WebSocket.
+- Browsers only send input (movement and answers) and draw the state. React handles the menus, lobby and leaderboard, and Phaser renders the game view.
+- The server decides whether an enemy is in a player's view using a fixed logical viewport centered on that player, so screen size doesn't affect who can hit what.
+- The leaderboard is stored in PostgreSQL, run in docker-compose alongside the backend.
