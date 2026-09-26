@@ -22,7 +22,11 @@ public class GameGateway extends TextWebSocketHandler {
 
 	@Override
 	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
-		// Echo until game messages are defined
+		String payload = message.getPayload();
+		if (payload.codePointCount(0, payload.length()) != 1) {
+			session.close(CloseStatus.BAD_DATA.withReason("Expected one character"));
+			return;
+		}
 		session.sendMessage(message);
 	}
 
