@@ -9,6 +9,7 @@
 - The message is a single short line with no body.
 - Do not add `Co-Authored-By` or any other trailer.
 - Make one commit only has 1 feature
+- Commit after each feature is done, without waiting to be asked.
 
 ## Game design
 Arithmancer is an endless co-op browser game. Players survive enemies by solving math questions shown above the enemies' heads. All numbers here are starting values to tune during development.
