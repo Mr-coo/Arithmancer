@@ -13,4 +13,7 @@ public sealed interface ServerMessage {
 	record Input(String key, KeyAction action) implements ServerMessage {
 	}
 
+	record GameStarted(String code, List<String> players) implements ServerMessage {
+	}
+
 }

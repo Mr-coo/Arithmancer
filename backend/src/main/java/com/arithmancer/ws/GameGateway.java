@@ -11,12 +11,16 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import com.arithmancer.game.Game;
+import com.arithmancer.game.GameManager;
 import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
 import com.arithmancer.room.RoomRegistry;
 import com.arithmancer.ws.ClientMessage.CreateRoom;
 import com.arithmancer.ws.ClientMessage.Input;
 import com.arithmancer.ws.ClientMessage.JoinRoom;
+import com.arithmancer.ws.ClientMessage.StartGame;
+import com.arithmancer.ws.ServerMessage.GameStarted;
 import com.arithmancer.ws.ServerMessage.RoomCreated;
 import com.arithmancer.ws.ServerMessage.RoomJoined;
 
@@ -30,10 +34,12 @@ public class GameGateway extends TextWebSocketHandler {
 
 	private final JsonMapper jsonMapper;
 	private final RoomRegistry roomRegistry;
+	private final GameManager gameManager;
 
-	public GameGateway(JsonMapper jsonMapper, RoomRegistry roomRegistry) {
+	public GameGateway(JsonMapper jsonMapper, RoomRegistry roomRegistry, GameManager gameManager) {
 		this.jsonMapper = jsonMapper;
 		this.roomRegistry = roomRegistry;
+		this.gameManager = gameManager;
 	}
 
 	@Override
@@ -47,6 +53,7 @@ public class GameGateway extends TextWebSocketHandler {
 			case CreateRoom createRoom -> createRoom(session, createRoom);
 			case JoinRoom joinRoom -> joinRoom(session, joinRoom);
 			case Input input -> input(session, input);
+			case StartGame startGame -> startGame(session);
 			case null -> session.close(CloseStatus.BAD_DATA.withReason("Invalid message"));
 		}
 	}
@@ -61,6 +68,7 @@ public class GameGateway extends TextWebSocketHandler {
 				case "createRoom" -> jsonMapper.treeToValue(event.content(), CreateRoom.class);
 				case "joinRoom" -> jsonMapper.treeToValue(event.content(), JoinRoom.class);
 				case "input" -> jsonMapper.treeToValue(event.content(), Input.class);
+				case "startGame" -> jsonMapper.treeToValue(event.content(), StartGame.class);
 				case null, default -> null;
 			};
 		} catch (JacksonException e) {
@@ -79,7 +87,7 @@ public class GameGateway extends TextWebSocketHandler {
 			return;
 		}
 		Room room = roomRegistry.create(new Player(session.getId(), createRoom.nickname().strip()));
-		send(session, "roomCreated", new RoomCreated(room.code(), nicknames(room)));
+		send(session, "roomCreated", new RoomCreated(room.code(), nicknames(room.players())));
 	}
 
 	private void joinRoom(WebSocketSession session, JoinRoom joinRoom) throws IOException {
@@ -96,7 +104,7 @@ public class GameGateway extends TextWebSocketHandler {
 			session.close(CloseStatus.BAD_DATA.withReason("Room is full"));
 			return;
 		}
-		send(session, "roomJoined", new RoomJoined(room.code(), nicknames(room)));
+		send(session, "roomJoined", new RoomJoined(room.code(), nicknames(room.players())));
 	}
 
 	private void input(WebSocketSession session, Input input) throws IOException {
@@ -112,12 +120,30 @@ public class GameGateway extends TextWebSocketHandler {
 		send(session, "input", new ServerMessage.Input(key, input.action()));
 	}
 
+	private void startGame(WebSocketSession session) throws IOException {
+		Room room = roomRegistry.findBySession(session.getId());
+		if (room == null) {
+			session.close(CloseStatus.BAD_DATA.withReason("Not in a room"));
+			return;
+		}
+		if (!room.players().getFirst().getSessionId().equals(session.getId())) {
+			session.close(CloseStatus.BAD_DATA.withReason("Only the host can start"));
+			return;
+		}
+		if (!roomRegistry.remove(room)) {
+			session.close(CloseStatus.BAD_DATA.withReason("Not in a room"));
+			return;
+		}
+		Game game = gameManager.start(room);
+		send(session, "gameStarted", new GameStarted(game.getCode(), nicknames(game.getPlayers())));
+	}
+
 	private static boolean isBlank(String nickname) {
 		return nickname == null || nickname.isBlank();
 	}
 
-	private static List<String> nicknames(Room room) {
-		return room.players().stream().map(Player::getNickname).toList();
+	private static List<String> nicknames(List<Player> players) {
+		return players.stream().map(Player::getNickname).toList();
 	}
 
 	private void send(WebSocketSession session, String type, ServerMessage content) throws IOException {

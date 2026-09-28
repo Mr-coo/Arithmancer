@@ -11,4 +11,7 @@ public sealed interface ClientMessage {
 	record Input(String key, KeyAction action) implements ClientMessage {
 	}
 
+	record StartGame() implements ClientMessage {
+	}
+
 }

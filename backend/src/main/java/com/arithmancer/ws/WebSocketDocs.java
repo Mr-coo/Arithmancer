@@ -70,6 +70,9 @@ public class WebSocketDocs {
 						- `{"type":"input","content":{"key":"a","action":"down"}}` sends a key press (`down`) or release (`up`) \
 						of exactly one letter. \
 						Reply: the same message echoed back.
+						- `{"type":"startGame","content":{}}` starts the game. Only the host (room creator) can send it, \
+						and nobody can join after. \
+						Reply: `{"type":"gameStarted","content":{"code":"KQXB","players":["Marco","Ana"]}}`
 
 						Anything else closes the connection with status 1007 (bad data).""")
 				.addParametersItem(new QueryParameter()

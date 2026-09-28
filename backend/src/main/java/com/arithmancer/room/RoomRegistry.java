@@ -29,6 +29,17 @@ public class RoomRegistry {
 		return code == null ? null : rooms.get(code);
 	}
 
+	public Room findBySession(String sessionId) {
+		return rooms.values().stream()
+				.filter(room -> room.players().stream().anyMatch(player -> player.getSessionId().equals(sessionId)))
+				.findFirst()
+				.orElse(null);
+	}
+
+	public boolean remove(Room room) {
+		return rooms.remove(room.code(), room);
+	}
+
 	private String randomCode() {
 		StringBuilder code = new StringBuilder(CODE_LENGTH);
 		for (int i = 0; i < CODE_LENGTH; i++) {
