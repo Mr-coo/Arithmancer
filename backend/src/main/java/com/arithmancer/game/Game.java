@@ -7,6 +7,7 @@ import java.util.Random;
 
 import com.arithmancer.entity.Enemy;
 import com.arithmancer.entity.Position;
+import com.arithmancer.math.Question;
 import com.arithmancer.room.Player;
 
 public class Game {
@@ -78,7 +79,7 @@ public class Game {
 		Position center = standing.get(random.nextInt(standing.size())).getPosition();
 		double angle = random.nextDouble(2 * Math.PI);
 		enemies.add(new Enemy(nextEnemyId++, new Position(center.x() + Math.cos(angle) * SPAWN_DISTANCE,
-				center.y() + Math.sin(angle) * SPAWN_DISTANCE)));
+				center.y() + Math.sin(angle) * SPAWN_DISTANCE), Question.random(random)));
 	}
 
 	private void chase(Enemy enemy, double deltaSeconds) {

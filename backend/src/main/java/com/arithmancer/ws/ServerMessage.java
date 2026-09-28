@@ -22,7 +22,7 @@ public sealed interface ServerMessage {
 	record PlayerState(String nickname, double x, double y, int health, int maxHealth, boolean you) {
 	}
 
-	record EnemyState(int id, double x, double y) {
+	record EnemyState(int id, double x, double y, String question) {
 	}
 
 }

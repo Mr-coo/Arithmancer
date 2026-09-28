@@ -54,7 +54,8 @@ public class GameManager {
 
 	private void sendState(Game game) {
 		List<EnemyState> enemies = game.getEnemies().stream()
-				.map(enemy -> new EnemyState(enemy.getId(), enemy.getPosition().x(), enemy.getPosition().y()))
+				.map(enemy -> new EnemyState(enemy.getId(), enemy.getPosition().x(), enemy.getPosition().y(),
+						enemy.getQuestion().text()))
 				.toList();
 		for (Player recipient : game.getPlayers()) {
 			List<PlayerState> players = game.getPlayers().stream()
