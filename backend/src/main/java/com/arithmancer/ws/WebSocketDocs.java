@@ -66,13 +66,13 @@ public class WebSocketDocs {
 						- `{"type":"createRoom","content":{"nickname":"Marco"}}` creates a room with you in it. \
 						Reply: `{"type":"roomCreated","content":{"code":"KQXB","players":["Marco"]}}`
 						- `{"type":"joinRoom","content":{"code":"KQXB","nickname":"Ana"}}` joins a room (max 4 players). \
-						Reply: `{"type":"roomJoined","content":{"code":"KQXB","players":["Marco","Ana"]}}`
+						Reply, to everyone in the room: `{"type":"roomJoined","content":{"code":"KQXB","players":["Marco","Ana"]}}`
 						- `{"type":"input","content":{"key":"a","action":"down"}}` sends a key press (`down`) or release (`up`) \
 						of exactly one letter. \
 						Reply: the same message echoed back.
 						- `{"type":"startGame","content":{}}` starts the game. Only the host (room creator) can send it, \
 						and nobody can join after. \
-						Reply: `{"type":"gameStarted","content":{"code":"KQXB","players":["Marco","Ana"]}}`
+						Reply, to every player: `{"type":"gameStarted","content":{"code":"KQXB","players":["Marco","Ana"]}}`
 
 						Anything else closes the connection with status 1007 (bad data).""")
 				.addParametersItem(new QueryParameter()

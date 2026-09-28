@@ -36,15 +36,19 @@ public class GameGateway extends TextWebSocketHandler {
 	private final JsonMapper jsonMapper;
 	private final RoomRegistry roomRegistry;
 	private final GameManager gameManager;
+	private final SessionRegistry sessionRegistry;
 
-	public GameGateway(JsonMapper jsonMapper, RoomRegistry roomRegistry, GameManager gameManager) {
+	public GameGateway(JsonMapper jsonMapper, RoomRegistry roomRegistry, GameManager gameManager,
+			SessionRegistry sessionRegistry) {
 		this.jsonMapper = jsonMapper;
 		this.roomRegistry = roomRegistry;
 		this.gameManager = gameManager;
+		this.sessionRegistry = sessionRegistry;
 	}
 
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) {
+		sessionRegistry.add(session);
 		log.info("Connected: {}", session.getId());
 	}
 
@@ -79,6 +83,7 @@ public class GameGateway extends TextWebSocketHandler {
 
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+		sessionRegistry.remove(session.getId());
 		log.info("Disconnected: {} ({})", session.getId(), status);
 	}
 
@@ -105,7 +110,7 @@ public class GameGateway extends TextWebSocketHandler {
 			session.close(CloseStatus.BAD_DATA.withReason("Room is full"));
 			return;
 		}
-		send(session, "roomJoined", new RoomJoined(room.code(), nicknames(room.players())));
+		sendAll(room.players(), "roomJoined", new RoomJoined(room.code(), nicknames(room.players())));
 	}
 
 	private void input(WebSocketSession session, Input input) throws IOException {
@@ -143,7 +148,7 @@ public class GameGateway extends TextWebSocketHandler {
 			return;
 		}
 		Game game = gameManager.start(room);
-		send(session, "gameStarted", new GameStarted(game.getCode(), nicknames(game.getPlayers())));
+		sendAll(game.getPlayers(), "gameStarted", new GameStarted(game.getCode(), nicknames(game.getPlayers())));
 	}
 
 	private static boolean isBlank(String nickname) {
@@ -154,9 +159,12 @@ public class GameGateway extends TextWebSocketHandler {
 		return players.stream().map(Player::getNickname).toList();
 	}
 
-	private void send(WebSocketSession session, String type, ServerMessage content) throws IOException {
-		Event event = new Event(type, jsonMapper.valueToTree(content));
-		session.sendMessage(new TextMessage(jsonMapper.writeValueAsString(event)));
+	private void send(WebSocketSession session, String type, ServerMessage content) {
+		sessionRegistry.send(session.getId(), type, content);
+	}
+
+	private void sendAll(List<Player> players, String type, ServerMessage content) {
+		players.forEach(player -> sessionRegistry.send(player.getSessionId(), type, content));
 	}
 
 }
