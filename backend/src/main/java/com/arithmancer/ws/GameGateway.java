@@ -15,6 +15,7 @@ import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
 import com.arithmancer.room.RoomRegistry;
 import com.arithmancer.ws.ClientMessage.CreateRoom;
+import com.arithmancer.ws.ClientMessage.Input;
 import com.arithmancer.ws.ClientMessage.JoinRoom;
 import com.arithmancer.ws.ServerMessage.RoomCreated;
 import com.arithmancer.ws.ServerMessage.RoomJoined;
@@ -45,6 +46,7 @@ public class GameGateway extends TextWebSocketHandler {
 		switch (parse(message.getPayload())) {
 			case CreateRoom createRoom -> createRoom(session, createRoom);
 			case JoinRoom joinRoom -> joinRoom(session, joinRoom);
+			case Input input -> input(session, input);
 			case null -> session.close(CloseStatus.BAD_DATA.withReason("Invalid message"));
 		}
 	}
@@ -58,6 +60,7 @@ public class GameGateway extends TextWebSocketHandler {
 			return switch (event.type()) {
 				case "createRoom" -> jsonMapper.treeToValue(event.content(), CreateRoom.class);
 				case "joinRoom" -> jsonMapper.treeToValue(event.content(), JoinRoom.class);
+				case "input" -> jsonMapper.treeToValue(event.content(), Input.class);
 				case null, default -> null;
 			};
 		} catch (JacksonException e) {
@@ -94,6 +97,15 @@ public class GameGateway extends TextWebSocketHandler {
 			return;
 		}
 		send(session, "roomJoined", new RoomJoined(room.code(), nicknames(room)));
+	}
+
+	private void input(WebSocketSession session, Input input) throws IOException {
+		String key = input.key();
+		if (key == null || key.codePointCount(0, key.length()) != 1 || !Character.isLetter(key.codePointAt(0))) {
+			session.close(CloseStatus.BAD_DATA.withReason("Expected one letter"));
+			return;
+		}
+		send(session, "input", new ServerMessage.Input(key));
 	}
 
 	private static boolean isBlank(String nickname) {
