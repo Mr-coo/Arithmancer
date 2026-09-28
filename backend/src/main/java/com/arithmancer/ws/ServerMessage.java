@@ -19,7 +19,7 @@ public sealed interface ServerMessage {
 	record GameState(List<PlayerState> players) implements ServerMessage {
 	}
 
-	record PlayerState(String nickname, double x, double y, boolean you) {
+	record PlayerState(String nickname, double x, double y, int health, int maxHealth, boolean you) {
 	}
 
 }
