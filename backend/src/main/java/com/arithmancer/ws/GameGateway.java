@@ -17,6 +17,7 @@ import com.arithmancer.game.GameManager;
 import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
 import com.arithmancer.room.RoomRegistry;
+import com.arithmancer.ws.ClientMessage.Answer;
 import com.arithmancer.ws.ClientMessage.CreateRoom;
 import com.arithmancer.ws.ClientMessage.Input;
 import com.arithmancer.ws.ClientMessage.JoinRoom;
@@ -59,6 +60,7 @@ public class GameGateway extends TextWebSocketHandler {
 			case JoinRoom joinRoom -> joinRoom(session, joinRoom);
 			case Input input -> input(session, input);
 			case StartGame startGame -> startGame(session);
+			case Answer answer -> answer(session, answer);
 			case null -> session.close(CloseStatus.BAD_DATA.withReason("Invalid message"));
 		}
 	}
@@ -74,6 +76,7 @@ public class GameGateway extends TextWebSocketHandler {
 				case "joinRoom" -> jsonMapper.treeToValue(event.content(), JoinRoom.class);
 				case "input" -> jsonMapper.treeToValue(event.content(), Input.class);
 				case "startGame" -> jsonMapper.treeToValue(event.content(), StartGame.class);
+				case "answer" -> jsonMapper.treeToValue(event.content(), Answer.class);
 				case null, default -> null;
 			};
 		} catch (JacksonException e) {
@@ -149,6 +152,17 @@ public class GameGateway extends TextWebSocketHandler {
 		}
 		Game game = gameManager.start(room);
 		sendAll(game.getPlayers(), "gameStarted", new GameStarted(game.getCode(), nicknames(game.getPlayers())));
+	}
+
+	private void answer(WebSocketSession session, Answer answer) throws IOException {
+		if (answer.value() == null || answer.value() < 0) {
+			session.close(CloseStatus.BAD_DATA.withReason("Expected a whole number of at least 0"));
+			return;
+		}
+		Player player = gameManager.findPlayer(session.getId());
+		if (player != null) {
+			player.submitAnswer(answer.value());
+		}
 	}
 
 	private static boolean isBlank(String nickname) {

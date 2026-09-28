@@ -1,7 +1,9 @@
 package com.arithmancer.room;
 
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.arithmancer.entity.Entity;
 import com.arithmancer.entity.Position;
@@ -16,6 +18,7 @@ public class Player extends Entity {
 	private final String sessionId;
 	private final String nickname;
 	private final Set<String> heldKeys = ConcurrentHashMap.newKeySet();
+	private final Queue<Integer> answers = new ConcurrentLinkedQueue<>();
 
 	public Player(String sessionId, String nickname) {
 		super(MAX_HEALTH, ATTACK, SPEED, new Position(0, 0));
@@ -41,6 +44,15 @@ public class Player extends Entity {
 
 	public boolean isHeld(String key) {
 		return heldKeys.contains(key);
+	}
+
+	public void submitAnswer(int answer) {
+		answers.add(answer);
+	}
+
+	// The next answer waiting for the game tick, or null when there is none.
+	public Integer pollAnswer() {
+		return answers.poll();
 	}
 
 }

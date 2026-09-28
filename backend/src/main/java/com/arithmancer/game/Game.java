@@ -15,7 +15,10 @@ public class Game {
 	// Starting values, to tune during development.
 	private static final double SPAWN_INTERVAL_SECONDS = 2;
 	private static final int MAX_ENEMIES = 20;
-	// Roughly outside a 1280x720 view centered on the player.
+	// Fixed logical view centered on each player, so screen size does not change who can hit what.
+	private static final double VIEW_WIDTH = 1280;
+	private static final double VIEW_HEIGHT = 720;
+	// Roughly outside the view.
 	private static final double SPAWN_DISTANCE = 750;
 	// Player radius 16 plus enemy radius 14, as drawn by the frontend.
 	private static final double CONTACT_DISTANCE = 30;
@@ -23,6 +26,7 @@ public class Game {
 	private final String code;
 	private final List<Player> players;
 	private final List<Enemy> enemies = new ArrayList<>();
+	private final List<Shot> shots = new ArrayList<>();
 	private final Random random = new Random();
 	private double secondsUntilSpawn = SPAWN_INTERVAL_SECONDS;
 	private int nextEnemyId;
@@ -44,9 +48,16 @@ public class Game {
 		return enemies;
 	}
 
+	// Hits from the last tick.
+	public List<Shot> getShots() {
+		return shots;
+	}
+
 	public void tick(double deltaSeconds) {
 		// One simulation step: movement, spawning, questions, damage and revives go here.
+		shots.clear();
 		players.forEach(player -> move(player, deltaSeconds));
+		players.forEach(this::answer);
 		spawnEnemies(deltaSeconds);
 		enemies.forEach(enemy -> chase(enemy, deltaSeconds));
 		enemies.removeIf(this::hitPlayer);
@@ -67,6 +78,36 @@ public class Game {
 
 	private static int held(Player player, String key) {
 		return player.isHeld(key) ? 1 : 0;
+	}
+
+	private void answer(Player player) {
+		for (Integer answer = player.pollAnswer(); answer != null; answer = player.pollAnswer()) {
+			hitEnemy(player, answer);
+		}
+	}
+
+	// Of the enemies in the player's view with this answer, the nearest takes a hit.
+	private void hitEnemy(Player player, int answer) {
+		Position from = player.getPosition();
+		Enemy target = enemies.stream()
+				.filter(enemy -> enemy.getQuestion().answer() == answer && inView(from, enemy.getPosition()))
+				.min(Comparator.comparingDouble(enemy -> from.distanceTo(enemy.getPosition())))
+				.orElse(null);
+		if (target == null) {
+			return;
+		}
+		shots.add(new Shot(player, target));
+		target.setHealth(target.getHealth() - player.getAttack());
+		if (target.getHealth() <= 0) {
+			enemies.remove(target);
+		} else {
+			target.setQuestion(Question.random(random));
+		}
+	}
+
+	private static boolean inView(Position center, Position point) {
+		return Math.abs(point.x() - center.x()) <= VIEW_WIDTH / 2
+				&& Math.abs(point.y() - center.y()) <= VIEW_HEIGHT / 2;
 	}
 
 	private void spawnEnemies(double deltaSeconds) {

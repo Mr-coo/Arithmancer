@@ -13,6 +13,7 @@ import com.arithmancer.room.Room;
 import com.arithmancer.ws.ServerMessage.EnemyState;
 import com.arithmancer.ws.ServerMessage.GameState;
 import com.arithmancer.ws.ServerMessage.PlayerState;
+import com.arithmancer.ws.ServerMessage.ShotState;
 import com.arithmancer.ws.SessionRegistry;
 
 @Component
@@ -57,12 +58,15 @@ public class GameManager {
 				.map(enemy -> new EnemyState(enemy.getId(), enemy.getPosition().x(), enemy.getPosition().y(),
 						enemy.getQuestion().text()))
 				.toList();
+		List<ShotState> shots = game.getShots().stream()
+				.map(shot -> new ShotState(game.getPlayers().indexOf(shot.player()), shot.enemy().getId()))
+				.toList();
 		for (Player recipient : game.getPlayers()) {
 			List<PlayerState> players = game.getPlayers().stream()
 					.map(player -> new PlayerState(player.getNickname(), player.getPosition().x(),
 							player.getPosition().y(), player.getHealth(), player.getMaxHealth(), player == recipient))
 					.toList();
-			sessionRegistry.send(recipient.getSessionId(), "state", new GameState(players, enemies));
+			sessionRegistry.send(recipient.getSessionId(), "state", new GameState(players, enemies, shots));
 		}
 	}
 

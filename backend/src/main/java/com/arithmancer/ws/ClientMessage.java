@@ -14,4 +14,7 @@ public sealed interface ClientMessage {
 	record StartGame() implements ClientMessage {
 	}
 
+	record Answer(Integer value) implements ClientMessage {
+	}
+
 }

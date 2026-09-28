@@ -73,9 +73,12 @@ public class WebSocketDocs {
 						- `{"type":"startGame","content":{}}` starts the game. Only the host (room creator) can send it, \
 						and nobody can join after. \
 						Reply, to every player: `{"type":"gameStarted","content":{"code":"KQXB","players":["Marco","Ana"]}}`
+						- `{"type":"answer","content":{"value":4}}` answers a question during a game. Of the enemies in your \
+						view with that answer, the nearest takes a hit. No reply: the hit shows up in the next state.
 
-						During a game, every player gets the state 20 times per second. `you` marks the receiving player: \
-						`{"type":"state","content":{"players":[{"nickname":"Marco","x":0.0,"y":-10.0,"health":100,"maxHealth":100,"you":true}],"enemies":[{"id":0,"x":420.0,"y":-310.0,"question":"7 - 3"}]}}`
+						During a game, every player gets the state 20 times per second. `you` marks the receiving player, \
+						and `shots` lists the hits from that tick (`player` is an index in `players`): \
+						`{"type":"state","content":{"players":[{"nickname":"Marco","x":0.0,"y":-10.0,"health":100,"maxHealth":100,"you":true}],"enemies":[{"id":0,"x":420.0,"y":-310.0,"question":"7 - 3"}],"shots":[{"player":0,"enemy":1}]}}`
 
 						Anything else closes the connection with status 1007 (bad data).""")
 				.addParametersItem(new QueryParameter()
