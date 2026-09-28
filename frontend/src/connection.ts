@@ -7,13 +7,17 @@ export type PlayerState = {
   you: boolean
 }
 
+export type EnemyState = { id: number; x: number; y: number }
+
+export type GameState = { players: PlayerState[]; enemies: EnemyState[] }
+
 type RoomContent = { code: string; players: string[] }
 
 type ServerMessages = {
   roomCreated: RoomContent
   roomJoined: RoomContent
   gameStarted: RoomContent
-  state: { players: PlayerState[] }
+  state: GameState
 }
 
 type ClientMessages = {

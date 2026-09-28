@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import { useEffect, useRef } from 'react'
-import type { Connection, PlayerState } from './connection'
+import type { Connection, GameState, PlayerState } from './connection'
 
 // Physical key positions, so WASD also works on other keyboard layouts.
 const MOVE_KEYS: Record<string, string> = { KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd' }
@@ -9,6 +9,9 @@ const GRID_SIZE = 64
 const PLAYER_RADIUS = 16
 const HEALTH_BAR_WIDTH = 32
 const HEALTH_BAR_HEIGHT = 4
+const ENEMY_RADIUS = 14
+// Players draw above enemies, so an enemy on top of a player does not hide their name or health.
+const PLAYER_DEPTH = 1
 // Share of the remaining distance covered each frame, to smooth the 20 updates per second.
 const SMOOTHING = 0.3
 
@@ -20,8 +23,9 @@ type Sprite = {
 }
 
 class GameScene extends Phaser.Scene {
-  latest: PlayerState[] = []
+  latest: GameState = { players: [], enemies: [] }
   private sprites: Sprite[] = []
+  private enemySprites = new Map<number, Phaser.GameObjects.Arc>()
   private grid?: Phaser.GameObjects.TileSprite
 
   create() {
@@ -37,7 +41,7 @@ class GameScene extends Phaser.Scene {
   }
 
   update() {
-    this.latest.forEach((player, i) => {
+    this.latest.players.forEach((player, i) => {
       const sprite = this.sprites[i] ?? this.addSprite(player)
       sprite.body.x += (player.x - sprite.body.x) * SMOOTHING
       sprite.body.y += (player.y - sprite.body.y) * SMOOTHING
@@ -49,9 +53,31 @@ class GameScene extends Phaser.Scene {
         .setScale(Phaser.Math.Clamp(player.health / player.maxHealth, 0, 1), 1)
       sprite.label.setPosition(sprite.body.x, barY - 14)
     })
+    this.updateEnemies()
     // Keep the screen-sized grid lined up with the world as the camera moves.
     const camera = this.cameras.main
     this.grid?.setTilePosition(camera.scrollX, camera.scrollY)
+  }
+
+  private updateEnemies() {
+    const ids = new Set<number>()
+    for (const enemy of this.latest.enemies) {
+      ids.add(enemy.id)
+      let body = this.enemySprites.get(enemy.id)
+      if (!body) {
+        body = this.add.circle(enemy.x, enemy.y, ENEMY_RADIUS, 0xef4444)
+        this.enemySprites.set(enemy.id, body)
+      }
+      body.x += (enemy.x - body.x) * SMOOTHING
+      body.y += (enemy.y - body.y) * SMOOTHING
+    }
+    // Remove enemies the server no longer sends.
+    for (const [id, body] of this.enemySprites) {
+      if (!ids.has(id)) {
+        body.destroy()
+        this.enemySprites.delete(id)
+      }
+    }
   }
 
   private addSprite(player: PlayerState): Sprite {
@@ -63,6 +89,7 @@ class GameScene extends Phaser.Scene {
       healthBack: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 0x7f1d1d).setOrigin(0, 0.5),
       healthFill: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 0x4ade80).setOrigin(0, 0.5),
     }
+    Object.values(sprite).forEach((part) => part.setDepth(PLAYER_DEPTH))
     this.sprites.push(sprite)
     if (player.you) {
       this.cameras.main.startFollow(sprite.body)
@@ -83,8 +110,8 @@ export function GameView({ connection }: { connection: Connection }) {
       scale: { mode: Phaser.Scale.RESIZE },
       scene,
     })
-    const stopState = connection.on('state', ({ players }) => {
-      scene.latest = players
+    const stopState = connection.on('state', (state) => {
+      scene.latest = state
     })
 
     const held = new Set<string>()
