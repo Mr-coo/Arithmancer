@@ -16,6 +16,8 @@ public class Game {
 	private static final int MAX_ENEMIES = 20;
 	// Roughly outside a 1280x720 view centered on the player.
 	private static final double SPAWN_DISTANCE = 750;
+	// Player radius 16 plus enemy radius 14, as drawn by the frontend.
+	private static final double CONTACT_DISTANCE = 30;
 
 	private final String code;
 	private final List<Player> players;
@@ -46,6 +48,7 @@ public class Game {
 		players.forEach(player -> move(player, deltaSeconds));
 		spawnEnemies(deltaSeconds);
 		enemies.forEach(enemy -> chase(enemy, deltaSeconds));
+		enemies.removeIf(this::hitPlayer);
 	}
 
 	// y grows downward, as on screen.
@@ -95,6 +98,19 @@ public class Game {
 		}
 		enemy.setPosition(new Position(from.x() + (to.x() - from.x()) / distance * step,
 				from.y() + (to.y() - from.y()) / distance * step));
+	}
+
+	// An enemy touching a standing player deals its attack as damage, then disappears.
+	private boolean hitPlayer(Enemy enemy) {
+		Player touched = standingPlayers().stream()
+				.filter(player -> enemy.getPosition().distanceTo(player.getPosition()) <= CONTACT_DISTANCE)
+				.findFirst()
+				.orElse(null);
+		if (touched == null) {
+			return false;
+		}
+		touched.setHealth(Math.max(0, touched.getHealth() - enemy.getAttack()));
+		return true;
 	}
 
 	// Players at 0 health are downed: enemies ignore them.
