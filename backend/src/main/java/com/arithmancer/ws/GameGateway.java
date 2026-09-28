@@ -2,6 +2,7 @@ package com.arithmancer.ws;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,6 +117,13 @@ public class GameGateway extends TextWebSocketHandler {
 		if (input.action() == null) {
 			session.close(CloseStatus.BAD_DATA.withReason("Expected down or up"));
 			return;
+		}
+		Player player = gameManager.findPlayer(session.getId());
+		if (player != null) {
+			switch (input.action()) {
+				case DOWN -> player.press(key.toLowerCase(Locale.ROOT));
+				case UP -> player.release(key.toLowerCase(Locale.ROOT));
+			}
 		}
 		send(session, "input", new ServerMessage.Input(key, input.action()));
 	}

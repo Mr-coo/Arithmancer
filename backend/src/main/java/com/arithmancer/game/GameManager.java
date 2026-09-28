@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
 
 @Component
@@ -26,9 +27,17 @@ public class GameManager {
 		return game;
 	}
 
+	public Player findPlayer(String sessionId) {
+		return games.stream()
+				.flatMap(game -> game.getPlayers().stream())
+				.filter(player -> player.getSessionId().equals(sessionId))
+				.findFirst()
+				.orElse(null);
+	}
+
 	@Scheduled(fixedRate = 1000 / TICKS_PER_SECOND)
 	void loop() {
-		games.forEach(Game::tick);
+		games.forEach(game -> game.tick(1.0 / TICKS_PER_SECOND));
 	}
 
 }

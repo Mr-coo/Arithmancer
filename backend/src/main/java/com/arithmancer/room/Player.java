@@ -1,5 +1,8 @@
 package com.arithmancer.room;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.arithmancer.entity.Entity;
 import com.arithmancer.entity.Position;
 
@@ -12,6 +15,7 @@ public class Player extends Entity {
 
 	private final String sessionId;
 	private final String nickname;
+	private final Set<String> heldKeys = ConcurrentHashMap.newKeySet();
 
 	public Player(String sessionId, String nickname) {
 		super(MAX_HEALTH, ATTACK, SPEED, new Position(0, 0));
@@ -25,6 +29,18 @@ public class Player extends Entity {
 
 	public String getNickname() {
 		return nickname;
+	}
+
+	public void press(String key) {
+		heldKeys.add(key);
+	}
+
+	public void release(String key) {
+		heldKeys.remove(key);
+	}
+
+	public boolean isHeld(String key) {
+		return heldKeys.contains(key);
 	}
 
 }
