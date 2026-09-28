@@ -74,6 +74,9 @@ public class WebSocketDocs {
 						and nobody can join after. \
 						Reply, to every player: `{"type":"gameStarted","content":{"code":"KQXB","players":["Marco","Ana"]}}`
 
+						During a game, every player gets the state 20 times per second. `you` marks the receiving player: \
+						`{"type":"state","content":{"players":[{"nickname":"Marco","x":0.0,"y":-10.0,"you":true}]}}`
+
 						Anything else closes the connection with status 1007 (bad data).""")
 				.addParametersItem(new QueryParameter()
 						.name("message")

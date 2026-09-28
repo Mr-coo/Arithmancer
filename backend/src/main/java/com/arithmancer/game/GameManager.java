@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 
 import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
+import com.arithmancer.ws.ServerMessage.GameState;
+import com.arithmancer.ws.ServerMessage.PlayerState;
+import com.arithmancer.ws.SessionRegistry;
 
 @Component
 public class GameManager {
@@ -19,6 +22,11 @@ public class GameManager {
 	private static final int TICKS_PER_SECOND = 20;
 
 	private final List<Game> games = new CopyOnWriteArrayList<>();
+	private final SessionRegistry sessionRegistry;
+
+	public GameManager(SessionRegistry sessionRegistry) {
+		this.sessionRegistry = sessionRegistry;
+	}
 
 	public Game start(Room room) {
 		Game game = new Game(room.code(), room.players());
@@ -37,7 +45,20 @@ public class GameManager {
 
 	@Scheduled(fixedRate = 1000 / TICKS_PER_SECOND)
 	void loop() {
-		games.forEach(game -> game.tick(1.0 / TICKS_PER_SECOND));
+		for (Game game : games) {
+			game.tick(1.0 / TICKS_PER_SECOND);
+			sendState(game);
+		}
+	}
+
+	private void sendState(Game game) {
+		for (Player recipient : game.getPlayers()) {
+			List<PlayerState> players = game.getPlayers().stream()
+					.map(player -> new PlayerState(player.getNickname(), player.getPosition().x(),
+							player.getPosition().y(), player == recipient))
+					.toList();
+			sessionRegistry.send(recipient.getSessionId(), "state", new GameState(players));
+		}
 	}
 
 }
