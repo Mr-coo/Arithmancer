@@ -113,7 +113,7 @@ public class GameGateway extends TextWebSocketHandler {
 	}
 
 	private static List<String> nicknames(Room room) {
-		return room.players().stream().map(Player::nickname).toList();
+		return room.players().stream().map(Player::getNickname).toList();
 	}
 
 	private void send(WebSocketSession session, String type, ServerMessage content) throws IOException {
