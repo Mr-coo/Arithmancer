@@ -7,4 +7,7 @@ public sealed interface ServerMessage {
 	record RoomCreated(String code, List<String> players) implements ServerMessage {
 	}
 
+	record RoomJoined(String code, List<String> players) implements ServerMessage {
+	}
+
 }

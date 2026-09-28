@@ -25,6 +25,10 @@ public class RoomRegistry {
 		}
 	}
 
+	public Room find(String code) {
+		return code == null ? null : rooms.get(code);
+	}
+
 	private String randomCode() {
 		StringBuilder code = new StringBuilder(CODE_LENGTH);
 		for (int i = 0; i < CODE_LENGTH; i++) {

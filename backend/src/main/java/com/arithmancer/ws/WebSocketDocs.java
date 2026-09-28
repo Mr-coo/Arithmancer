@@ -65,6 +65,8 @@ public class WebSocketDocs {
 						Every message, both ways, is `{"type": "<eventName>", "content": {...}}`:
 						- `{"type":"createRoom","content":{"nickname":"Marco"}}` creates a room with you in it. \
 						Reply: `{"type":"roomCreated","content":{"code":"KQXB","players":["Marco"]}}`
+						- `{"type":"joinRoom","content":{"code":"KQXB","nickname":"Ana"}}` joins a room (max 4 players). \
+						Reply: `{"type":"roomJoined","content":{"code":"KQXB","players":["Marco","Ana"]}}`
 
 						Anything else closes the connection with status 1007 (bad data).""")
 				.addParametersItem(new QueryParameter()

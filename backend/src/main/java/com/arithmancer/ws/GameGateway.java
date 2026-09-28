@@ -1,6 +1,7 @@
 package com.arithmancer.ws;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,9 @@ import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
 import com.arithmancer.room.RoomRegistry;
 import com.arithmancer.ws.ClientMessage.CreateRoom;
+import com.arithmancer.ws.ClientMessage.JoinRoom;
 import com.arithmancer.ws.ServerMessage.RoomCreated;
+import com.arithmancer.ws.ServerMessage.RoomJoined;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
@@ -41,6 +44,7 @@ public class GameGateway extends TextWebSocketHandler {
 	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
 		switch (parse(message.getPayload())) {
 			case CreateRoom createRoom -> createRoom(session, createRoom);
+			case JoinRoom joinRoom -> joinRoom(session, joinRoom);
 			case null -> session.close(CloseStatus.BAD_DATA.withReason("Invalid message"));
 		}
 	}
@@ -53,6 +57,7 @@ public class GameGateway extends TextWebSocketHandler {
 			}
 			return switch (event.type()) {
 				case "createRoom" -> jsonMapper.treeToValue(event.content(), CreateRoom.class);
+				case "joinRoom" -> jsonMapper.treeToValue(event.content(), JoinRoom.class);
 				case null, default -> null;
 			};
 		} catch (JacksonException e) {
@@ -66,12 +71,37 @@ public class GameGateway extends TextWebSocketHandler {
 	}
 
 	private void createRoom(WebSocketSession session, CreateRoom createRoom) throws IOException {
-		if (createRoom.nickname() == null || createRoom.nickname().isBlank()) {
+		if (isBlank(createRoom.nickname())) {
 			session.close(CloseStatus.BAD_DATA.withReason("Nickname required"));
 			return;
 		}
 		Room room = roomRegistry.create(new Player(session.getId(), createRoom.nickname().strip()));
-		send(session, "roomCreated", new RoomCreated(room.code(), room.players().stream().map(Player::nickname).toList()));
+		send(session, "roomCreated", new RoomCreated(room.code(), nicknames(room)));
+	}
+
+	private void joinRoom(WebSocketSession session, JoinRoom joinRoom) throws IOException {
+		if (isBlank(joinRoom.nickname())) {
+			session.close(CloseStatus.BAD_DATA.withReason("Nickname required"));
+			return;
+		}
+		Room room = roomRegistry.find(joinRoom.code());
+		if (room == null) {
+			session.close(CloseStatus.BAD_DATA.withReason("Room not found"));
+			return;
+		}
+		if (!room.join(new Player(session.getId(), joinRoom.nickname().strip()))) {
+			session.close(CloseStatus.BAD_DATA.withReason("Room is full"));
+			return;
+		}
+		send(session, "roomJoined", new RoomJoined(room.code(), nicknames(room)));
+	}
+
+	private static boolean isBlank(String nickname) {
+		return nickname == null || nickname.isBlank();
+	}
+
+	private static List<String> nicknames(Room room) {
+		return room.players().stream().map(Player::nickname).toList();
 	}
 
 	private void send(WebSocketSession session, String type, ServerMessage content) throws IOException {
