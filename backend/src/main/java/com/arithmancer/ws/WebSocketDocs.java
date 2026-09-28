@@ -62,16 +62,16 @@ public class WebSocketDocs {
 						Connect with a WebSocket client, e.g. `new WebSocket("ws://localhost:8080/ws")`. \
 						"Try it out" opens a real WebSocket, sends `message` and shows the reply.
 
-						Messages are JSON objects with a `type`:
-						- `{"type":"createRoom","nickname":"Marco"}` creates a room with you in it. \
-						Reply: `{"type":"roomCreated","code":"KQXB","players":["Marco"]}`
+						Every message, both ways, is `{"type": "<eventName>", "content": {...}}`:
+						- `{"type":"createRoom","content":{"nickname":"Marco"}}` creates a room with you in it. \
+						Reply: `{"type":"roomCreated","content":{"code":"KQXB","players":["Marco"]}}`
 
 						Anything else closes the connection with status 1007 (bad data).""")
 				.addParametersItem(new QueryParameter()
 						.name("message")
 						.required(true)
 						.description("Swagger UI only: sent as a text message once the socket is open.")
-						.example("{\"type\":\"createRoom\",\"nickname\":\"Marco\"}")
+						.example("{\"type\":\"createRoom\",\"content\":{\"nickname\":\"Marco\"}}")
 						.schema(new StringSchema()))
 				.responses(new ApiResponses()
 						.addApiResponse("101", new ApiResponse().description("Switching Protocols")))));

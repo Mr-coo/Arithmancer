@@ -39,15 +39,24 @@ public class GameGateway extends TextWebSocketHandler {
 
 	@Override
 	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
-		ClientMessage clientMessage;
-		try {
-			clientMessage = jsonMapper.readValue(message.getPayload(), ClientMessage.class);
-		} catch (JacksonException e) {
-			clientMessage = null;
-		}
-		switch (clientMessage) {
+		switch (parse(message.getPayload())) {
 			case CreateRoom createRoom -> createRoom(session, createRoom);
 			case null -> session.close(CloseStatus.BAD_DATA.withReason("Invalid message"));
+		}
+	}
+
+	private ClientMessage parse(String payload) {
+		try {
+			Event event = jsonMapper.readValue(payload, Event.class);
+			if (event == null || event.content() == null) {
+				return null;
+			}
+			return switch (event.type()) {
+				case "createRoom" -> jsonMapper.treeToValue(event.content(), CreateRoom.class);
+				case null, default -> null;
+			};
+		} catch (JacksonException e) {
+			return null;
 		}
 	}
 
@@ -62,11 +71,12 @@ public class GameGateway extends TextWebSocketHandler {
 			return;
 		}
 		Room room = roomRegistry.create(new Player(session.getId(), createRoom.nickname().strip()));
-		send(session, new RoomCreated(room.code(), room.players().stream().map(Player::nickname).toList()));
+		send(session, "roomCreated", new RoomCreated(room.code(), room.players().stream().map(Player::nickname).toList()));
 	}
 
-	private void send(WebSocketSession session, ServerMessage message) throws IOException {
-		session.sendMessage(new TextMessage(jsonMapper.writerFor(ServerMessage.class).writeValueAsString(message)));
+	private void send(WebSocketSession session, String type, ServerMessage content) throws IOException {
+		Event event = new Event(type, jsonMapper.valueToTree(content));
+		session.sendMessage(new TextMessage(jsonMapper.writeValueAsString(event)));
 	}
 
 }
