@@ -1,4 +1,11 @@
-export type PlayerState = { nickname: string; x: number; y: number; you: boolean }
+export type PlayerState = {
+  nickname: string
+  x: number
+  y: number
+  health: number
+  maxHealth: number
+  you: boolean
+}
 
 type RoomContent = { code: string; players: string[] }
 

@@ -7,10 +7,17 @@ const MOVE_KEYS: Record<string, string> = { KeyW: 'w', KeyA: 'a', KeyS: 's', Key
 
 const GRID_SIZE = 64
 const PLAYER_RADIUS = 16
+const HEALTH_BAR_WIDTH = 32
+const HEALTH_BAR_HEIGHT = 4
 // Share of the remaining distance covered each frame, to smooth the 20 updates per second.
 const SMOOTHING = 0.3
 
-type Sprite = { body: Phaser.GameObjects.Arc; label: Phaser.GameObjects.Text }
+type Sprite = {
+  body: Phaser.GameObjects.Arc
+  label: Phaser.GameObjects.Text
+  healthBack: Phaser.GameObjects.Rectangle
+  healthFill: Phaser.GameObjects.Rectangle
+}
 
 class GameScene extends Phaser.Scene {
   latest: PlayerState[] = []
@@ -34,7 +41,13 @@ class GameScene extends Phaser.Scene {
       const sprite = this.sprites[i] ?? this.addSprite(player)
       sprite.body.x += (player.x - sprite.body.x) * SMOOTHING
       sprite.body.y += (player.y - sprite.body.y) * SMOOTHING
-      sprite.label.setPosition(sprite.body.x, sprite.body.y - PLAYER_RADIUS - 12)
+      const barX = sprite.body.x - HEALTH_BAR_WIDTH / 2
+      const barY = sprite.body.y - PLAYER_RADIUS - 8
+      sprite.healthBack.setPosition(barX, barY)
+      sprite.healthFill
+        .setPosition(barX, barY)
+        .setScale(Phaser.Math.Clamp(player.health / player.maxHealth, 0, 1), 1)
+      sprite.label.setPosition(sprite.body.x, barY - 14)
     })
     // Keep the screen-sized grid lined up with the world as the camera moves.
     const camera = this.cameras.main
@@ -47,6 +60,8 @@ class GameScene extends Phaser.Scene {
       label: this.add
         .text(player.x, player.y, player.nickname, { fontFamily: 'system-ui', fontSize: '14px' })
         .setOrigin(0.5),
+      healthBack: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 0x7f1d1d).setOrigin(0, 0.5),
+      healthFill: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 0x4ade80).setOrigin(0, 0.5),
     }
     this.sprites.push(sprite)
     if (player.you) {
