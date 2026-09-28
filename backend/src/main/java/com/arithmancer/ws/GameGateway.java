@@ -105,7 +105,11 @@ public class GameGateway extends TextWebSocketHandler {
 			session.close(CloseStatus.BAD_DATA.withReason("Expected one letter"));
 			return;
 		}
-		send(session, "input", new ServerMessage.Input(key));
+		if (input.action() == null) {
+			session.close(CloseStatus.BAD_DATA.withReason("Expected down or up"));
+			return;
+		}
+		send(session, "input", new ServerMessage.Input(key, input.action()));
 	}
 
 	private static boolean isBlank(String nickname) {

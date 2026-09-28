@@ -8,7 +8,7 @@ public sealed interface ClientMessage {
 	record JoinRoom(String code, String nickname) implements ClientMessage {
 	}
 
-	record Input(String key) implements ClientMessage {
+	record Input(String key, KeyAction action) implements ClientMessage {
 	}
 
 }

@@ -67,7 +67,8 @@ public class WebSocketDocs {
 						Reply: `{"type":"roomCreated","content":{"code":"KQXB","players":["Marco"]}}`
 						- `{"type":"joinRoom","content":{"code":"KQXB","nickname":"Ana"}}` joins a room (max 4 players). \
 						Reply: `{"type":"roomJoined","content":{"code":"KQXB","players":["Marco","Ana"]}}`
-						- `{"type":"input","content":{"key":"a"}}` sends exactly one letter. \
+						- `{"type":"input","content":{"key":"a","action":"down"}}` sends a key press (`down`) or release (`up`) \
+						of exactly one letter. \
 						Reply: the same message echoed back.
 
 						Anything else closes the connection with status 1007 (bad data).""")
