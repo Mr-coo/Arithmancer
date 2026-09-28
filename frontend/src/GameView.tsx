@@ -22,10 +22,12 @@ type Sprite = {
   healthFill: Phaser.GameObjects.Rectangle
 }
 
+type EnemySprite = { body: Phaser.GameObjects.Arc; question: Phaser.GameObjects.Text }
+
 class GameScene extends Phaser.Scene {
   latest: GameState = { players: [], enemies: [] }
   private sprites: Sprite[] = []
-  private enemySprites = new Map<number, Phaser.GameObjects.Arc>()
+  private enemySprites = new Map<number, EnemySprite>()
   private grid?: Phaser.GameObjects.TileSprite
 
   create() {
@@ -63,18 +65,25 @@ class GameScene extends Phaser.Scene {
     const ids = new Set<number>()
     for (const enemy of this.latest.enemies) {
       ids.add(enemy.id)
-      let body = this.enemySprites.get(enemy.id)
-      if (!body) {
-        body = this.add.circle(enemy.x, enemy.y, ENEMY_RADIUS, 0xef4444)
-        this.enemySprites.set(enemy.id, body)
+      let sprite = this.enemySprites.get(enemy.id)
+      if (!sprite) {
+        sprite = {
+          body: this.add.circle(enemy.x, enemy.y, ENEMY_RADIUS, 0xef4444),
+          question: this.add
+            .text(enemy.x, enemy.y, '', { fontFamily: 'system-ui', fontSize: '16px', fontStyle: 'bold' })
+            .setOrigin(0.5),
+        }
+        this.enemySprites.set(enemy.id, sprite)
       }
-      body.x += (enemy.x - body.x) * SMOOTHING
-      body.y += (enemy.y - body.y) * SMOOTHING
+      sprite.body.x += (enemy.x - sprite.body.x) * SMOOTHING
+      sprite.body.y += (enemy.y - sprite.body.y) * SMOOTHING
+      sprite.question.setText(enemy.question).setPosition(sprite.body.x, sprite.body.y - ENEMY_RADIUS - 12)
     }
     // Remove enemies the server no longer sends.
-    for (const [id, body] of this.enemySprites) {
+    for (const [id, sprite] of this.enemySprites) {
       if (!ids.has(id)) {
-        body.destroy()
+        sprite.body.destroy()
+        sprite.question.destroy()
         this.enemySprites.delete(id)
       }
     }

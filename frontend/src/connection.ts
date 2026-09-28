@@ -7,7 +7,7 @@ export type PlayerState = {
   you: boolean
 }
 
-export type EnemyState = { id: number; x: number; y: number }
+export type EnemyState = { id: number; x: number; y: number; question: string }
 
 export type GameState = { players: PlayerState[]; enemies: EnemyState[] }
 
