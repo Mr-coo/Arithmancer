@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
+import com.arithmancer.ws.ServerMessage.EnemyState;
 import com.arithmancer.ws.ServerMessage.GameState;
 import com.arithmancer.ws.ServerMessage.PlayerState;
 import com.arithmancer.ws.SessionRegistry;
@@ -52,12 +53,15 @@ public class GameManager {
 	}
 
 	private void sendState(Game game) {
+		List<EnemyState> enemies = game.getEnemies().stream()
+				.map(enemy -> new EnemyState(enemy.getId(), enemy.getPosition().x(), enemy.getPosition().y()))
+				.toList();
 		for (Player recipient : game.getPlayers()) {
 			List<PlayerState> players = game.getPlayers().stream()
 					.map(player -> new PlayerState(player.getNickname(), player.getPosition().x(),
 							player.getPosition().y(), player.getHealth(), player.getMaxHealth(), player == recipient))
 					.toList();
-			sessionRegistry.send(recipient.getSessionId(), "state", new GameState(players));
+			sessionRegistry.send(recipient.getSessionId(), "state", new GameState(players, enemies));
 		}
 	}
 

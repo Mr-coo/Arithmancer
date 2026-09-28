@@ -16,10 +16,13 @@ public sealed interface ServerMessage {
 	record GameStarted(String code, List<String> players) implements ServerMessage {
 	}
 
-	record GameState(List<PlayerState> players) implements ServerMessage {
+	record GameState(List<PlayerState> players, List<EnemyState> enemies) implements ServerMessage {
 	}
 
 	record PlayerState(String nickname, double x, double y, int health, int maxHealth, boolean you) {
+	}
+
+	record EnemyState(int id, double x, double y) {
 	}
 
 }
