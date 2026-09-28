@@ -62,12 +62,16 @@ public class WebSocketDocs {
 						Connect with a WebSocket client, e.g. `new WebSocket("ws://localhost:8080/ws")`. \
 						"Try it out" opens a real WebSocket, sends `message` and shows the reply.
 
-						Send a text message of exactly one character and the server echoes it back. \
-						Any other message closes the connection with status 1007 (Expected one character).""")
+						Messages are JSON objects with a `type`:
+						- `{"type":"createRoom","nickname":"Marco"}` creates a room with you in it. \
+						Reply: `{"type":"roomCreated","code":"KQXB","players":["Marco"]}`
+
+						Anything else closes the connection with status 1007 (bad data).""")
 				.addParametersItem(new QueryParameter()
 						.name("message")
 						.required(true)
 						.description("Swagger UI only: sent as a text message once the socket is open.")
+						.example("{\"type\":\"createRoom\",\"nickname\":\"Marco\"}")
 						.schema(new StringSchema()))
 				.responses(new ApiResponses()
 						.addApiResponse("101", new ApiResponse().description("Switching Protocols")))));
