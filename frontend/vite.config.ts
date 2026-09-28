@@ -6,8 +6,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // Forward API calls to the Spring Boot container
+      // Forward API calls and the game WebSocket to the Spring Boot container
       '/api': 'http://localhost:8080',
+      '/ws': { target: 'ws://localhost:8080', ws: true },
     },
   },
 })
