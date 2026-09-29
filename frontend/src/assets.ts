@@ -17,6 +17,9 @@ import purpleIdle from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Arch
 import purpleRun from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Archer/Archer_Run.png'
 import purpleShoot from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Archer/Archer_Shoot.png'
 import tntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Red/TNT_Red.png'
+import explosion from '../Tiny Swords/Tiny Swords (Update 010)/Effects/Explosion/Explosions.png'
+import dead from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Knights/Troops/Dead/Dead.png'
+import dust from '../asset/Tiny Swords (Free Pack)/Particle FX/Dust_02.png'
 
 // Players are archers, one color each (a room has up to 4 players).
 export const PLAYER_COLORS = ['blue', 'red', 'yellow', 'purple'] as const
@@ -39,6 +42,10 @@ export const GRASS_FRAME = 10
 export const TREE = 'tree'
 export const ROCKS = ['rock2', 'rock4']
 export const ARROW = 'arrow'
+// Effects, each played once: a goblin blowing up, a dust puff, and a dead player's skull.
+export const EXPLOSION = 'explosion'
+export const DUST = 'dust'
+export const DEAD = 'dead'
 
 export const archerKey = (color: string, action: 'idle' | 'run' | 'shoot') => `archer-${color}-${action}`
 export const goblinKey = (action: 'idle' | 'run') => `goblin-${action}`
@@ -57,6 +64,9 @@ export function preloadAssets(scene: Phaser.Scene) {
     }
   }
   scene.load.spritesheet(GOBLIN, tntGoblin, UNIT_FRAME)
+  scene.load.spritesheet(EXPLOSION, explosion, UNIT_FRAME)
+  scene.load.spritesheet(DUST, dust, { frameWidth: 64, frameHeight: 64 })
+  scene.load.spritesheet(DEAD, dead, { frameWidth: 128, frameHeight: 128 })
 }
 
 // Archer and tree animations use the same key as their sprite sheet; the goblin's are rows of one sheet.
@@ -77,4 +87,8 @@ export function createAnimations(scene: Phaser.Scene) {
     })
   }
   loop(TREE, 6)
+  loop(EXPLOSION, 18, 0)
+  loop(DUST, 20, 0)
+  // The skull pops up and rests; the sheet's later frames, where it sinks away, are left out.
+  scene.anims.create({ key: DEAD, frames: scene.anims.generateFrameNumbers(DEAD, { start: 0, end: 6 }), frameRate: 10 })
 }

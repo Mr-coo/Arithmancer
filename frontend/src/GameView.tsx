@@ -4,6 +4,9 @@ import {
   ARROW,
   archerKey,
   createAnimations,
+  DEAD,
+  DUST,
+  EXPLOSION,
   GOBLIN,
   goblinKey,
   GRASS_FRAME,
@@ -43,12 +46,17 @@ const ARROW_SCALE = 0.6
 const GHOST_ALPHA = 0.75
 // 8 frames at 24 per second.
 const SHOOT_MS = 333
+// A dead player is a skull, standing where its shadow rests in the 128x128 frame.
+const SKULL_FEET = { x: 67 / 128, y: 94 / 128 }
+const SKULL_SCALE = 0.6
+const EXPLOSION_SCALE = 0.7
 // Draw order, bottom to top: players behind a decoration, decorations, enemies (ghosts float over decorations),
 // then the other players, so an enemy on top of a player does not hide their name or health.
 const BEHIND_DEPTH = 1
 const DECORATION_DEPTH = 2
 const ENEMY_DEPTH = 3
 const PLAYER_DEPTH = 4
+const EFFECT_DEPTH = 5
 // A decoration you are behind turns see-through, so you can still see yourself.
 const BEHIND_ALPHA = 0.5
 // The server sends the state 20 times per second.
@@ -98,6 +106,8 @@ class GameScene extends Phaser.Scene {
   private enemySprites = new Map<number, EnemySprite>()
   // Enemies with a projectile on the way, kept on screen until it arrives.
   private targeted = new Set<number>()
+  // Enemies killed by an arrow. Any other enemy the server drops reached a player and blew up.
+  private shotDown = new Set<number>()
   private ground?: Phaser.GameObjects.TileSprite
 
   preload() {
@@ -137,11 +147,21 @@ class GameScene extends Phaser.Scene {
       const dy = player.y - sprite.body.y
       sprite.body.x += dx * SMOOTHING
       sprite.body.y += dy * SMOOTHING
-      if (Math.abs(dx) > MOVING) {
-        sprite.body.setFlipX(dx < 0)
-      }
-      if (time >= (this.shootingUntil[i] ?? 0)) {
-        sprite.body.play(archerKey(colorOf(i), Math.hypot(dx, dy) > MOVING ? 'run' : 'idle'), true)
+      const isSkull = sprite.body.anims.currentAnim?.key === DEAD
+      if (player.health <= 0) {
+        if (!isSkull) {
+          sprite.body.setOrigin(SKULL_FEET.x, SKULL_FEET.y).setScale(SKULL_SCALE).setFlipX(false).play(DEAD)
+        }
+      } else {
+        if (isSkull) {
+          sprite.body.setOrigin(ARCHER_FEET.x, ARCHER_FEET.y).setScale(UNIT_SCALE)
+        }
+        if (Math.abs(dx) > MOVING) {
+          sprite.body.setFlipX(dx < 0)
+        }
+        if (time >= (this.shootingUntil[i] ?? 0)) {
+          sprite.body.play(archerKey(colorOf(i), Math.hypot(dx, dy) > MOVING ? 'run' : 'idle'), true)
+        }
       }
       const barX = sprite.body.x - HEALTH_BAR_WIDTH / 2
       const barY = sprite.body.y - UNIT_HEIGHT - 6
@@ -177,6 +197,7 @@ class GameScene extends Phaser.Scene {
   // Each hit is an arrow from the archer to the enemy, fading and shrinking until it disappears.
   private launchShots() {
     for (const shot of this.pendingShots.splice(0)) {
+      this.shotDown.add(shot.enemy)
       const archer = this.sprites[shot.player]?.body
       const enemy = this.enemySprites.get(shot.enemy)
       if (!archer || !enemy) {
@@ -204,6 +225,10 @@ class GameScene extends Phaser.Scene {
         onComplete: () => {
           arrow.destroy()
           this.targeted.delete(shot.enemy)
+          // An enemy that survived the hit can still blow up later.
+          if (this.latest.enemies.some((e) => e.id === shot.enemy)) {
+            this.shotDown.delete(shot.enemy)
+          }
         },
       })
     }
@@ -242,8 +267,15 @@ class GameScene extends Phaser.Scene {
     }
     for (const [id, sprite] of this.enemySprites) {
       if (!ids.has(id)) {
-        // Remove enemies the server no longer sends, once any arrow at them has arrived.
+        // Remove enemies the server no longer sends, once any arrow at them has arrived: in a puff of dust if an
+        // arrow killed them, otherwise they reached a player and blew up.
         if (!this.targeted.has(id)) {
+          const center = { x: sprite.body.x, y: sprite.body.y - GOBLIN_HEIGHT / 2 }
+          if (this.shotDown.delete(id)) {
+            this.playEffect(DUST, center, 1)
+          } else {
+            this.playEffect(EXPLOSION, center, EXPLOSION_SCALE)
+          }
           sprite.body.destroy()
           sprite.question.destroy()
           this.enemySprites.delete(id)
@@ -261,6 +293,11 @@ class GameScene extends Phaser.Scene {
       sprite.body.play(goblinKey(Math.hypot(sprite.velocity.x, sprite.velocity.y) > MOVING ? 'run' : 'idle'), true)
       sprite.question.setPosition(sprite.body.x, sprite.body.y - GOBLIN_HEIGHT - 12)
     }
+  }
+
+  private playEffect(key: string, at: Point, scale: number) {
+    const effect = this.add.sprite(at.x, at.y, key).setScale(scale).setDepth(EFFECT_DEPTH).play(key)
+    effect.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => effect.destroy())
   }
 
   private addSprite(player: PlayerState, index: number): Sprite {
