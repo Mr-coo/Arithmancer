@@ -3,6 +3,7 @@ import tilemap from '../asset/Tiny Swords (Free Pack)/Terrain/Tileset/Tilemap_co
 import tree from '../asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree1.png'
 import rock2 from '../asset/Tiny Swords (Free Pack)/Terrain/Decorations/Rocks/Rock2.png'
 import rock4 from '../asset/Tiny Swords (Free Pack)/Terrain/Decorations/Rocks/Rock4.png'
+import boulder from '../Tiny Swords/Tiny Swords (Update 010)/Deco/06.png'
 import arrow from '../asset/Tiny Swords (Free Pack)/Units/Blue Units/Archer/Arrow.png'
 import blueIdle from '../asset/Tiny Swords (Free Pack)/Units/Blue Units/Archer/Archer_Idle.png'
 import blueRun from '../asset/Tiny Swords (Free Pack)/Units/Blue Units/Archer/Archer_Run.png'
@@ -40,7 +41,7 @@ export const GROUND = 'ground'
 // The center of the tilemap's grass patch, which repeats seamlessly.
 export const GRASS_FRAME = 10
 export const TREE = 'tree'
-export const ROCKS = ['rock2', 'rock4']
+export const ROCKS = ['rock2', 'rock4', 'boulder']
 export const ARROW = 'arrow'
 // Effects, each played once: a goblin blowing up, a dust puff, and a dead player's skull.
 export const EXPLOSION = 'explosion'
@@ -57,6 +58,7 @@ export function preloadAssets(scene: Phaser.Scene) {
   scene.load.spritesheet(TREE, tree, { frameWidth: 192, frameHeight: 256 })
   scene.load.image(ROCKS[0], rock2)
   scene.load.image(ROCKS[1], rock4)
+  scene.load.image(ROCKS[2], boulder)
   scene.load.image(ARROW, arrow)
   for (const color of PLAYER_COLORS) {
     for (const [action, url] of Object.entries(ARCHERS[color])) {

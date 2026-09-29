@@ -38,9 +38,12 @@ const AIM_HEIGHT = 20
 const TREE_SCALE = 0.74
 // The middle of the trunk, which sits on the tree's solid circle.
 const TREE_BASE = { x: 98 / 192, y: 224 / 256 }
-// Width of each rock in ROCKS, so it can be scaled to its solid circle.
-const ROCK_WIDTHS = [46, 54]
-const ROCK_CENTER_Y = 33 / 64
+// Width and vertical center of each rock in ROCKS, so it can be scaled to its solid circle.
+const ROCK_SIZES = [
+  { width: 46, centerY: 33 / 64 },
+  { width: 54, centerY: 33 / 64 },
+  { width: 39, centerY: 30 / 64 },
+]
 const ARROW_SCALE = 0.6
 // Enemies are ghosts that walk through trees and stones, so they are drawn slightly see-through.
 const GHOST_ALPHA = 0.75
@@ -132,8 +135,8 @@ class GameScene extends Phaser.Scene {
               .play({ key: TREE, startFrame: i % 8 })
           : this.add
               .image(decoration.x, decoration.y, ROCKS[i % ROCKS.length])
-              .setOrigin(0.5, ROCK_CENTER_Y)
-              .setScale((2 * decoration.radius) / ROCK_WIDTHS[i % ROCKS.length])
+              .setOrigin(0.5, ROCK_SIZES[i % ROCKS.length].centerY)
+              .setScale((2 * decoration.radius) / ROCK_SIZES[i % ROCKS.length].width)
       object.setDepth(DECORATION_DEPTH)
       return { decoration, object }
     })
