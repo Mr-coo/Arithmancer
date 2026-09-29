@@ -5,6 +5,7 @@ import {
   archerKey,
   createAnimations,
   DEAD,
+  DETAIL_SIZE,
   DETAILS,
   detailKey,
   DUST,
@@ -54,10 +55,9 @@ const SHOOT_MS = 333
 const SKULL_FEET = { x: 67 / 128, y: 94 / 128 }
 const SKULL_SCALE = 0.6
 const EXPLOSION_SCALE = 0.7
-// Draw order, bottom to top: details on the ground, characters behind a decoration, decorations, enemies, then the
+// Draw order, bottom to top: characters behind a decoration or detail, decorations and details, enemies, then the
 // other players, so an enemy on top of a player does not hide their name or health. Enemies' questions always stay
 // above decorations, so they can be read.
-const DETAIL_DEPTH = 0
 const BEHIND_DEPTH = 1
 const DECORATION_DEPTH = 2
 const ENEMY_DEPTH = 3
@@ -106,6 +106,8 @@ class GameScene extends Phaser.Scene {
   pendingShots: ShotState[] = []
   decorations: DecorationState[] = []
   details: DetailState[] = []
+  // Where a character's feet are behind each detail.
+  private detailCovers: Phaser.Geom.Rectangle[] = []
   private decorationSprites: DecorationSprite[] = []
   private sprites: Sprite[] = []
   // When each player's shoot animation ends, by player index.
@@ -128,9 +130,22 @@ class GameScene extends Phaser.Scene {
       .setOrigin(0)
       .setScrollFactor(0)
     this.scale.on('resize', (size: Phaser.Structs.Size) => this.ground?.setSize(size.width, size.height))
-    this.details.forEach((detail, i) => {
-      const variant = i % DETAILS[detail.type].length
-      this.add.image(detail.x, detail.y, detailKey(detail.type, variant)).setScale(DETAIL_SCALE).setDepth(DETAIL_DEPTH)
+    // Characters walk over details, but one whose feet are on a detail, above its bottom edge, is behind it. The box
+    // is widened by the character's radius.
+    this.detailCovers = this.details.map((detail, i) => {
+      const variants = DETAILS[detail.type]
+      const variant = i % variants.length
+      this.add
+        .image(detail.x, detail.y, detailKey(detail.type, variant))
+        .setScale(DETAIL_SCALE)
+        .setDepth(DECORATION_DEPTH)
+      const [left, top, right, bottom] = variants[variant].box.map((edge) => (edge - DETAIL_SIZE / 2) * DETAIL_SCALE)
+      return new Phaser.Geom.Rectangle(
+        detail.x + left - PLAYER_RADIUS,
+        detail.y + top,
+        right - left + 2 * PLAYER_RADIUS,
+        bottom - top,
+      )
     })
     // Trees stand with the middle of their trunk on the solid circle; rocks are scaled to fill it.
     this.decorationSprites = this.decorations.map((decoration, i) => {
@@ -187,7 +202,7 @@ class GameScene extends Phaser.Scene {
         .setScale(Phaser.Math.Clamp(player.cooldown / player.maxCooldown, 0, 1), 1)
       sprite.label.setPosition(sprite.body.x, barY - 14)
       const covering = this.decorations.filter((decoration) => isBehind(sprite.body, decoration))
-      const depth = covering.length ? BEHIND_DEPTH : PLAYER_DEPTH
+      const depth = covering.length || this.isBehindDetail(sprite.body) ? BEHIND_DEPTH : PLAYER_DEPTH
       if (sprite.body.depth !== depth) {
         Object.values(sprite).forEach((part) => part.setDepth(depth))
       }
@@ -296,7 +311,8 @@ class GameScene extends Phaser.Scene {
       }
       sprite.body.x += (sprite.target.x - sprite.body.x) * SMOOTHING
       sprite.body.y += (sprite.target.y - sprite.body.y) * SMOOTHING
-      const behind = this.decorations.some((decoration) => isBehind(sprite.body, decoration))
+      const behind =
+        this.decorations.some((decoration) => isBehind(sprite.body, decoration)) || this.isBehindDetail(sprite.body)
       sprite.body.setDepth(behind ? BEHIND_DEPTH : ENEMY_DEPTH)
       if (Math.abs(sprite.velocity.x) > MOVING) {
         sprite.body.setFlipX(sprite.velocity.x < 0)
@@ -304,6 +320,10 @@ class GameScene extends Phaser.Scene {
       sprite.body.play(goblinKey(Math.hypot(sprite.velocity.x, sprite.velocity.y) > MOVING ? 'run' : 'idle'), true)
       sprite.question.setPosition(sprite.body.x, sprite.body.y - GOBLIN_HEIGHT - 12)
     }
+  }
+
+  private isBehindDetail(feet: Point) {
+    return this.detailCovers.some((cover) => cover.contains(feet.x, feet.y))
   }
 
   private playEffect(key: string, at: Point, scale: number) {

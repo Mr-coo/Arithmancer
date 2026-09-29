@@ -57,13 +57,34 @@ export const GROUND = 'ground'
 export const GRASS_FRAME = 10
 export const TREE = 'tree'
 export const ROCKS = ['rock2', 'rock4', 'boulder']
-// The variants of each detail on the ground.
-export const DETAILS: Record<DetailState['type'], string[]> = {
-  bush: [bush1, bush2, bush3, bush4, bush5],
-  mushroom: [mushroom1, mushroom2, mushroom3],
-  pebble: [pebble1, pebble2],
-  pumpkin: [pumpkin1, pumpkin2],
-  bone: [bone1, bone2],
+// The variants of each detail on the ground, with the box their sprite fills in its 64x64 image, leaving out the
+// shadow: left, top, right, bottom.
+export const DETAIL_SIZE = 64
+export const DETAILS: Record<DetailState['type'], { url: string; box: number[] }[]> = {
+  bush: [
+    { url: bush1, box: [16, 21, 47, 40] },
+    { url: bush2, box: [12, 17, 53, 45] },
+    { url: bush3, box: [4, 11, 61, 50] },
+    { url: bush4, box: [23, 23, 44, 43] },
+    { url: bush5, box: [20, 15, 52, 47] },
+  ],
+  mushroom: [
+    { url: mushroom1, box: [25, 24, 42, 40] },
+    { url: mushroom2, box: [21, 20, 47, 44] },
+    { url: mushroom3, box: [14, 12, 52, 45] },
+  ],
+  pebble: [
+    { url: pebble1, box: [25, 19, 43, 34] },
+    { url: pebble2, box: [19, 18, 46, 38] },
+  ],
+  pumpkin: [
+    { url: pumpkin1, box: [12, 12, 51, 48] },
+    { url: pumpkin2, box: [8, 10, 61, 51] },
+  ],
+  bone: [
+    { url: bone1, box: [15, 16, 51, 45] },
+    { url: bone2, box: [25, 20, 43, 43] },
+  ],
 }
 export const ARROW = 'arrow'
 // Effects, each played once: a goblin blowing up, a dust puff, and a dead player's skull.
@@ -83,8 +104,8 @@ export function preloadAssets(scene: Phaser.Scene) {
   scene.load.image(ROCKS[0], rock2)
   scene.load.image(ROCKS[1], rock4)
   scene.load.image(ROCKS[2], boulder)
-  for (const [type, urls] of Object.entries(DETAILS)) {
-    urls.forEach((url, variant) => scene.load.image(detailKey(type, variant), url))
+  for (const [type, variants] of Object.entries(DETAILS)) {
+    variants.forEach(({ url }, variant) => scene.load.image(detailKey(type, variant), url))
   }
   scene.load.image(ARROW, arrow)
   for (const color of PLAYER_COLORS) {
