@@ -8,6 +8,7 @@ import java.util.Random;
 import com.arithmancer.entity.Enemy;
 import com.arithmancer.entity.Position;
 import com.arithmancer.map.Decoration;
+import com.arithmancer.map.Detail;
 import com.arithmancer.math.Question;
 import com.arithmancer.room.Player;
 
@@ -32,6 +33,12 @@ public class Game {
 	private static final double START_CLEARANCE = 200;
 	private static final double DECORATION_SPACING = 120;
 	private static final Position START = new Position(0, 0);
+	// Details are scattered over the same area, apart from the trees, stones and each other.
+	private static final int DETAILS = 250;
+	private static final double DETAIL_SPACING = 50;
+	// Types listed more than once are more common.
+	private static final List<String> DETAIL_TYPES = List.of("bush", "bush", "bush", "mushroom", "mushroom", "pebble",
+			"pebble", "pumpkin", "bone");
 
 	private final String code;
 	private final List<Player> players;
@@ -39,6 +46,7 @@ public class Game {
 	private final List<Shot> shots = new ArrayList<>();
 	private final Random random = new Random();
 	private final List<Decoration> decorations;
+	private final List<Detail> details;
 	private double secondsUntilSpawn = SPAWN_INTERVAL_SECONDS;
 	private int nextEnemyId;
 	private double elapsedSeconds;
@@ -47,6 +55,7 @@ public class Game {
 		this.code = code;
 		this.players = List.copyOf(players);
 		this.decorations = scatterDecorations();
+		this.details = scatterDetails();
 	}
 
 	public String getCode() {
@@ -63,6 +72,10 @@ public class Game {
 
 	public List<Decoration> getDecorations() {
 		return decorations;
+	}
+
+	public List<Detail> getDetails() {
+		return details;
 	}
 
 	// Hits from the last tick.
@@ -128,6 +141,21 @@ public class Game {
 					.allMatch(decoration -> decoration.solid().center().distanceTo(base) >= DECORATION_SPACING);
 			if (clear) {
 				placed.add(placed.size() < TREES ? Decoration.tree(base) : Decoration.stone(base));
+			}
+		}
+		return List.copyOf(placed);
+	}
+
+	private List<Detail> scatterDetails() {
+		List<Detail> placed = new ArrayList<>();
+		for (int attempt = 0; attempt < 10_000 && placed.size() < DETAILS; attempt++) {
+			Position position = new Position(random.nextDouble(-DECORATION_RANGE, DECORATION_RANGE),
+					random.nextDouble(-DECORATION_RANGE, DECORATION_RANGE));
+			boolean clear = decorations.stream()
+					.allMatch(decoration -> decoration.solid().center().distanceTo(position) >= DETAIL_SPACING)
+					&& placed.stream().allMatch(detail -> detail.position().distanceTo(position) >= DETAIL_SPACING);
+			if (clear) {
+				placed.add(new Detail(DETAIL_TYPES.get(random.nextInt(DETAIL_TYPES.size())), position));
 			}
 		}
 		return List.copyOf(placed);

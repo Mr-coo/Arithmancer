@@ -5,6 +5,8 @@ import {
   archerKey,
   createAnimations,
   DEAD,
+  DETAILS,
+  detailKey,
   DUST,
   EXPLOSION,
   GOBLIN,
@@ -16,7 +18,7 @@ import {
   ROCKS,
   TREE,
 } from './assets'
-import type { Connection, DecorationState, GameState, PlayerState, ShotState } from './connection'
+import type { Connection, DecorationState, DetailState, GameState, PlayerState, ShotState } from './connection'
 import { formatTime } from './format'
 
 // Physical key positions, so WASD also works on other keyboard layouts.
@@ -44,6 +46,7 @@ const ROCK_SIZES = [
   { width: 54, centerY: 33 / 64 },
   { width: 39, centerY: 30 / 64 },
 ]
+const DETAIL_SCALE = 0.75
 const ARROW_SCALE = 0.6
 // Enemies are ghosts that walk through trees and stones, so they are drawn slightly see-through.
 const GHOST_ALPHA = 0.75
@@ -53,8 +56,9 @@ const SHOOT_MS = 333
 const SKULL_FEET = { x: 67 / 128, y: 94 / 128 }
 const SKULL_SCALE = 0.6
 const EXPLOSION_SCALE = 0.7
-// Draw order, bottom to top: players behind a decoration, decorations, enemies (ghosts float over decorations),
-// then the other players, so an enemy on top of a player does not hide their name or health.
+// Draw order, bottom to top: details on the ground, players behind a decoration, decorations, enemies (ghosts float
+// over decorations), then the other players, so an enemy on top of a player does not hide their name or health.
+const DETAIL_DEPTH = 0
 const BEHIND_DEPTH = 1
 const DECORATION_DEPTH = 2
 const ENEMY_DEPTH = 3
@@ -102,6 +106,7 @@ class GameScene extends Phaser.Scene {
   latest: GameState = { time: 0, players: [], enemies: [], shots: [] }
   pendingShots: ShotState[] = []
   decorations: DecorationState[] = []
+  details: DetailState[] = []
   private decorationSprites: DecorationSprite[] = []
   private sprites: Sprite[] = []
   // When each player's shoot animation ends, by player index.
@@ -124,6 +129,10 @@ class GameScene extends Phaser.Scene {
       .setOrigin(0)
       .setScrollFactor(0)
     this.scale.on('resize', (size: Phaser.Structs.Size) => this.ground?.setSize(size.width, size.height))
+    this.details.forEach((detail, i) => {
+      const variant = i % DETAILS[detail.type].length
+      this.add.image(detail.x, detail.y, detailKey(detail.type, variant)).setScale(DETAIL_SCALE).setDepth(DETAIL_DEPTH)
+    })
     // Trees stand with the middle of their trunk on the solid circle; rocks are scaled to fill it.
     this.decorationSprites = this.decorations.map((decoration, i) => {
       const object =
@@ -325,13 +334,22 @@ class GameScene extends Phaser.Scene {
   }
 }
 
-export function GameView({ connection, decorations }: { connection: Connection; decorations: DecorationState[] }) {
+export function GameView({
+  connection,
+  decorations,
+  details,
+}: {
+  connection: Connection
+  decorations: DecorationState[]
+  details: DetailState[]
+}) {
   const parent = useRef<HTMLDivElement>(null)
   const [hud, setHud] = useState<GameState>()
 
   useEffect(() => {
     const scene = new GameScene('game')
     scene.decorations = decorations
+    scene.details = details
     const game = new Phaser.Game({
       type: Phaser.AUTO,
       parent: parent.current!,
@@ -382,7 +400,7 @@ export function GameView({ connection, decorations }: { connection: Connection; 
       stopState()
       game.destroy(true)
     }
-  }, [connection, decorations])
+  }, [connection, decorations, details])
 
   return (
     <>

@@ -23,6 +23,7 @@ import com.arithmancer.ws.ClientMessage.Input;
 import com.arithmancer.ws.ClientMessage.JoinRoom;
 import com.arithmancer.ws.ClientMessage.StartGame;
 import com.arithmancer.ws.ServerMessage.DecorationState;
+import com.arithmancer.ws.ServerMessage.DetailState;
 import com.arithmancer.ws.ServerMessage.GameStarted;
 import com.arithmancer.ws.ServerMessage.RoomCreated;
 import com.arithmancer.ws.ServerMessage.RoomJoined;
@@ -157,8 +158,11 @@ public class GameGateway extends TextWebSocketHandler {
 						decoration.solid().center().y(), decoration.solid().radius(), decoration.cover().center().x(),
 						decoration.cover().center().y(), decoration.cover().radius()))
 				.toList();
+		List<DetailState> details = game.getDetails().stream()
+				.map(detail -> new DetailState(detail.type(), detail.position().x(), detail.position().y()))
+				.toList();
 		sendAll(game.getPlayers(), "gameStarted",
-				new GameStarted(game.getCode(), nicknames(game.getPlayers()), decorations));
+				new GameStarted(game.getCode(), nicknames(game.getPlayers()), decorations, details));
 	}
 
 	private void answer(WebSocketSession session, Answer answer) throws IOException {

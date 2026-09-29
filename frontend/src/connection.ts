@@ -37,12 +37,15 @@ export type DecorationState = {
   coverRadius: number
 }
 
+// Drawn on the ground at (x, y). Characters walk over it.
+export type DetailState = { type: 'bush' | 'mushroom' | 'pebble' | 'pumpkin' | 'bone'; x: number; y: number }
+
 type RoomContent = { code: string; players: string[] }
 
 type ServerMessages = {
   roomCreated: RoomContent
   roomJoined: RoomContent
-  gameStarted: RoomContent & { decorations: DecorationState[] }
+  gameStarted: RoomContent & { decorations: DecorationState[]; details: DetailState[] }
   state: GameState
   gameOver: GameOver
 }

@@ -73,8 +73,9 @@ public class WebSocketDocs {
 						- `{"type":"startGame","content":{}}` starts the game. Only the host (room creator) can send it, \
 						and nobody can join after. \
 						Reply, to every player, with the trees and stones on the map. Players cannot walk into a \
-						decoration's solid circle (`x`, `y`, `radius`); a character touching its cover circle is behind it: \
-						`{"type":"gameStarted","content":{"code":"KQXB","players":["Marco","Ana"],"decorations":[{"type":"tree","x":320.0,"y":-140.0,"radius":14.0,"coverX":320.0,"coverY":-207.0,"coverRadius":50.0}]}}`
+						decoration's solid circle (`x`, `y`, `radius`); a character touching its cover circle is behind it. \
+						`details` are bushes, mushrooms, pebbles, pumpkins and bones on the ground, which characters walk over: \
+						`{"type":"gameStarted","content":{"code":"KQXB","players":["Marco","Ana"],"decorations":[{"type":"tree","x":320.0,"y":-140.0,"radius":14.0,"coverX":320.0,"coverY":-207.0,"coverRadius":50.0}],"details":[{"type":"mushroom","x":150.0,"y":80.0}]}}`
 						- `{"type":"answer","content":{"value":4}}` answers a question during a game. Of the enemies in your \
 						view with that answer, the nearest takes a hit. After any answer, right or wrong, your answers are \
 						ignored for a cooldown (1 second). No reply: the hit shows up in the next state.

@@ -21,6 +21,21 @@ import tntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/
 import explosion from '../Tiny Swords/Tiny Swords (Update 010)/Effects/Explosion/Explosions.png'
 import dead from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Knights/Troops/Dead/Dead.png'
 import dust from '../asset/Tiny Swords (Free Pack)/Particle FX/Dust_02.png'
+import mushroom1 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/01.png'
+import mushroom2 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/02.png'
+import mushroom3 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/03.png'
+import pebble1 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/04.png'
+import pebble2 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/05.png'
+import bush1 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/07.png'
+import bush2 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/08.png'
+import bush3 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/09.png'
+import bush4 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/10.png'
+import bush5 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/11.png'
+import pumpkin1 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/12.png'
+import pumpkin2 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/13.png'
+import bone1 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/14.png'
+import bone2 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/15.png'
+import type { DetailState } from './connection'
 
 // Players are archers, one color each (a room has up to 4 players).
 export const PLAYER_COLORS = ['blue', 'red', 'yellow', 'purple'] as const
@@ -42,6 +57,14 @@ export const GROUND = 'ground'
 export const GRASS_FRAME = 10
 export const TREE = 'tree'
 export const ROCKS = ['rock2', 'rock4', 'boulder']
+// The variants of each detail on the ground.
+export const DETAILS: Record<DetailState['type'], string[]> = {
+  bush: [bush1, bush2, bush3, bush4, bush5],
+  mushroom: [mushroom1, mushroom2, mushroom3],
+  pebble: [pebble1, pebble2],
+  pumpkin: [pumpkin1, pumpkin2],
+  bone: [bone1, bone2],
+}
 export const ARROW = 'arrow'
 // Effects, each played once: a goblin blowing up, a dust puff, and a dead player's skull.
 export const EXPLOSION = 'explosion'
@@ -50,6 +73,7 @@ export const DEAD = 'dead'
 
 export const archerKey = (color: string, action: 'idle' | 'run' | 'shoot') => `archer-${color}-${action}`
 export const goblinKey = (action: 'idle' | 'run') => `goblin-${action}`
+export const detailKey = (type: string, variant: number) => `${type}-${variant}`
 
 const UNIT_FRAME = { frameWidth: 192, frameHeight: 192 }
 
@@ -59,6 +83,9 @@ export function preloadAssets(scene: Phaser.Scene) {
   scene.load.image(ROCKS[0], rock2)
   scene.load.image(ROCKS[1], rock4)
   scene.load.image(ROCKS[2], boulder)
+  for (const [type, urls] of Object.entries(DETAILS)) {
+    urls.forEach((url, variant) => scene.load.image(detailKey(type, variant), url))
+  }
   scene.load.image(ARROW, arrow)
   for (const color of PLAYER_COLORS) {
     for (const [action, url] of Object.entries(ARCHERS[color])) {

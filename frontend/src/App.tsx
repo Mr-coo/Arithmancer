@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { connect, type Connection, type DecorationState, type GameOver } from './connection'
+import { connect, type Connection, type DecorationState, type DetailState, type GameOver } from './connection'
 import { formatTime } from './format'
 import { GameView } from './GameView'
 import './App.css'
@@ -7,7 +7,7 @@ import './App.css'
 type Screen =
   | { name: 'home'; error?: string }
   | { name: 'lobby'; code: string; players: string[]; host: boolean }
-  | { name: 'game'; decorations: DecorationState[] }
+  | { name: 'game'; decorations: DecorationState[]; details: DetailState[] }
   | ({ name: 'gameOver' } & GameOver)
 
 function App() {
@@ -28,7 +28,7 @@ function App() {
     opened.on('roomJoined', ({ code, players }) =>
       setScreen((current) => ({ name: 'lobby', code, players, host: current.name === 'lobby' && current.host })),
     )
-    opened.on('gameStarted', ({ decorations }) => setScreen({ name: 'game', decorations }))
+    opened.on('gameStarted', ({ decorations, details }) => setScreen({ name: 'game', decorations, details }))
     opened.on('gameOver', (results) => setScreen({ name: 'gameOver', ...results }))
     setConnection(opened)
     setConnecting(false)
@@ -54,7 +54,7 @@ function App() {
   if (screen.name === 'game' && connection) {
     return (
       <>
-        <GameView connection={connection} decorations={screen.decorations} />
+        <GameView connection={connection} decorations={screen.decorations} details={screen.details} />
         <p className="hint">Move with WASD. Press an enemy's answer (0-9) to shoot it.</p>
       </>
     )
