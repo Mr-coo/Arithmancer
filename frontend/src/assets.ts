@@ -16,8 +16,7 @@ import yellowShoot from '../asset/Tiny Swords (Free Pack)/Units/Yellow Units/Arc
 import purpleIdle from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Archer/Archer_Idle.png'
 import purpleRun from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Archer/Archer_Run.png'
 import purpleShoot from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Archer/Archer_Shoot.png'
-import ghostIdle from '../asset/Tiny Swords (Free Pack)/Units/Black Units/Warrior/Warrior_Idle.png'
-import ghostRun from '../asset/Tiny Swords (Free Pack)/Units/Black Units/Warrior/Warrior_Run.png'
+import tntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Red/TNT_Red.png'
 
 // Players are archers, one color each (a room has up to 4 players).
 export const PLAYER_COLORS = ['blue', 'red', 'yellow', 'purple'] as const
@@ -29,8 +28,10 @@ const ARCHERS = {
   purple: { idle: purpleIdle, run: purpleRun, shoot: purpleShoot },
 }
 
-// Enemies are ghosts: black warriors drawn see-through.
-const GHOST = { idle: ghostIdle, run: ghostRun }
+// Enemies are TNT goblins. Their sheet has one animation per row, 7 frames wide: idle (6 frames), run (6),
+// then throw (7, unused).
+export const GOBLIN = 'goblin'
+const GOBLIN_FRAMES = { idle: { start: 0, end: 5 }, run: { start: 7, end: 12 } }
 
 export const GROUND = 'ground'
 // The center of the tilemap's grass patch, which repeats seamlessly.
@@ -40,7 +41,7 @@ export const ROCKS = ['rock2', 'rock4']
 export const ARROW = 'arrow'
 
 export const archerKey = (color: string, action: 'idle' | 'run' | 'shoot') => `archer-${color}-${action}`
-export const ghostKey = (action: 'idle' | 'run') => `ghost-${action}`
+export const goblinKey = (action: 'idle' | 'run') => `goblin-${action}`
 
 const UNIT_FRAME = { frameWidth: 192, frameHeight: 192 }
 
@@ -55,12 +56,10 @@ export function preloadAssets(scene: Phaser.Scene) {
       scene.load.spritesheet(archerKey(color, action as 'idle' | 'run' | 'shoot'), url, UNIT_FRAME)
     }
   }
-  for (const [action, url] of Object.entries(GHOST)) {
-    scene.load.spritesheet(ghostKey(action as 'idle' | 'run'), url, UNIT_FRAME)
-  }
+  scene.load.spritesheet(GOBLIN, tntGoblin, UNIT_FRAME)
 }
 
-// Each animation uses the same key as its sprite sheet.
+// Archer and tree animations use the same key as their sprite sheet; the goblin's are rows of one sheet.
 export function createAnimations(scene: Phaser.Scene) {
   const loop = (key: string, frameRate: number, repeat = -1) =>
     scene.anims.create({ key, frames: scene.anims.generateFrameNumbers(key), frameRate, repeat })
@@ -69,7 +68,13 @@ export function createAnimations(scene: Phaser.Scene) {
     loop(archerKey(color, 'run'), 10)
     loop(archerKey(color, 'shoot'), 24, 0)
   }
-  loop(ghostKey('idle'), 8)
-  loop(ghostKey('run'), 10)
+  for (const [action, frames] of Object.entries(GOBLIN_FRAMES)) {
+    scene.anims.create({
+      key: goblinKey(action as 'idle' | 'run'),
+      frames: scene.anims.generateFrameNumbers(GOBLIN, frames),
+      frameRate: 10,
+      repeat: -1,
+    })
+  }
   loop(TREE, 6)
 }

@@ -4,7 +4,8 @@ import {
   ARROW,
   archerKey,
   createAnimations,
-  ghostKey,
+  GOBLIN,
+  goblinKey,
   GRASS_FRAME,
   GROUND,
   PLAYER_COLORS,
@@ -26,9 +27,10 @@ const PROJECTILE_MS = 250
 // Sprite sizes and anchors, measured from the Tiny Swords sheets. Characters stand with their feet on their position.
 const UNIT_SCALE = 0.5
 const ARCHER_FEET = { x: 95 / 192, y: 128 / 192 }
-const GHOST_FEET = { x: 97 / 192, y: 129 / 192 }
+const GOBLIN_FEET = { x: 95 / 192, y: 127 / 192 }
 // From the feet to the top of the head, and to the chest where arrows leave and land.
 const UNIT_HEIGHT = 40
+const GOBLIN_HEIGHT = 30
 const AIM_HEIGHT = 20
 const TREE_SCALE = 0.74
 // The middle of the trunk, which sits on the tree's solid circle.
@@ -37,6 +39,7 @@ const TREE_BASE = { x: 98 / 192, y: 224 / 256 }
 const ROCK_WIDTHS = [46, 54]
 const ROCK_CENTER_Y = 33 / 64
 const ARROW_SCALE = 0.6
+// Enemies are ghosts that walk through trees and stones, so they are drawn slightly see-through.
 const GHOST_ALPHA = 0.75
 // 8 frames at 24 per second.
 const SHOOT_MS = 333
@@ -214,8 +217,8 @@ class GameScene extends Phaser.Scene {
       if (!sprite) {
         sprite = {
           body: this.add
-            .sprite(enemy.x, enemy.y, ghostKey('run'))
-            .setOrigin(GHOST_FEET.x, GHOST_FEET.y)
+            .sprite(enemy.x, enemy.y, GOBLIN)
+            .setOrigin(GOBLIN_FEET.x, GOBLIN_FEET.y)
             .setScale(UNIT_SCALE)
             .setAlpha(GHOST_ALPHA)
             .setDepth(ENEMY_DEPTH),
@@ -255,8 +258,8 @@ class GameScene extends Phaser.Scene {
       if (Math.abs(sprite.velocity.x) > MOVING) {
         sprite.body.setFlipX(sprite.velocity.x < 0)
       }
-      sprite.body.play(ghostKey(Math.hypot(sprite.velocity.x, sprite.velocity.y) > MOVING ? 'run' : 'idle'), true)
-      sprite.question.setPosition(sprite.body.x, sprite.body.y - UNIT_HEIGHT - 12)
+      sprite.body.play(goblinKey(Math.hypot(sprite.velocity.x, sprite.velocity.y) > MOVING ? 'run' : 'idle'), true)
+      sprite.question.setPosition(sprite.body.x, sprite.body.y - GOBLIN_HEIGHT - 12)
     }
   }
 
