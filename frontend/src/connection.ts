@@ -7,6 +7,8 @@ export type PlayerState = {
   // Seconds until the player can shoot again, out of maxCooldown.
   cooldown: number
   maxCooldown: number
+  // Enemies this player killed.
+  score: number
   you: boolean
 }
 
@@ -15,7 +17,8 @@ export type EnemyState = { id: number; x: number; y: number; question: string }
 // A hit from the last tick: player is an index in players, enemy is the id of the enemy hit.
 export type ShotState = { player: number; enemy: number }
 
-export type GameState = { players: PlayerState[]; enemies: EnemyState[]; shots: ShotState[] }
+// time: seconds since the run started.
+export type GameState = { time: number; players: PlayerState[]; enemies: EnemyState[]; shots: ShotState[] }
 
 type RoomContent = { code: string; players: string[] }
 

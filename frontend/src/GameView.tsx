@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Connection, GameState, PlayerState, ShotState } from './connection'
 
 // Physical key positions, so WASD also works on other keyboard layouts.
@@ -39,7 +39,7 @@ type EnemySprite = {
 }
 
 class GameScene extends Phaser.Scene {
-  latest: GameState = { players: [], enemies: [], shots: [] }
+  latest: GameState = { time: 0, players: [], enemies: [], shots: [] }
   pendingShots: ShotState[] = []
   private sprites: Sprite[] = []
   private enemySprites = new Map<number, EnemySprite>()
@@ -183,6 +183,7 @@ class GameScene extends Phaser.Scene {
 
 export function GameView({ connection }: { connection: Connection }) {
   const parent = useRef<HTMLDivElement>(null)
+  const [hud, setHud] = useState<GameState>()
 
   useEffect(() => {
     const scene = new GameScene('game')
@@ -195,6 +196,7 @@ export function GameView({ connection }: { connection: Connection }) {
     })
     const stopState = connection.on('state', (state) => {
       scene.latest = state
+      setHud(state)
       scene.pendingShots.push(...state.shots)
     })
 
@@ -237,5 +239,28 @@ export function GameView({ connection }: { connection: Connection }) {
     }
   }, [connection])
 
-  return <div ref={parent} className="game" />
+  return (
+    <>
+      <div ref={parent} className="game" />
+      {hud && (
+        <div className="hud">
+          <p className="time">{formatTime(hud.time)}</p>
+          <ul>
+            {hud.players.map((player, i) => (
+              <li key={i} className={player.you ? 'you' : undefined}>
+                <span>{player.nickname}</span>
+                <span>{player.score}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
+  )
+}
+
+// Whole seconds as m:ss.
+function formatTime(seconds: number) {
+  const whole = Math.floor(seconds)
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`
 }

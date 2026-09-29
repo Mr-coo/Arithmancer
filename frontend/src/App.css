@@ -84,6 +84,42 @@ button {
   inset: 0;
 }
 
+.hud {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  min-width: 140px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #f3f4f6;
+  background: rgba(0, 0, 0, 0.4);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+
+  .time {
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  ul {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    font-size: 15px;
+  }
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .you {
+    font-weight: 600;
+    color: #b8a6ff;
+  }
+}
+
 .hint {
   position: fixed;
   left: 16px;
