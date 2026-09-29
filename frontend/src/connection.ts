@@ -25,12 +25,24 @@ export type FinalScore = { nickname: string; score: number; you: boolean }
 // time: seconds the team survived.
 export type GameOver = { time: number; players: FinalScore[] }
 
+// A tree or stone: players cannot walk into the solid circle (x, y, radius), and a character touching the cover
+// circle is behind it.
+export type DecorationState = {
+  type: 'tree' | 'stone'
+  x: number
+  y: number
+  radius: number
+  coverX: number
+  coverY: number
+  coverRadius: number
+}
+
 type RoomContent = { code: string; players: string[] }
 
 type ServerMessages = {
   roomCreated: RoomContent
   roomJoined: RoomContent
-  gameStarted: RoomContent
+  gameStarted: RoomContent & { decorations: DecorationState[] }
   state: GameState
   gameOver: GameOver
 }

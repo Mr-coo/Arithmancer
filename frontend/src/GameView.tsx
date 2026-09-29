@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import { useEffect, useRef, useState } from 'react'
-import type { Connection, GameState, PlayerState, ShotState } from './connection'
+import type { Connection, DecorationState, GameState, PlayerState, ShotState } from './connection'
 import { formatTime } from './format'
 
 // Physical key positions, so WASD also works on other keyboard layouts.
@@ -14,8 +14,14 @@ const COOLDOWN_BAR_HEIGHT = 2
 const ENEMY_RADIUS = 14
 const PROJECTILE_RADIUS = 6
 const PROJECTILE_MS = 250
-// Players draw above enemies, so an enemy on top of a player does not hide their name or health.
-const PLAYER_DEPTH = 1
+// Draw order, bottom to top: players behind a decoration, decorations, enemies (ghosts float over decorations),
+// then the other players, so an enemy on top of a player does not hide their name or health.
+const BEHIND_DEPTH = 1
+const DECORATION_DEPTH = 2
+const ENEMY_DEPTH = 3
+const PLAYER_DEPTH = 4
+// A decoration you are behind turns see-through, so you can still see yourself.
+const BEHIND_ALPHA = 0.5
 // The server sends the state 20 times per second.
 const TICKS_PER_SECOND = 20
 // Share of the remaining distance covered each frame, to smooth those updates.
@@ -39,9 +45,20 @@ type EnemySprite = {
   velocity: Point
 }
 
+type DecorationSprite = { decoration: DecorationState; parts: Phaser.GameObjects.Arc[] }
+
+// A character touching a decoration's cover circle is behind it.
+function isBehind(point: Point, decoration: DecorationState) {
+  return (
+    Math.hypot(point.x - decoration.coverX, point.y - decoration.coverY) < decoration.coverRadius + PLAYER_RADIUS
+  )
+}
+
 class GameScene extends Phaser.Scene {
   latest: GameState = { time: 0, players: [], enemies: [], shots: [] }
   pendingShots: ShotState[] = []
+  decorations: DecorationState[] = []
+  private decorationSprites: DecorationSprite[] = []
   private sprites: Sprite[] = []
   private enemySprites = new Map<number, EnemySprite>()
   // Enemies with a projectile on the way, kept on screen until it arrives.
@@ -58,9 +75,22 @@ class GameScene extends Phaser.Scene {
       .setOrigin(0)
       .setScrollFactor(0)
     this.scale.on('resize', (size: Phaser.Structs.Size) => this.grid?.setSize(size.width, size.height))
+    // Circles for now: a tree is a trunk (its solid circle) under a canopy (its cover circle), a stone one circle.
+    this.decorationSprites = this.decorations.map((decoration) => {
+      const parts =
+        decoration.type === 'tree'
+          ? [
+              this.add.circle(decoration.x, decoration.y, decoration.radius, 0x7c4a2d),
+              this.add.circle(decoration.coverX, decoration.coverY, decoration.coverRadius, 0x2f7d4f),
+            ]
+          : [this.add.circle(decoration.x, decoration.y, decoration.radius, 0x8b8f98)]
+      parts.forEach((part) => part.setDepth(DECORATION_DEPTH))
+      return { decoration, parts }
+    })
   }
 
   update(_time: number, delta: number) {
+    let coveringYou = new Set<DecorationState>()
     this.latest.players.forEach((player, i) => {
       const sprite = this.sprites[i] ?? this.addSprite(player)
       sprite.body.x += (player.x - sprite.body.x) * SMOOTHING
@@ -77,7 +107,18 @@ class GameScene extends Phaser.Scene {
         .setPosition(barX, barY + HEALTH_BAR_HEIGHT / 2 + COOLDOWN_BAR_HEIGHT)
         .setScale(Phaser.Math.Clamp(player.cooldown / player.maxCooldown, 0, 1), 1)
       sprite.label.setPosition(sprite.body.x, barY - 14)
+      const covering = this.decorations.filter((decoration) => isBehind(sprite.body, decoration))
+      const depth = covering.length ? BEHIND_DEPTH : PLAYER_DEPTH
+      if (sprite.body.depth !== depth) {
+        Object.values(sprite).forEach((part) => part.setDepth(depth))
+      }
+      if (player.you) {
+        coveringYou = new Set(covering)
+      }
     })
+    for (const { decoration, parts } of this.decorationSprites) {
+      parts.forEach((part) => part.setAlpha(coveringYou.has(decoration) ? BEHIND_ALPHA : 1))
+    }
     this.launchShots()
     this.updateEnemies(delta)
     // Keep the screen-sized grid lined up with the world as the camera moves.
@@ -126,10 +167,11 @@ class GameScene extends Phaser.Scene {
       let sprite = this.enemySprites.get(enemy.id)
       if (!sprite) {
         sprite = {
-          body: this.add.circle(enemy.x, enemy.y, ENEMY_RADIUS, 0xef4444),
+          body: this.add.circle(enemy.x, enemy.y, ENEMY_RADIUS, 0xef4444).setDepth(ENEMY_DEPTH),
           question: this.add
             .text(enemy.x, enemy.y, '', { fontFamily: 'system-ui', fontSize: '16px', fontStyle: 'bold' })
-            .setOrigin(0.5),
+            .setOrigin(0.5)
+            .setDepth(ENEMY_DEPTH),
           target: { x: enemy.x, y: enemy.y },
           velocity: { x: 0, y: 0 },
         }
@@ -182,12 +224,13 @@ class GameScene extends Phaser.Scene {
   }
 }
 
-export function GameView({ connection }: { connection: Connection }) {
+export function GameView({ connection, decorations }: { connection: Connection; decorations: DecorationState[] }) {
   const parent = useRef<HTMLDivElement>(null)
   const [hud, setHud] = useState<GameState>()
 
   useEffect(() => {
     const scene = new GameScene('game')
+    scene.decorations = decorations
     const game = new Phaser.Game({
       type: Phaser.AUTO,
       parent: parent.current!,
@@ -238,7 +281,7 @@ export function GameView({ connection }: { connection: Connection }) {
       stopState()
       game.destroy(true)
     }
-  }, [connection])
+  }, [connection, decorations])
 
   return (
     <>
