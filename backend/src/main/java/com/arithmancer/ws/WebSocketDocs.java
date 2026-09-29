@@ -74,8 +74,8 @@ public class WebSocketDocs {
 						and nobody can join after. \
 						Reply, to every player: `{"type":"gameStarted","content":{"code":"KQXB","players":["Marco","Ana"]}}`
 						- `{"type":"answer","content":{"value":4}}` answers a question during a game. Of the enemies in your \
-						view with that answer, the nearest takes a hit. After a hit, your answers are ignored for a \
-						cooldown (1 second). No reply: the hit shows up in the next state.
+						view with that answer, the nearest takes a hit. After any answer, right or wrong, your answers are \
+						ignored for a cooldown (1 second). No reply: the hit shows up in the next state.
 
 						During a game, every player gets the state 20 times per second. `time` is the seconds since the run \
 						started, `score` counts the enemies a player killed, `you` marks the receiving player, \
