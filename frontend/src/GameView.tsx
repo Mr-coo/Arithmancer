@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import type { Connection, GameState, PlayerState, ShotState } from './connection'
 
 // Physical key positions, so WASD also works on other keyboard layouts.
@@ -12,8 +12,6 @@ const HEALTH_BAR_HEIGHT = 4
 const ENEMY_RADIUS = 14
 const PROJECTILE_RADIUS = 6
 const PROJECTILE_MS = 250
-// Keeps typed answers within the whole numbers the server accepts.
-const MAX_ANSWER_DIGITS = 6
 // Players draw above enemies, so an enemy on top of a player does not hide their name or health.
 const PLAYER_DEPTH = 1
 // Share of the remaining distance covered each frame, to smooth the 20 updates per second.
@@ -142,7 +140,6 @@ class GameScene extends Phaser.Scene {
 
 export function GameView({ connection }: { connection: Connection }) {
   const parent = useRef<HTMLDivElement>(null)
-  const [answer, setAnswer] = useState('')
 
   useEffect(() => {
     const scene = new GameScene('game')
@@ -159,21 +156,12 @@ export function GameView({ connection }: { connection: Connection }) {
     })
 
     const held = new Set<string>()
-    let typed = ''
     const onKeyDown = (event: KeyboardEvent) => {
+      // Answers are one digit, so pressing it shoots. Ignore auto-repeat while the key is held.
       if (/^[0-9]$/.test(event.key)) {
-        if (typed.length < MAX_ANSWER_DIGITS) {
-          typed += event.key
-          setAnswer(typed)
+        if (!event.repeat) {
+          connection.send('answer', { value: Number(event.key) })
         }
-        return
-      }
-      if (event.key === 'Backspace' || event.key === 'Enter') {
-        if (event.key === 'Enter' && typed) {
-          connection.send('answer', { value: Number(typed) })
-        }
-        typed = event.key === 'Backspace' ? typed.slice(0, -1) : ''
-        setAnswer(typed)
         return
       }
       const key = MOVE_KEYS[event.code]
@@ -206,10 +194,5 @@ export function GameView({ connection }: { connection: Connection }) {
     }
   }, [connection])
 
-  return (
-    <>
-      <div ref={parent} className="game" />
-      <p className="answer">{answer || <span className="placeholder">Type the answer, then Enter</span>}</p>
-    </>
-  )
+  return <div ref={parent} className="game" />
 }

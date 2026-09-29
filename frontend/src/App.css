@@ -84,26 +84,6 @@ button {
   inset: 0;
 }
 
-.answer {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
-  min-width: 120px;
-  padding: 4px 16px;
-  border-radius: 6px;
-  text-align: center;
-  font-size: 28px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.4);
-  pointer-events: none;
-
-  .placeholder {
-    font-size: 14px;
-    color: #9ca3af;
-  }
-}
-
 .hint {
   position: fixed;
   left: 16px;

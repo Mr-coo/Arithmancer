@@ -46,7 +46,7 @@ function App() {
     return (
       <>
         <GameView connection={connection} />
-        <p className="hint">Move with WASD</p>
+        <p className="hint">Move with WASD. Press an enemy's answer (0-9) to shoot it.</p>
       </>
     )
   }
