@@ -14,7 +14,9 @@ const PROJECTILE_RADIUS = 6
 const PROJECTILE_MS = 250
 // Players draw above enemies, so an enemy on top of a player does not hide their name or health.
 const PLAYER_DEPTH = 1
-// Share of the remaining distance covered each frame, to smooth the 20 updates per second.
+// The server sends the state 20 times per second.
+const TICKS_PER_SECOND = 20
+// Share of the remaining distance covered each frame, to smooth those updates.
 const SMOOTHING = 0.3
 
 type Sprite = {
@@ -24,7 +26,15 @@ type Sprite = {
   healthFill: Phaser.GameObjects.Rectangle
 }
 
-type EnemySprite = { body: Phaser.GameObjects.Arc; question: Phaser.GameObjects.Text }
+type Point = { x: number; y: number }
+
+type EnemySprite = {
+  body: Phaser.GameObjects.Arc
+  question: Phaser.GameObjects.Text
+  // Latest server position, and how fast it moved (units per second).
+  target: Point
+  velocity: Point
+}
 
 class GameScene extends Phaser.Scene {
   latest: GameState = { players: [], enemies: [], shots: [] }
@@ -47,7 +57,7 @@ class GameScene extends Phaser.Scene {
     this.scale.on('resize', (size: Phaser.Structs.Size) => this.grid?.setSize(size.width, size.height))
   }
 
-  update() {
+  update(_time: number, delta: number) {
     this.latest.players.forEach((player, i) => {
       const sprite = this.sprites[i] ?? this.addSprite(player)
       sprite.body.x += (player.x - sprite.body.x) * SMOOTHING
@@ -61,7 +71,7 @@ class GameScene extends Phaser.Scene {
       sprite.label.setPosition(sprite.body.x, barY - 14)
     })
     this.launchShots()
-    this.updateEnemies()
+    this.updateEnemies(delta)
     // Keep the screen-sized grid lined up with the world as the camera moves.
     const camera = this.cameras.main
     this.grid?.setTilePosition(camera.scrollX, camera.scrollY)
@@ -71,19 +81,28 @@ class GameScene extends Phaser.Scene {
   private launchShots() {
     for (const shot of this.pendingShots.splice(0)) {
       const from = this.sprites[shot.player]?.body
-      const to = this.enemySprites.get(shot.enemy)?.body
-      if (!from || !to) {
+      const enemy = this.enemySprites.get(shot.enemy)
+      if (!from || !enemy) {
         continue
       }
       this.targeted.add(shot.enemy)
-      const projectile = this.add.circle(from.x, from.y, PROJECTILE_RADIUS, 0xfacc15).setDepth(PLAYER_DEPTH)
-      this.tweens.add({
-        targets: projectile,
-        x: to.x,
-        y: to.y,
-        alpha: 0,
-        scale: 0.3,
+      const start = { x: from.x, y: from.y }
+      const projectile = this.add.circle(start.x, start.y, PROJECTILE_RADIUS, 0xfacc15).setDepth(PLAYER_DEPTH)
+      this.tweens.addCounter({
+        from: 0,
+        to: 1,
         duration: PROJECTILE_MS,
+        // Aim at where the enemy is now, so the projectile lands on it while it keeps moving.
+        onUpdate: (tween) => {
+          const progress = tween.getValue() ?? 1
+          projectile
+            .setPosition(
+              start.x + (enemy.body.x - start.x) * progress,
+              start.y + (enemy.body.y - start.y) * progress,
+            )
+            .setAlpha(1 - progress)
+            .setScale(1 - 0.7 * progress)
+        },
         onComplete: () => {
           projectile.destroy()
           this.targeted.delete(shot.enemy)
@@ -92,7 +111,7 @@ class GameScene extends Phaser.Scene {
     }
   }
 
-  private updateEnemies() {
+  private updateEnemies(delta: number) {
     const ids = new Set<number>()
     for (const enemy of this.latest.enemies) {
       ids.add(enemy.id)
@@ -103,20 +122,36 @@ class GameScene extends Phaser.Scene {
           question: this.add
             .text(enemy.x, enemy.y, '', { fontFamily: 'system-ui', fontSize: '16px', fontStyle: 'bold' })
             .setOrigin(0.5),
+          target: { x: enemy.x, y: enemy.y },
+          velocity: { x: 0, y: 0 },
         }
         this.enemySprites.set(enemy.id, sprite)
       }
-      sprite.body.x += (enemy.x - sprite.body.x) * SMOOTHING
-      sprite.body.y += (enemy.y - sprite.body.y) * SMOOTHING
-      sprite.question.setText(enemy.question).setPosition(sprite.body.x, sprite.body.y - ENEMY_RADIUS - 12)
-    }
-    // Remove enemies the server no longer sends, once any projectile at them has arrived.
-    for (const [id, sprite] of this.enemySprites) {
-      if (!ids.has(id) && !this.targeted.has(id)) {
-        sprite.body.destroy()
-        sprite.question.destroy()
-        this.enemySprites.delete(id)
+      if (enemy.x !== sprite.target.x || enemy.y !== sprite.target.y) {
+        sprite.velocity = {
+          x: (enemy.x - sprite.target.x) * TICKS_PER_SECOND,
+          y: (enemy.y - sprite.target.y) * TICKS_PER_SECOND,
+        }
+        sprite.target = { x: enemy.x, y: enemy.y }
       }
+      sprite.question.setText(enemy.question)
+    }
+    for (const [id, sprite] of this.enemySprites) {
+      if (!ids.has(id)) {
+        // Remove enemies the server no longer sends, once any projectile at them has arrived.
+        if (!this.targeted.has(id)) {
+          sprite.body.destroy()
+          sprite.question.destroy()
+          this.enemySprites.delete(id)
+          continue
+        }
+        // Until then, keep it moving the way it was going.
+        sprite.target.x += (sprite.velocity.x * delta) / 1000
+        sprite.target.y += (sprite.velocity.y * delta) / 1000
+      }
+      sprite.body.x += (sprite.target.x - sprite.body.x) * SMOOTHING
+      sprite.body.y += (sprite.target.y - sprite.body.y) * SMOOTHING
+      sprite.question.setPosition(sprite.body.x, sprite.body.y - ENEMY_RADIUS - 12)
     }
   }
 
