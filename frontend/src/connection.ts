@@ -4,6 +4,9 @@ export type PlayerState = {
   y: number
   health: number
   maxHealth: number
+  // Seconds until the player can shoot again, out of maxCooldown.
+  cooldown: number
+  maxCooldown: number
   you: boolean
 }
 

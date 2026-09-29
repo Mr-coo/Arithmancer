@@ -9,6 +9,7 @@ const GRID_SIZE = 64
 const PLAYER_RADIUS = 16
 const HEALTH_BAR_WIDTH = 32
 const HEALTH_BAR_HEIGHT = 4
+const COOLDOWN_BAR_HEIGHT = 2
 const ENEMY_RADIUS = 14
 const PROJECTILE_RADIUS = 6
 const PROJECTILE_MS = 250
@@ -24,6 +25,7 @@ type Sprite = {
   label: Phaser.GameObjects.Text
   healthBack: Phaser.GameObjects.Rectangle
   healthFill: Phaser.GameObjects.Rectangle
+  cooldownFill: Phaser.GameObjects.Rectangle
 }
 
 type Point = { x: number; y: number }
@@ -68,6 +70,11 @@ class GameScene extends Phaser.Scene {
       sprite.healthFill
         .setPosition(barX, barY)
         .setScale(Phaser.Math.Clamp(player.health / player.maxHealth, 0, 1), 1)
+      // Shrinks as the shot cooldown runs out, hidden once the player can shoot.
+      sprite.cooldownFill
+        .setVisible(player.cooldown > 0)
+        .setPosition(barX, barY + HEALTH_BAR_HEIGHT / 2 + COOLDOWN_BAR_HEIGHT)
+        .setScale(Phaser.Math.Clamp(player.cooldown / player.maxCooldown, 0, 1), 1)
       sprite.label.setPosition(sprite.body.x, barY - 14)
     })
     this.launchShots()
@@ -163,6 +170,7 @@ class GameScene extends Phaser.Scene {
         .setOrigin(0.5),
       healthBack: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 0x7f1d1d).setOrigin(0, 0.5),
       healthFill: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 0x4ade80).setOrigin(0, 0.5),
+      cooldownFill: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, COOLDOWN_BAR_HEIGHT, 0xfacc15).setOrigin(0, 0.5),
     }
     Object.values(sprite).forEach((part) => part.setDepth(PLAYER_DEPTH))
     this.sprites.push(sprite)
