@@ -6,9 +6,9 @@ import com.arithmancer.entity.Position;
 // and a character touching its cover circle is behind it.
 public record Decoration(String type, Circle solid, Circle cover) {
 
-	// Starting sizes, to tune during development. The cover sits above the base, like a tree's canopy.
+	// Sizes match the frontend's sprites. The cover sits above the base, like a tree's canopy.
 	public static Decoration tree(Position base) {
-		return new Decoration("tree", new Circle(base, 14), new Circle(new Position(base.x(), base.y() - 36), 44));
+		return new Decoration("tree", new Circle(base, 14), new Circle(new Position(base.x(), base.y() - 67), 50));
 	}
 
 	public static Decoration stone(Position base) {

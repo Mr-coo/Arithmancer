@@ -74,7 +74,7 @@ public class WebSocketDocs {
 						and nobody can join after. \
 						Reply, to every player, with the trees and stones on the map. Players cannot walk into a \
 						decoration's solid circle (`x`, `y`, `radius`); a character touching its cover circle is behind it: \
-						`{"type":"gameStarted","content":{"code":"KQXB","players":["Marco","Ana"],"decorations":[{"type":"tree","x":320.0,"y":-140.0,"radius":14.0,"coverX":320.0,"coverY":-176.0,"coverRadius":44.0}]}}`
+						`{"type":"gameStarted","content":{"code":"KQXB","players":["Marco","Ana"],"decorations":[{"type":"tree","x":320.0,"y":-140.0,"radius":14.0,"coverX":320.0,"coverY":-207.0,"coverRadius":50.0}]}}`
 						- `{"type":"answer","content":{"value":4}}` answers a question during a game. Of the enemies in your \
 						view with that answer, the nearest takes a hit. After any answer, right or wrong, your answers are \
 						ignored for a cooldown (1 second). No reply: the hit shows up in the next state.
