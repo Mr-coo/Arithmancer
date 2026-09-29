@@ -1,19 +1,45 @@
 import Phaser from 'phaser'
 import { useEffect, useRef, useState } from 'react'
+import {
+  ARROW,
+  archerKey,
+  createAnimations,
+  ghostKey,
+  GRASS_FRAME,
+  GROUND,
+  PLAYER_COLORS,
+  preloadAssets,
+  ROCKS,
+  TREE,
+} from './assets'
 import type { Connection, DecorationState, GameState, PlayerState, ShotState } from './connection'
 import { formatTime } from './format'
 
 // Physical key positions, so WASD also works on other keyboard layouts.
 const MOVE_KEYS: Record<string, string> = { KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd' }
 
-const GRID_SIZE = 64
 const PLAYER_RADIUS = 16
 const HEALTH_BAR_WIDTH = 32
 const HEALTH_BAR_HEIGHT = 4
 const COOLDOWN_BAR_HEIGHT = 2
-const ENEMY_RADIUS = 14
-const PROJECTILE_RADIUS = 6
 const PROJECTILE_MS = 250
+// Sprite sizes and anchors, measured from the Tiny Swords sheets. Characters stand with their feet on their position.
+const UNIT_SCALE = 0.5
+const ARCHER_FEET = { x: 95 / 192, y: 128 / 192 }
+const GHOST_FEET = { x: 97 / 192, y: 129 / 192 }
+// From the feet to the top of the head, and to the chest where arrows leave and land.
+const UNIT_HEIGHT = 40
+const AIM_HEIGHT = 20
+const TREE_SCALE = 0.74
+// The middle of the trunk, which sits on the tree's solid circle.
+const TREE_BASE = { x: 98 / 192, y: 224 / 256 }
+// Width of each rock in ROCKS, so it can be scaled to its solid circle.
+const ROCK_WIDTHS = [46, 54]
+const ROCK_CENTER_Y = 33 / 64
+const ARROW_SCALE = 0.6
+const GHOST_ALPHA = 0.75
+// 8 frames at 24 per second.
+const SHOOT_MS = 333
 // Draw order, bottom to top: players behind a decoration, decorations, enemies (ghosts float over decorations),
 // then the other players, so an enemy on top of a player does not hide their name or health.
 const BEHIND_DEPTH = 1
@@ -26,9 +52,11 @@ const BEHIND_ALPHA = 0.5
 const TICKS_PER_SECOND = 20
 // Share of the remaining distance covered each frame, to smooth those updates.
 const SMOOTHING = 0.3
+// Below this many pixels of movement per frame, a character plays its idle animation.
+const MOVING = 0.5
 
 type Sprite = {
-  body: Phaser.GameObjects.Arc
+  body: Phaser.GameObjects.Sprite
   label: Phaser.GameObjects.Text
   healthBack: Phaser.GameObjects.Rectangle
   healthFill: Phaser.GameObjects.Rectangle
@@ -38,14 +66,14 @@ type Sprite = {
 type Point = { x: number; y: number }
 
 type EnemySprite = {
-  body: Phaser.GameObjects.Arc
+  body: Phaser.GameObjects.Sprite
   question: Phaser.GameObjects.Text
   // Latest server position, and how fast it moved (units per second).
   target: Point
   velocity: Point
 }
 
-type DecorationSprite = { decoration: DecorationState; parts: Phaser.GameObjects.Arc[] }
+type DecorationSprite = { decoration: DecorationState; object: Phaser.GameObjects.Image }
 
 // A character touching a decoration's cover circle is behind it.
 function isBehind(point: Point, decoration: DecorationState) {
@@ -54,49 +82,66 @@ function isBehind(point: Point, decoration: DecorationState) {
   )
 }
 
+const colorOf = (player: number) => PLAYER_COLORS[player % PLAYER_COLORS.length]
+
 class GameScene extends Phaser.Scene {
   latest: GameState = { time: 0, players: [], enemies: [], shots: [] }
   pendingShots: ShotState[] = []
   decorations: DecorationState[] = []
   private decorationSprites: DecorationSprite[] = []
   private sprites: Sprite[] = []
+  // When each player's shoot animation ends, by player index.
+  private shootingUntil: number[] = []
   private enemySprites = new Map<number, EnemySprite>()
   // Enemies with a projectile on the way, kept on screen until it arrives.
   private targeted = new Set<number>()
-  private grid?: Phaser.GameObjects.TileSprite
+  private ground?: Phaser.GameObjects.TileSprite
+
+  preload() {
+    preloadAssets(this)
+  }
 
   create() {
-    const lines = this.make.graphics({}, false)
-    lines.lineStyle(1, 0xffffff, 0.08).strokeRect(0, 0, GRID_SIZE, GRID_SIZE)
-    lines.generateTexture('grid', GRID_SIZE, GRID_SIZE)
-    lines.destroy()
-    this.grid = this.add
-      .tileSprite(0, 0, this.scale.width, this.scale.height, 'grid')
+    createAnimations(this)
+    this.ground = this.add
+      .tileSprite(0, 0, this.scale.width, this.scale.height, GROUND, GRASS_FRAME)
       .setOrigin(0)
       .setScrollFactor(0)
-    this.scale.on('resize', (size: Phaser.Structs.Size) => this.grid?.setSize(size.width, size.height))
-    // Circles for now: a tree is a trunk (its solid circle) under a canopy (its cover circle), a stone one circle.
-    this.decorationSprites = this.decorations.map((decoration) => {
-      const parts =
+    this.scale.on('resize', (size: Phaser.Structs.Size) => this.ground?.setSize(size.width, size.height))
+    // Trees stand with the middle of their trunk on the solid circle; rocks are scaled to fill it.
+    this.decorationSprites = this.decorations.map((decoration, i) => {
+      const object =
         decoration.type === 'tree'
-          ? [
-              this.add.circle(decoration.x, decoration.y, decoration.radius, 0x7c4a2d),
-              this.add.circle(decoration.coverX, decoration.coverY, decoration.coverRadius, 0x2f7d4f),
-            ]
-          : [this.add.circle(decoration.x, decoration.y, decoration.radius, 0x8b8f98)]
-      parts.forEach((part) => part.setDepth(DECORATION_DEPTH))
-      return { decoration, parts }
+          ? this.add
+              .sprite(decoration.x, decoration.y, TREE)
+              .setOrigin(TREE_BASE.x, TREE_BASE.y)
+              .setScale(TREE_SCALE)
+              .play({ key: TREE, startFrame: i % 8 })
+          : this.add
+              .image(decoration.x, decoration.y, ROCKS[i % ROCKS.length])
+              .setOrigin(0.5, ROCK_CENTER_Y)
+              .setScale((2 * decoration.radius) / ROCK_WIDTHS[i % ROCKS.length])
+      object.setDepth(DECORATION_DEPTH)
+      return { decoration, object }
     })
   }
 
-  update(_time: number, delta: number) {
+  update(time: number, delta: number) {
     let coveringYou = new Set<DecorationState>()
     this.latest.players.forEach((player, i) => {
-      const sprite = this.sprites[i] ?? this.addSprite(player)
-      sprite.body.x += (player.x - sprite.body.x) * SMOOTHING
-      sprite.body.y += (player.y - sprite.body.y) * SMOOTHING
+      const sprite = this.sprites[i] ?? this.addSprite(player, i)
+      const dx = player.x - sprite.body.x
+      const dy = player.y - sprite.body.y
+      sprite.body.x += dx * SMOOTHING
+      sprite.body.y += dy * SMOOTHING
+      if (Math.abs(dx) > MOVING) {
+        sprite.body.setFlipX(dx < 0)
+      }
+      if (time >= (this.shootingUntil[i] ?? 0)) {
+        sprite.body.play(archerKey(colorOf(i), Math.hypot(dx, dy) > MOVING ? 'run' : 'idle'), true)
+      }
       const barX = sprite.body.x - HEALTH_BAR_WIDTH / 2
-      const barY = sprite.body.y - PLAYER_RADIUS - 8
+      const barY = sprite.body.y - UNIT_HEIGHT - 6
       sprite.healthBack.setPosition(barX, barY)
       sprite.healthFill
         .setPosition(barX, barY)
@@ -116,44 +161,45 @@ class GameScene extends Phaser.Scene {
         coveringYou = new Set(covering)
       }
     })
-    for (const { decoration, parts } of this.decorationSprites) {
-      parts.forEach((part) => part.setAlpha(coveringYou.has(decoration) ? BEHIND_ALPHA : 1))
+    for (const { decoration, object } of this.decorationSprites) {
+      object.setAlpha(coveringYou.has(decoration) ? BEHIND_ALPHA : 1)
     }
     this.launchShots()
     this.updateEnemies(delta)
-    // Keep the screen-sized grid lined up with the world as the camera moves.
+    // Keep the screen-sized ground lined up with the world as the camera moves.
     const camera = this.cameras.main
-    this.grid?.setTilePosition(camera.scrollX, camera.scrollY)
+    this.ground?.setTilePosition(camera.scrollX, camera.scrollY)
   }
 
-  // Each hit flies from the player to the enemy, fading and shrinking until it disappears.
+  // Each hit is an arrow from the archer to the enemy, fading and shrinking until it disappears.
   private launchShots() {
     for (const shot of this.pendingShots.splice(0)) {
-      const from = this.sprites[shot.player]?.body
+      const archer = this.sprites[shot.player]?.body
       const enemy = this.enemySprites.get(shot.enemy)
-      if (!from || !enemy) {
+      if (!archer || !enemy) {
         continue
       }
       this.targeted.add(shot.enemy)
-      const start = { x: from.x, y: from.y }
-      const projectile = this.add.circle(start.x, start.y, PROJECTILE_RADIUS, 0xfacc15).setDepth(PLAYER_DEPTH)
+      this.shootingUntil[shot.player] = this.time.now + SHOOT_MS
+      archer.setFlipX(enemy.body.x < archer.x).play(archerKey(colorOf(shot.player), 'shoot'))
+      const start = { x: archer.x, y: archer.y - AIM_HEIGHT }
+      const arrow = this.add.image(start.x, start.y, ARROW).setScale(ARROW_SCALE).setDepth(PLAYER_DEPTH)
       this.tweens.addCounter({
         from: 0,
         to: 1,
         duration: PROJECTILE_MS,
-        // Aim at where the enemy is now, so the projectile lands on it while it keeps moving.
+        // Aim at where the enemy is now, so the arrow lands on it while it keeps moving.
         onUpdate: (tween) => {
           const progress = tween.getValue() ?? 1
-          projectile
-            .setPosition(
-              start.x + (enemy.body.x - start.x) * progress,
-              start.y + (enemy.body.y - start.y) * progress,
-            )
+          const target = { x: enemy.body.x, y: enemy.body.y - AIM_HEIGHT }
+          arrow
+            .setPosition(start.x + (target.x - start.x) * progress, start.y + (target.y - start.y) * progress)
+            .setRotation(Math.atan2(target.y - start.y, target.x - start.x))
             .setAlpha(1 - progress)
-            .setScale(1 - 0.7 * progress)
+            .setScale(ARROW_SCALE * (1 - 0.5 * progress))
         },
         onComplete: () => {
-          projectile.destroy()
+          arrow.destroy()
           this.targeted.delete(shot.enemy)
         },
       })
@@ -167,7 +213,12 @@ class GameScene extends Phaser.Scene {
       let sprite = this.enemySprites.get(enemy.id)
       if (!sprite) {
         sprite = {
-          body: this.add.circle(enemy.x, enemy.y, ENEMY_RADIUS, 0xef4444).setDepth(ENEMY_DEPTH),
+          body: this.add
+            .sprite(enemy.x, enemy.y, ghostKey('run'))
+            .setOrigin(GHOST_FEET.x, GHOST_FEET.y)
+            .setScale(UNIT_SCALE)
+            .setAlpha(GHOST_ALPHA)
+            .setDepth(ENEMY_DEPTH),
           question: this.add
             .text(enemy.x, enemy.y, '', { fontFamily: 'system-ui', fontSize: '16px', fontStyle: 'bold' })
             .setOrigin(0.5)
@@ -188,7 +239,7 @@ class GameScene extends Phaser.Scene {
     }
     for (const [id, sprite] of this.enemySprites) {
       if (!ids.has(id)) {
-        // Remove enemies the server no longer sends, once any projectile at them has arrived.
+        // Remove enemies the server no longer sends, once any arrow at them has arrived.
         if (!this.targeted.has(id)) {
           sprite.body.destroy()
           sprite.question.destroy()
@@ -201,13 +252,20 @@ class GameScene extends Phaser.Scene {
       }
       sprite.body.x += (sprite.target.x - sprite.body.x) * SMOOTHING
       sprite.body.y += (sprite.target.y - sprite.body.y) * SMOOTHING
-      sprite.question.setPosition(sprite.body.x, sprite.body.y - ENEMY_RADIUS - 12)
+      if (Math.abs(sprite.velocity.x) > MOVING) {
+        sprite.body.setFlipX(sprite.velocity.x < 0)
+      }
+      sprite.body.play(ghostKey(Math.hypot(sprite.velocity.x, sprite.velocity.y) > MOVING ? 'run' : 'idle'), true)
+      sprite.question.setPosition(sprite.body.x, sprite.body.y - UNIT_HEIGHT - 12)
     }
   }
 
-  private addSprite(player: PlayerState): Sprite {
+  private addSprite(player: PlayerState, index: number): Sprite {
     const sprite = {
-      body: this.add.circle(player.x, player.y, PLAYER_RADIUS, player.you ? 0x7c5cff : 0x3ec9a7),
+      body: this.add
+        .sprite(player.x, player.y, archerKey(colorOf(index), 'idle'))
+        .setOrigin(ARCHER_FEET.x, ARCHER_FEET.y)
+        .setScale(UNIT_SCALE),
       label: this.add
         .text(player.x, player.y, player.nickname, { fontFamily: 'system-ui', fontSize: '14px' })
         .setOrigin(0.5),

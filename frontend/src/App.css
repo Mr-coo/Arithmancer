@@ -134,6 +134,9 @@ button {
   position: fixed;
   left: 16px;
   bottom: 16px;
-  color: #9ca3af;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #f3f4f6;
+  background: rgba(0, 0, 0, 0.4);
   pointer-events: none;
 }
