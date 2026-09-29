@@ -48,16 +48,15 @@ const ROCK_SIZES = [
 ]
 const DETAIL_SCALE = 0.75
 const ARROW_SCALE = 0.6
-// Enemies are ghosts that walk through trees and stones, so they are drawn slightly see-through.
-const GHOST_ALPHA = 0.75
 // 8 frames at 24 per second.
 const SHOOT_MS = 333
 // A dead player is a skull, standing where its shadow rests in the 128x128 frame.
 const SKULL_FEET = { x: 67 / 128, y: 94 / 128 }
 const SKULL_SCALE = 0.6
 const EXPLOSION_SCALE = 0.7
-// Draw order, bottom to top: details on the ground, players behind a decoration, decorations, enemies (ghosts float
-// over decorations), then the other players, so an enemy on top of a player does not hide their name or health.
+// Draw order, bottom to top: details on the ground, characters behind a decoration, decorations, enemies, then the
+// other players, so an enemy on top of a player does not hide their name or health. Enemies' questions always stay
+// above decorations, so they can be read.
 const DETAIL_DEPTH = 0
 const BEHIND_DEPTH = 1
 const DECORATION_DEPTH = 2
@@ -256,9 +255,7 @@ class GameScene extends Phaser.Scene {
           body: this.add
             .sprite(enemy.x, enemy.y, GOBLIN)
             .setOrigin(GOBLIN_FEET.x, GOBLIN_FEET.y)
-            .setScale(UNIT_SCALE)
-            .setAlpha(GHOST_ALPHA)
-            .setDepth(ENEMY_DEPTH),
+            .setScale(UNIT_SCALE),
           question: this.add
             .text(enemy.x, enemy.y, '', { fontFamily: 'system-ui', fontSize: '16px', fontStyle: 'bold' })
             .setOrigin(0.5)
@@ -299,6 +296,8 @@ class GameScene extends Phaser.Scene {
       }
       sprite.body.x += (sprite.target.x - sprite.body.x) * SMOOTHING
       sprite.body.y += (sprite.target.y - sprite.body.y) * SMOOTHING
+      const behind = this.decorations.some((decoration) => isBehind(sprite.body, decoration))
+      sprite.body.setDepth(behind ? BEHIND_DEPTH : ENEMY_DEPTH)
       if (Math.abs(sprite.velocity.x) > MOVING) {
         sprite.body.setFlipX(sprite.velocity.x < 0)
       }

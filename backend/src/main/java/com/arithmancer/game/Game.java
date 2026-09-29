@@ -9,6 +9,7 @@ import com.arithmancer.entity.Enemy;
 import com.arithmancer.entity.Position;
 import com.arithmancer.map.Decoration;
 import com.arithmancer.map.Detail;
+import com.arithmancer.map.PathFinder;
 import com.arithmancer.math.Question;
 import com.arithmancer.room.Player;
 
@@ -47,6 +48,7 @@ public class Game {
 	private final Random random = new Random();
 	private final List<Decoration> decorations;
 	private final List<Detail> details;
+	private final PathFinder pathFinder;
 	private double secondsUntilSpawn = SPAWN_INTERVAL_SECONDS;
 	private int nextEnemyId;
 	private double elapsedSeconds;
@@ -56,6 +58,7 @@ public class Game {
 		this.players = List.copyOf(players);
 		this.decorations = scatterDecorations();
 		this.details = scatterDetails();
+		this.pathFinder = new PathFinder(decorations, ENEMY_RADIUS);
 	}
 
 	public String getCode() {
@@ -114,14 +117,15 @@ public class Game {
 		// Divide by the direction's length so diagonal moves are not faster.
 		double step = player.getSpeed() * deltaSeconds / Math.hypot(dx, dy);
 		Position position = player.getPosition();
-		player.setPosition(pushOutOfDecorations(new Position(position.x() + dx * step, position.y() + dy * step)));
+		player.setPosition(pushOutOfDecorations(new Position(position.x() + dx * step, position.y() + dy * step),
+				PLAYER_RADIUS));
 	}
 
-	// Players cannot walk into a decoration's solid circle: push them back to its edge, so they slide around it.
-	private Position pushOutOfDecorations(Position position) {
+	// Characters cannot walk into a decoration's solid circle: push them back to its edge, so they slide around it.
+	private Position pushOutOfDecorations(Position position, double radius) {
 		for (Decoration decoration : decorations) {
 			Position center = decoration.solid().center();
-			double minDistance = decoration.solid().radius() + PLAYER_RADIUS;
+			double minDistance = decoration.solid().radius() + radius;
 			double distance = position.distanceTo(center);
 			if (distance < minDistance && distance > 0) {
 				double scale = minDistance / distance;
@@ -210,8 +214,9 @@ public class Game {
 		secondsUntilSpawn = SPAWN_INTERVAL_SECONDS;
 		Position center = standing.get(random.nextInt(standing.size())).getPosition();
 		double angle = random.nextDouble(2 * Math.PI);
-		enemies.add(new Enemy(nextEnemyId++, new Position(center.x() + Math.cos(angle) * SPAWN_DISTANCE,
-				center.y() + Math.sin(angle) * SPAWN_DISTANCE), Question.random(random)));
+		Position position = pushOutOfDecorations(new Position(center.x() + Math.cos(angle) * SPAWN_DISTANCE,
+				center.y() + Math.sin(angle) * SPAWN_DISTANCE), ENEMY_RADIUS);
+		enemies.add(new Enemy(nextEnemyId++, position, Question.random(random)));
 	}
 
 	private void chase(Enemy enemy, double deltaSeconds) {
@@ -222,15 +227,15 @@ public class Game {
 		if (target == null) {
 			return;
 		}
-		Position to = target.getPosition();
+		Position to = pathFinder.waypoint(from, target.getPosition());
 		double distance = from.distanceTo(to);
 		double step = enemy.getSpeed() * deltaSeconds;
 		if (distance <= step) {
 			enemy.setPosition(to);
 			return;
 		}
-		enemy.setPosition(new Position(from.x() + (to.x() - from.x()) / distance * step,
-				from.y() + (to.y() - from.y()) / distance * step));
+		enemy.setPosition(pushOutOfDecorations(new Position(from.x() + (to.x() - from.x()) / distance * step,
+				from.y() + (to.y() - from.y()) / distance * step), ENEMY_RADIUS));
 	}
 
 	// An enemy touching a standing player deals its attack as damage, then disappears.
