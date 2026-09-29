@@ -20,7 +20,9 @@ public sealed interface ServerMessage {
 			implements ServerMessage {
 	}
 
-	record PlayerState(String nickname, double x, double y, int health, int maxHealth, boolean you) {
+	// cooldown: seconds until the player can shoot again, out of maxCooldown.
+	record PlayerState(String nickname, double x, double y, int health, int maxHealth, double cooldown,
+			double maxCooldown, boolean you) {
 	}
 
 	record EnemyState(int id, double x, double y, String question) {

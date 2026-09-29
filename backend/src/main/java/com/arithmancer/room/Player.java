@@ -14,11 +14,14 @@ public class Player extends Entity {
 	private static final int MAX_HEALTH = 100;
 	private static final int ATTACK = 1;
 	private static final double SPEED = 200;
+	private static final double SHOT_COOLDOWN_SECONDS = 3;
 
 	private final String sessionId;
 	private final String nickname;
 	private final Set<String> heldKeys = ConcurrentHashMap.newKeySet();
 	private final Queue<Integer> answers = new ConcurrentLinkedQueue<>();
+	// Seconds until the player can shoot again.
+	private double shotCooldown;
 
 	public Player(String sessionId, String nickname) {
 		super(MAX_HEALTH, ATTACK, SPEED, new Position(0, 0));
@@ -53,6 +56,22 @@ public class Player extends Entity {
 	// The next answer waiting for the game tick, or null when there is none.
 	public Integer pollAnswer() {
 		return answers.poll();
+	}
+
+	public double getShotCooldown() {
+		return shotCooldown;
+	}
+
+	public double getMaxShotCooldown() {
+		return SHOT_COOLDOWN_SECONDS;
+	}
+
+	public void startShotCooldown() {
+		shotCooldown = SHOT_COOLDOWN_SECONDS;
+	}
+
+	public void coolDown(double deltaSeconds) {
+		shotCooldown = Math.max(0, shotCooldown - deltaSeconds);
 	}
 
 }
