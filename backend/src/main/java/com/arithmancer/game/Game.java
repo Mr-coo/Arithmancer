@@ -75,11 +75,11 @@ public class Game {
 		enemies.removeIf(this::hitPlayer);
 	}
 
-	// y grows downward, as on screen.
+	// y grows downward, as on screen. Dead players cannot move.
 	private static void move(Player player, double deltaSeconds) {
 		int dx = held(player, "d") - held(player, "a");
 		int dy = held(player, "s") - held(player, "w");
-		if (dx == 0 && dy == 0) {
+		if (player.getHealth() <= 0 || (dx == 0 && dy == 0)) {
 			return;
 		}
 		// Divide by the direction's length so diagonal moves are not faster.
