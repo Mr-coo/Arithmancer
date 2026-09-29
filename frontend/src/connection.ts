@@ -9,7 +9,10 @@ export type PlayerState = {
 
 export type EnemyState = { id: number; x: number; y: number; question: string }
 
-export type GameState = { players: PlayerState[]; enemies: EnemyState[] }
+// A hit from the last tick: player is an index in players, enemy is the id of the enemy hit.
+export type ShotState = { player: number; enemy: number }
+
+export type GameState = { players: PlayerState[]; enemies: EnemyState[]; shots: ShotState[] }
 
 type RoomContent = { code: string; players: string[] }
 
@@ -25,6 +28,7 @@ type ClientMessages = {
   joinRoom: { code: string; nickname: string }
   startGame: Record<string, never>
   input: { key: string; action: 'down' | 'up' }
+  answer: { value: number }
 }
 
 type Handler = (content: never) => void

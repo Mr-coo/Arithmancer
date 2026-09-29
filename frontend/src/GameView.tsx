@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
-import { useEffect, useRef } from 'react'
-import type { Connection, GameState, PlayerState } from './connection'
+import { useEffect, useRef, useState } from 'react'
+import type { Connection, GameState, PlayerState, ShotState } from './connection'
 
 // Physical key positions, so WASD also works on other keyboard layouts.
 const MOVE_KEYS: Record<string, string> = { KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd' }
@@ -10,6 +10,10 @@ const PLAYER_RADIUS = 16
 const HEALTH_BAR_WIDTH = 32
 const HEALTH_BAR_HEIGHT = 4
 const ENEMY_RADIUS = 14
+const PROJECTILE_RADIUS = 6
+const PROJECTILE_MS = 250
+// Keeps typed answers within the whole numbers the server accepts.
+const MAX_ANSWER_DIGITS = 6
 // Players draw above enemies, so an enemy on top of a player does not hide their name or health.
 const PLAYER_DEPTH = 1
 // Share of the remaining distance covered each frame, to smooth the 20 updates per second.
@@ -25,9 +29,12 @@ type Sprite = {
 type EnemySprite = { body: Phaser.GameObjects.Arc; question: Phaser.GameObjects.Text }
 
 class GameScene extends Phaser.Scene {
-  latest: GameState = { players: [], enemies: [] }
+  latest: GameState = { players: [], enemies: [], shots: [] }
+  pendingShots: ShotState[] = []
   private sprites: Sprite[] = []
   private enemySprites = new Map<number, EnemySprite>()
+  // Enemies with a projectile on the way, kept on screen until it arrives.
+  private targeted = new Set<number>()
   private grid?: Phaser.GameObjects.TileSprite
 
   create() {
@@ -55,10 +62,36 @@ class GameScene extends Phaser.Scene {
         .setScale(Phaser.Math.Clamp(player.health / player.maxHealth, 0, 1), 1)
       sprite.label.setPosition(sprite.body.x, barY - 14)
     })
+    this.launchShots()
     this.updateEnemies()
     // Keep the screen-sized grid lined up with the world as the camera moves.
     const camera = this.cameras.main
     this.grid?.setTilePosition(camera.scrollX, camera.scrollY)
+  }
+
+  // Each hit flies from the player to the enemy, fading and shrinking until it disappears.
+  private launchShots() {
+    for (const shot of this.pendingShots.splice(0)) {
+      const from = this.sprites[shot.player]?.body
+      const to = this.enemySprites.get(shot.enemy)?.body
+      if (!from || !to) {
+        continue
+      }
+      this.targeted.add(shot.enemy)
+      const projectile = this.add.circle(from.x, from.y, PROJECTILE_RADIUS, 0xfacc15).setDepth(PLAYER_DEPTH)
+      this.tweens.add({
+        targets: projectile,
+        x: to.x,
+        y: to.y,
+        alpha: 0,
+        scale: 0.3,
+        duration: PROJECTILE_MS,
+        onComplete: () => {
+          projectile.destroy()
+          this.targeted.delete(shot.enemy)
+        },
+      })
+    }
   }
 
   private updateEnemies() {
@@ -79,9 +112,9 @@ class GameScene extends Phaser.Scene {
       sprite.body.y += (enemy.y - sprite.body.y) * SMOOTHING
       sprite.question.setText(enemy.question).setPosition(sprite.body.x, sprite.body.y - ENEMY_RADIUS - 12)
     }
-    // Remove enemies the server no longer sends.
+    // Remove enemies the server no longer sends, once any projectile at them has arrived.
     for (const [id, sprite] of this.enemySprites) {
-      if (!ids.has(id)) {
+      if (!ids.has(id) && !this.targeted.has(id)) {
         sprite.body.destroy()
         sprite.question.destroy()
         this.enemySprites.delete(id)
@@ -109,6 +142,7 @@ class GameScene extends Phaser.Scene {
 
 export function GameView({ connection }: { connection: Connection }) {
   const parent = useRef<HTMLDivElement>(null)
+  const [answer, setAnswer] = useState('')
 
   useEffect(() => {
     const scene = new GameScene('game')
@@ -121,10 +155,27 @@ export function GameView({ connection }: { connection: Connection }) {
     })
     const stopState = connection.on('state', (state) => {
       scene.latest = state
+      scene.pendingShots.push(...state.shots)
     })
 
     const held = new Set<string>()
+    let typed = ''
     const onKeyDown = (event: KeyboardEvent) => {
+      if (/^[0-9]$/.test(event.key)) {
+        if (typed.length < MAX_ANSWER_DIGITS) {
+          typed += event.key
+          setAnswer(typed)
+        }
+        return
+      }
+      if (event.key === 'Backspace' || event.key === 'Enter') {
+        if (event.key === 'Enter' && typed) {
+          connection.send('answer', { value: Number(typed) })
+        }
+        typed = event.key === 'Backspace' ? typed.slice(0, -1) : ''
+        setAnswer(typed)
+        return
+      }
       const key = MOVE_KEYS[event.code]
       if (key && !held.has(key)) {
         held.add(key)
@@ -155,5 +206,10 @@ export function GameView({ connection }: { connection: Connection }) {
     }
   }, [connection])
 
-  return <div ref={parent} className="game" />
+  return (
+    <>
+      <div ref={parent} className="game" />
+      <p className="answer">{answer || <span className="placeholder">Type the answer, then Enter</span>}</p>
+    </>
+  )
 }
