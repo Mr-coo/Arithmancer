@@ -30,6 +30,7 @@ public class Game {
 	private final Random random = new Random();
 	private double secondsUntilSpawn = SPAWN_INTERVAL_SECONDS;
 	private int nextEnemyId;
+	private double elapsedSeconds;
 
 	public Game(String code, List<Player> players) {
 		this.code = code;
@@ -53,8 +54,14 @@ public class Game {
 		return shots;
 	}
 
+	// How long the run has lasted.
+	public double getElapsedSeconds() {
+		return elapsedSeconds;
+	}
+
 	public void tick(double deltaSeconds) {
 		// One simulation step: movement, spawning, questions, damage and revives go here.
+		elapsedSeconds += deltaSeconds;
 		shots.clear();
 		players.forEach(player -> move(player, deltaSeconds));
 		players.forEach(player -> answer(player, deltaSeconds));
@@ -104,6 +111,7 @@ public class Game {
 		target.setHealth(target.getHealth() - player.getAttack());
 		if (target.getHealth() <= 0) {
 			enemies.remove(target);
+			player.addPoint();
 		} else {
 			target.setQuestion(Question.random(random));
 		}

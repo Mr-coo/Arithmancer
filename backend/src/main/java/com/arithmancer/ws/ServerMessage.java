@@ -16,13 +16,14 @@ public sealed interface ServerMessage {
 	record GameStarted(String code, List<String> players) implements ServerMessage {
 	}
 
-	record GameState(List<PlayerState> players, List<EnemyState> enemies, List<ShotState> shots)
+	// time: seconds since the run started.
+	record GameState(double time, List<PlayerState> players, List<EnemyState> enemies, List<ShotState> shots)
 			implements ServerMessage {
 	}
 
-	// cooldown: seconds until the player can shoot again, out of maxCooldown.
+	// cooldown: seconds until the player can shoot again, out of maxCooldown. score: enemies killed.
 	record PlayerState(String nickname, double x, double y, int health, int maxHealth, double cooldown,
-			double maxCooldown, boolean you) {
+			double maxCooldown, int score, boolean you) {
 	}
 
 	record EnemyState(int id, double x, double y, String question) {

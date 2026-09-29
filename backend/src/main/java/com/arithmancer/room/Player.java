@@ -22,6 +22,8 @@ public class Player extends Entity {
 	private final Queue<Integer> answers = new ConcurrentLinkedQueue<>();
 	// Seconds until the player can shoot again.
 	private double shotCooldown;
+	// One point per enemy the player killed.
+	private int score;
 
 	public Player(String sessionId, String nickname) {
 		super(MAX_HEALTH, ATTACK, SPEED, new Position(0, 0));
@@ -72,6 +74,14 @@ public class Player extends Entity {
 
 	public void coolDown(double deltaSeconds) {
 		shotCooldown = Math.max(0, shotCooldown - deltaSeconds);
+	}
+
+	public int getScore() {
+		return score;
+	}
+
+	public void addPoint() {
+		score++;
 	}
 
 }
