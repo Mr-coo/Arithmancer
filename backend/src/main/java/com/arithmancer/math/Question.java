@@ -6,15 +6,17 @@ public record Question(String text, int answer) {
 
 	// Starting range, to tune during development: runs start with small + and -.
 	private static final int MAX_OPERAND = 10;
+	// Answers are one digit, so a single key press answers a question.
+	private static final int MAX_ANSWER = 9;
 
 	public static Question random(Random random) {
-		int a = random.nextInt(MAX_OPERAND + 1);
-		int b = random.nextInt(MAX_OPERAND + 1);
+		int answer = random.nextInt(MAX_ANSWER + 1);
 		if (random.nextBoolean()) {
-			return new Question(a + " + " + b, a + b);
+			int a = random.nextInt(answer + 1);
+			return new Question(a + " + " + (answer - a), answer);
 		}
-		// Subtract the smaller number so the answer stays a whole number >= 0.
-		return new Question(Math.max(a, b) + " - " + Math.min(a, b), Math.abs(a - b));
+		int b = random.nextInt(MAX_OPERAND - answer + 1);
+		return new Question((answer + b) + " - " + b, answer);
 	}
 
 }
