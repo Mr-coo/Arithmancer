@@ -13,7 +13,12 @@ public sealed interface ServerMessage {
 	record Input(String key, KeyAction action) implements ServerMessage {
 	}
 
-	record GameStarted(String code, List<String> players) implements ServerMessage {
+	record GameStarted(String code, List<String> players, List<DecorationState> decorations) implements ServerMessage {
+	}
+
+	// Solid circle at (x, y) with radius; the cover circle marks where a character is behind it.
+	record DecorationState(String type, double x, double y, double radius, double coverX, double coverY,
+			double coverRadius) {
 	}
 
 	// time: seconds since the run started.

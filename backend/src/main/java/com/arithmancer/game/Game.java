@@ -7,6 +7,7 @@ import java.util.Random;
 
 import com.arithmancer.entity.Enemy;
 import com.arithmancer.entity.Position;
+import com.arithmancer.map.Decoration;
 import com.arithmancer.math.Question;
 import com.arithmancer.room.Player;
 
@@ -20,14 +21,24 @@ public class Game {
 	private static final double VIEW_HEIGHT = 720;
 	// Roughly outside the view.
 	private static final double SPAWN_DISTANCE = 750;
-	// Player radius 16 plus enemy radius 14, as drawn by the frontend.
-	private static final double CONTACT_DISTANCE = 30;
+	// Sizes as drawn by the frontend.
+	private static final double PLAYER_RADIUS = 16;
+	private static final double ENEMY_RADIUS = 14;
+	private static final double CONTACT_DISTANCE = PLAYER_RADIUS + ENEMY_RADIUS;
+	// Trees and stones are scattered around the start point, keeping it clear and leaving room to walk between them.
+	private static final int TREES = 60;
+	private static final int STONES = 30;
+	private static final double DECORATION_RANGE = 2000;
+	private static final double START_CLEARANCE = 200;
+	private static final double DECORATION_SPACING = 120;
+	private static final Position START = new Position(0, 0);
 
 	private final String code;
 	private final List<Player> players;
 	private final List<Enemy> enemies = new ArrayList<>();
 	private final List<Shot> shots = new ArrayList<>();
 	private final Random random = new Random();
+	private final List<Decoration> decorations;
 	private double secondsUntilSpawn = SPAWN_INTERVAL_SECONDS;
 	private int nextEnemyId;
 	private double elapsedSeconds;
@@ -35,6 +46,7 @@ public class Game {
 	public Game(String code, List<Player> players) {
 		this.code = code;
 		this.players = List.copyOf(players);
+		this.decorations = scatterDecorations();
 	}
 
 	public String getCode() {
@@ -47,6 +59,10 @@ public class Game {
 
 	public List<Enemy> getEnemies() {
 		return enemies;
+	}
+
+	public List<Decoration> getDecorations() {
+		return decorations;
 	}
 
 	// Hits from the last tick.
@@ -76,7 +92,7 @@ public class Game {
 	}
 
 	// y grows downward, as on screen. Dead players cannot move.
-	private static void move(Player player, double deltaSeconds) {
+	private void move(Player player, double deltaSeconds) {
 		int dx = held(player, "d") - held(player, "a");
 		int dy = held(player, "s") - held(player, "w");
 		if (player.getHealth() <= 0 || (dx == 0 && dy == 0)) {
@@ -85,7 +101,36 @@ public class Game {
 		// Divide by the direction's length so diagonal moves are not faster.
 		double step = player.getSpeed() * deltaSeconds / Math.hypot(dx, dy);
 		Position position = player.getPosition();
-		player.setPosition(new Position(position.x() + dx * step, position.y() + dy * step));
+		player.setPosition(pushOutOfDecorations(new Position(position.x() + dx * step, position.y() + dy * step)));
+	}
+
+	// Players cannot walk into a decoration's solid circle: push them back to its edge, so they slide around it.
+	private Position pushOutOfDecorations(Position position) {
+		for (Decoration decoration : decorations) {
+			Position center = decoration.solid().center();
+			double minDistance = decoration.solid().radius() + PLAYER_RADIUS;
+			double distance = position.distanceTo(center);
+			if (distance < minDistance && distance > 0) {
+				double scale = minDistance / distance;
+				position = new Position(center.x() + (position.x() - center.x()) * scale,
+						center.y() + (position.y() - center.y()) * scale);
+			}
+		}
+		return position;
+	}
+
+	private List<Decoration> scatterDecorations() {
+		List<Decoration> placed = new ArrayList<>();
+		for (int attempt = 0; attempt < 10_000 && placed.size() < TREES + STONES; attempt++) {
+			Position base = new Position(random.nextDouble(-DECORATION_RANGE, DECORATION_RANGE),
+					random.nextDouble(-DECORATION_RANGE, DECORATION_RANGE));
+			boolean clear = base.distanceTo(START) >= START_CLEARANCE && placed.stream()
+					.allMatch(decoration -> decoration.solid().center().distanceTo(base) >= DECORATION_SPACING);
+			if (clear) {
+				placed.add(placed.size() < TREES ? Decoration.tree(base) : Decoration.stone(base));
+			}
+		}
+		return List.copyOf(placed);
 	}
 
 	private static int held(Player player, String key) {
