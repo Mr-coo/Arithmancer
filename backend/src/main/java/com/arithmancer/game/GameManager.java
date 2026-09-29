@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
 import com.arithmancer.ws.ServerMessage.EnemyState;
+import com.arithmancer.ws.ServerMessage.FinalScore;
+import com.arithmancer.ws.ServerMessage.GameOver;
 import com.arithmancer.ws.ServerMessage.GameState;
 import com.arithmancer.ws.ServerMessage.PlayerState;
 import com.arithmancer.ws.ServerMessage.ShotState;
@@ -50,6 +52,20 @@ public class GameManager {
 		for (Game game : games) {
 			game.tick(1.0 / TICKS_PER_SECOND);
 			sendState(game);
+			if (game.isOver()) {
+				end(game);
+			}
+		}
+	}
+
+	private void end(Game game) {
+		games.remove(game);
+		log.info("Game {} over after {} seconds", game.getCode(), Math.round(game.getElapsedSeconds()));
+		for (Player recipient : game.getPlayers()) {
+			List<FinalScore> scores = game.getPlayers().stream()
+					.map(player -> new FinalScore(player.getNickname(), player.getScore(), player == recipient))
+					.toList();
+			sessionRegistry.send(recipient.getSessionId(), "gameOver", new GameOver(game.getElapsedSeconds(), scores));
 		}
 	}
 

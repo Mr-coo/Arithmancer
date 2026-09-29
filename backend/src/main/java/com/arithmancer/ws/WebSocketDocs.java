@@ -82,6 +82,10 @@ public class WebSocketDocs {
 						and `shots` lists the hits from that tick (`player` is an index in `players`): \
 						`{"type":"state","content":{"time":12.35,"players":[{"nickname":"Marco","x":0.0,"y":-10.0,"health":100,"maxHealth":100,"cooldown":0.5,"maxCooldown":1.0,"score":3,"you":true}],"enemies":[{"id":0,"x":420.0,"y":-310.0,"question":"7 - 3"}],"shots":[{"player":0,"enemy":1}]}}`
 
+						When every player is dead (health 0), the game ends and every player gets the results. \
+						`time` is how long the team survived: \
+						`{"type":"gameOver","content":{"time":83.2,"players":[{"nickname":"Marco","score":5,"you":true},{"nickname":"Ana","score":3,"you":false}]}}`
+
 						Anything else closes the connection with status 1007 (bad data).""")
 				.addParametersItem(new QueryParameter()
 						.name("message")

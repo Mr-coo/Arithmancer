@@ -33,4 +33,11 @@ public sealed interface ServerMessage {
 	record ShotState(int player, int enemy) {
 	}
 
+	// time: seconds the team survived.
+	record GameOver(double time, List<FinalScore> players) implements ServerMessage {
+	}
+
+	record FinalScore(String nickname, int score, boolean you) {
+	}
+
 }

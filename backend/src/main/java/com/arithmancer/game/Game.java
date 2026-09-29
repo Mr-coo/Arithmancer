@@ -59,6 +59,11 @@ public class Game {
 		return elapsedSeconds;
 	}
 
+	// The run is lost once every player is dead.
+	public boolean isOver() {
+		return standingPlayers().isEmpty();
+	}
+
 	public void tick(double deltaSeconds) {
 		// One simulation step: movement, spawning, questions, damage and revives go here.
 		elapsedSeconds += deltaSeconds;
