@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { useEffect, useRef, useState } from 'react'
 import type { Connection, GameState, PlayerState, ShotState } from './connection'
+import { formatTime } from './format'
 
 // Physical key positions, so WASD also works on other keyboard layouts.
 const MOVE_KEYS: Record<string, string> = { KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd' }
@@ -257,10 +258,4 @@ export function GameView({ connection }: { connection: Connection }) {
       )}
     </>
   )
-}
-
-// Whole seconds as m:ss.
-function formatTime(seconds: number) {
-  const whole = Math.floor(seconds)
-  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`
 }

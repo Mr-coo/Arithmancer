@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { connect, type Connection } from './connection'
+import { connect, type Connection, type GameOver } from './connection'
+import { formatTime } from './format'
 import { GameView } from './GameView'
 import './App.css'
 
@@ -7,6 +8,7 @@ type Screen =
   | { name: 'home'; error?: string }
   | { name: 'lobby'; code: string; players: string[]; host: boolean }
   | { name: 'game' }
+  | ({ name: 'gameOver' } & GameOver)
 
 function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' })
@@ -27,9 +29,16 @@ function App() {
       setScreen((current) => ({ name: 'lobby', code, players, host: current.name === 'lobby' && current.host })),
     )
     opened.on('gameStarted', () => setScreen({ name: 'game' }))
+    opened.on('gameOver', (results) => setScreen({ name: 'gameOver', ...results }))
     setConnection(opened)
     setConnecting(false)
     return opened
+  }
+
+  function backToMenu() {
+    connection?.close()
+    setConnection(undefined)
+    setScreen({ name: 'home' })
   }
 
   async function createRoom() {
@@ -48,6 +57,26 @@ function App() {
         <GameView connection={connection} />
         <p className="hint">Move with WASD. Press an enemy's answer (0-9) to shoot it.</p>
       </>
+    )
+  }
+
+  if (screen.name === 'gameOver') {
+    return (
+      <main className="panel">
+        <h1>Game over</h1>
+        <p>You survived {formatTime(screen.time)}.</p>
+        <ul className="players results">
+          {screen.players.map((player, i) => (
+            <li key={i} className={player.you ? 'you' : undefined}>
+              <span>{player.nickname}</span>
+              <span>{player.score}</span>
+            </li>
+          ))}
+        </ul>
+        <button type="button" onClick={backToMenu}>
+          Back to menu
+        </button>
+      </main>
     )
   }
 

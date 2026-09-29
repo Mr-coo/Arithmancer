@@ -70,6 +70,16 @@ button {
   }
 }
 
+.results li {
+  display: flex;
+  justify-content: space-between;
+
+  &.you {
+    font-weight: 600;
+    color: var(--accent);
+  }
+}
+
 .tag {
   margin-left: 8px;
   padding: 2px 6px;
