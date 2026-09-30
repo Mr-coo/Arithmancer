@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { connect, type Connection, type DecorationState, type DetailState, type GameOver } from './connection'
 import { formatTime } from './format'
 import { GameView } from './GameView'
+import { HeroScene } from './HeroScene'
 import './App.css'
 
 type Screen =
@@ -105,26 +106,31 @@ function App() {
   }
 
   return (
-    <main className="panel">
-      <h1>Arithmancer</h1>
-      {screen.name === 'home' && screen.error && <p className="error">{screen.error}</p>}
-      <label>
-        Nickname
-        <input value={nickname} onChange={(event) => setNickname(event.target.value)} />
-      </label>
-      <button type="button" disabled={!nickname.trim() || connecting} onClick={createRoom}>
-        Create room
-      </button>
-      <div className="join">
-        <input
-          aria-label="Room code"
-          placeholder="Room code"
-          value={code}
-          onChange={(event) => setCode(event.target.value)}
-        />
-        <button type="button" disabled={!nickname.trim() || !code.trim() || connecting} onClick={joinRoom}>
-          Join room
-        </button>
+    <main className="home">
+      <h1 className="title">Arithmancer</h1>
+      <div className="home-body">
+        <HeroScene />
+        <section className="panel">
+          {screen.name === 'home' && screen.error && <p className="error">{screen.error}</p>}
+          <label>
+            Nickname
+            <input value={nickname} onChange={(event) => setNickname(event.target.value)} />
+          </label>
+          <button type="button" disabled={!nickname.trim() || connecting} onClick={createRoom}>
+            Create room
+          </button>
+          <div className="join">
+            <input
+              aria-label="Room code"
+              placeholder="Room code"
+              value={code}
+              onChange={(event) => setCode(event.target.value)}
+            />
+            <button type="button" disabled={!nickname.trim() || !code.trim() || connecting} onClick={joinRoom}>
+              Join room
+            </button>
+          </div>
+        </section>
       </div>
     </main>
   )

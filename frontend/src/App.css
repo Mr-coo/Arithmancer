@@ -166,6 +166,141 @@ button {
   background: var(--accent-bg);
 }
 
+/* The home page: the game's name, then archers facing goblins beside the form. */
+.home {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 5vh 16px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+/* Cream letters with a dark ink outline and a drop shadow, to stand out on the grass. */
+.title {
+  font-size: clamp(48px, 9vw, 120px);
+  line-height: 1;
+  color: #fff4d6;
+  text-shadow:
+    4px 0 #3d2a1e,
+    -4px 0 #3d2a1e,
+    0 4px #3d2a1e,
+    0 -4px #3d2a1e,
+    4px 4px #3d2a1e,
+    -4px 4px #3d2a1e,
+    4px -4px #3d2a1e,
+    -4px -4px #3d2a1e,
+    0 12px rgba(61, 42, 30, 0.35);
+}
+
+.home-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+
+  .panel {
+    margin: 0;
+  }
+}
+
+/* A stage tilted in 3D, and a little more with the mouse (--tilt-x and --tilt-y go from -1 to 1). Characters stand at
+   their own depth, so nearer ones look bigger, and lean back against the stage's tilt to stand upright. */
+.scene {
+  --tilt-x: 0;
+  --tilt-y: 0;
+
+  position: relative;
+  width: 560px;
+  height: 420px;
+  perspective: 900px;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(calc(12deg - var(--tilt-y) * 6deg)) rotateY(calc(18deg + var(--tilt-x) * 6deg));
+  transition: transform 0.4s ease-out;
+
+  /* A soft patch of shade on the ground under everyone. */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 35% 0 0;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(61, 42, 30, 0.2), transparent);
+  }
+}
+
+.character {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate3d(var(--x), var(--y), var(--z)) rotateX(calc(-12deg + var(--tilt-y) * 6deg));
+  transition: transform 0.4s ease-out;
+
+  /* Its shadow on the ground, under its feet in the 192x192 frame. */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 118px;
+    left: 62px;
+    width: 68px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(61, 42, 30, 0.25);
+  }
+}
+
+/* Plays the frames of one row of the sheet, left to right. */
+.sprite {
+  position: relative;
+  width: 192px;
+  height: 192px;
+  background: var(--sheet) 0 calc(var(--row) * -192px) no-repeat;
+  animation: sprite-frames var(--seconds) steps(var(--frames)) infinite;
+
+  &.flip {
+    transform: scaleX(-1);
+  }
+}
+
+@keyframes sprite-frames {
+  to {
+    background-position-x: calc(var(--frames) * -192px);
+  }
+}
+
+.question {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  width: 192px;
+  font-size: 22px;
+  text-align: center;
+  color: #fff;
+  text-shadow:
+    2px 0 #3d2a1e,
+    -2px 0 #3d2a1e,
+    0 2px #3d2a1e,
+    0 -2px #3d2a1e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sprite {
+    animation: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .scene {
+    display: none;
+  }
+}
+
 .game {
   position: fixed;
   inset: 0;

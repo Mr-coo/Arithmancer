@@ -45,7 +45,7 @@ import type { DetailState, EnemyType, ItemType } from './connection'
 // Players are archers, one color each (a room has up to 4 players).
 export const PLAYER_COLORS = ['blue', 'red', 'yellow', 'purple'] as const
 
-const ARCHERS = {
+export const ARCHERS = {
   blue: { idle: blueIdle, run: blueRun, shoot: blueShoot },
   red: { idle: redIdle, run: redRun, shoot: redShoot },
   yellow: { idle: yellowIdle, run: yellowRun, shoot: yellowShoot },
@@ -54,7 +54,7 @@ const ARCHERS = {
 
 // Enemies, loaded under their type's name. Each sheet has one animation per row, 7 frames wide: idle, run, then
 // attacks (unused). Goblins are TNT goblins, with 6 idle frames; torch goblins have 7.
-const ENEMIES: Record<EnemyType, { sheet: string; idle: number }> = {
+export const ENEMIES: Record<EnemyType, { sheet: string; idle: number }> = {
   goblin: { sheet: tntGoblin, idle: 6 },
   torch: { sheet: torchGoblin, idle: 7 },
 }
