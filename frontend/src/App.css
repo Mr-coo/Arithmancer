@@ -94,31 +94,26 @@ input {
   }
 }
 
+/* The text sits in the middle of the button's face. The enabled face is higher in its image (rows 9 to 40 of 64) than
+   the pressed and disabled ones (13 to 44), so enabled buttons leave more room below the text. */
 button {
-  padding: 0 4px 6px;
-  color: #fff;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  padding: 0 4px 11px;
+  color: #161c2e;
   background: none;
   border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Blue_3Slides.png') 0 64 fill / 0 48px;
 
   &:hover:not(:disabled) {
-    border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Hover_3Slides.png');
-    color: var(--text-h);
-    text-shadow: none;
+    filter: brightness(1.08);
   }
 
-  /* The pressed face sits 4px lower in the 64px image, 3px at this size. */
   &:active:not(:disabled) {
-    padding-top: 3px;
-    padding-bottom: 3px;
+    padding-bottom: 6px;
     border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Blue_3Slides_Pressed.png');
-    color: #fff;
-    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
   }
 
   &:disabled {
+    padding-bottom: 6px;
     color: var(--text);
-    text-shadow: none;
     border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Disable_3Slides.png');
   }
 }
