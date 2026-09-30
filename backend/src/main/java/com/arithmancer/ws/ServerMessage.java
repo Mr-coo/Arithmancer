@@ -27,18 +27,23 @@ public sealed interface ServerMessage {
 	}
 
 	// time: seconds since the run started.
-	record GameState(double time, List<PlayerState> players, List<EnemyState> enemies, List<ShotState> shots)
-			implements ServerMessage {
+	record GameState(double time, List<PlayerState> players, List<EnemyState> enemies, List<ItemState> items,
+			List<ShotState> shots) implements ServerMessage {
 	}
 
 	// cooldown: seconds until the player can shoot again, out of maxCooldown. score: enemies killed. revive: while
-	// downed, how far a teammate has got reviving them, from 0 to 1.
+	// downed, how far a teammate has got reviving them, from 0 to 1. haste, speedBoost: seconds left of those item
+	// boosts.
 	record PlayerState(String nickname, double x, double y, int health, int maxHealth, double cooldown,
-			double maxCooldown, int score, double revive, boolean you) {
+			double maxCooldown, int score, double revive, double haste, double speedBoost, boolean you) {
 	}
 
 	// type: goblin or torch. health: answers still needed to kill it, out of maxHealth.
 	record EnemyState(int id, String type, double x, double y, String question, int health, int maxHealth) {
+	}
+
+	// type: heal, haste or speed.
+	record ItemState(int id, String type, double x, double y) {
 	}
 
 	// player: index in players, enemy: the id of the enemy hit.

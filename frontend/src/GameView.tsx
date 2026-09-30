@@ -18,6 +18,8 @@ import {
   HEALTH_BAR_CHANNEL,
   HEALTH_BAR_FILL,
   HEALTH_BAR_SIZE,
+  ITEM_ICONS,
+  itemKey,
   PLAYER_COLORS,
   preloadAssets,
   ROCKS,
@@ -71,6 +73,9 @@ const SHOOT_MS = 333
 const SKULL_FEET = { x: 67 / 128, y: 94 / 128 }
 const SKULL_SCALE = 0.6
 const EXPLOSION_SCALE = 0.7
+// Items lie on the ground, bobbing so they catch the eye.
+const ITEM_SCALE = 0.5
+const ITEM_BOB = 4
 // Draw order, bottom to top: characters behind a decoration or detail, decorations and details, enemies, then the
 // other players, so an enemy on top of a player does not hide their name or health. Enemies' questions always stay
 // above decorations, so they can be read.
@@ -129,7 +134,7 @@ function isBehind(point: Point, decoration: DecorationState) {
 const colorOf = (player: number) => PLAYER_COLORS[player % PLAYER_COLORS.length]
 
 class GameScene extends Phaser.Scene {
-  latest: GameState = { time: 0, players: [], enemies: [], shots: [] }
+  latest: GameState = { time: 0, players: [], enemies: [], items: [], shots: [] }
   pendingShots: ShotState[] = []
   decorations: DecorationState[] = []
   details: DetailState[] = []
@@ -140,6 +145,7 @@ class GameScene extends Phaser.Scene {
   // When each player's shoot animation ends, by player index.
   private shootingUntil: number[] = []
   private enemySprites = new Map<number, EnemySprite>()
+  private itemSprites = new Map<number, Phaser.GameObjects.Image>()
   // Enemies with a projectile on the way, kept on screen until it arrives.
   private targeted = new Set<number>()
   // Enemies killed by an arrow. Any other enemy the server drops reached a player and blew up.
@@ -247,6 +253,7 @@ class GameScene extends Phaser.Scene {
     }
     this.launchShots()
     this.updateEnemies(delta)
+    this.updateItems()
     // Keep the screen-sized ground lined up with the world as the camera moves.
     const camera = this.cameras.main
     this.ground?.setTilePosition(camera.scrollX, camera.scrollY)
@@ -368,6 +375,37 @@ class GameScene extends Phaser.Scene {
         this.placeHealthBar(sprite.healthBar, sprite.body.x, top)
       }
       sprite.question.setPosition(sprite.body.x, top - 12)
+    }
+  }
+
+  // Items appear where the server drops them, and vanish in a puff once picked up or gone.
+  private updateItems() {
+    const ids = new Set<number>()
+    for (const item of this.latest.items) {
+      ids.add(item.id)
+      if (!this.itemSprites.has(item.id)) {
+        const image = this.add
+          .image(item.x, item.y, itemKey(item.type))
+          .setScale(ITEM_SCALE)
+          .setDepth(DECORATION_DEPTH)
+        this.tweens.add({
+          targets: image,
+          y: item.y - ITEM_BOB,
+          duration: 600,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        })
+        this.itemSprites.set(item.id, image)
+      }
+    }
+    for (const [id, image] of this.itemSprites) {
+      if (!ids.has(id)) {
+        this.playEffect(DUST, image, 0.6)
+        this.tweens.killTweensOf(image)
+        image.destroy()
+        this.itemSprites.delete(id)
+      }
     }
   }
 
@@ -517,9 +555,31 @@ export function GameView({
                 <span>{player.score}</span>
               </li>
             ))}
+            <Boosts player={hud.players.find((player) => player.you)} />
           </ul>
         </div>
       )}
     </>
+  )
+}
+
+// Your item boosts and the seconds left of each.
+function Boosts({ player }: { player?: PlayerState }) {
+  const boosts = [
+    { type: 'haste' as const, label: 'Faster shots', seconds: player?.haste ?? 0 },
+    { type: 'speed' as const, label: 'Faster moves', seconds: player?.speedBoost ?? 0 },
+  ].filter((boost) => boost.seconds > 0)
+  if (boosts.length === 0) {
+    return null
+  }
+  return (
+    <li className="boosts">
+      {boosts.map((boost) => (
+        <span key={boost.type} title={boost.label}>
+          <img src={ITEM_ICONS[boost.type]} alt={boost.label} />
+          {Math.ceil(boost.seconds)}s
+        </span>
+      ))}
+    </li>
   )
 }

@@ -17,6 +17,9 @@ public class Player extends Entity {
 	private static final double SHOT_COOLDOWN_SECONDS = 0.5;
 	// A wrong answer locks the player's input for longer.
 	private static final double WRONG_ANSWER_LOCK_SECONDS = 1;
+	// Item boosts: shots cool down in HASTE_FACTOR of the time, and moves are SPEED_BOOST_FACTOR as fast.
+	private static final double HASTE_FACTOR = 0.5;
+	private static final double SPEED_BOOST_FACTOR = 1.5;
 
 	private final String sessionId;
 	private final String nickname;
@@ -29,6 +32,9 @@ public class Player extends Entity {
 	private int score;
 	// While downed: how far a teammate has got reviving the player, from 0 to 1.
 	private double reviveProgress;
+	// Seconds left of each item boost.
+	private double hasteSeconds;
+	private double speedBoostSeconds;
 
 	public Player(String sessionId, String nickname) {
 		super(MAX_HEALTH, ATTACK, SPEED, new Position(0, 0));
@@ -73,8 +79,13 @@ public class Player extends Entity {
 		return maxShotCooldown;
 	}
 
+	@Override
+	public double getSpeed() {
+		return speedBoostSeconds > 0 ? super.getSpeed() * SPEED_BOOST_FACTOR : super.getSpeed();
+	}
+
 	public void startShotCooldown() {
-		coolDownFor(SHOT_COOLDOWN_SECONDS);
+		coolDownFor(hasteSeconds > 0 ? SHOT_COOLDOWN_SECONDS * HASTE_FACTOR : SHOT_COOLDOWN_SECONDS);
 	}
 
 	public void lockAfterWrongAnswer() {
@@ -86,8 +97,31 @@ public class Player extends Entity {
 		maxShotCooldown = seconds;
 	}
 
+	// Counts down the shot cooldown and the item boosts.
 	public void coolDown(double deltaSeconds) {
 		shotCooldown = Math.max(0, shotCooldown - deltaSeconds);
+		hasteSeconds = Math.max(0, hasteSeconds - deltaSeconds);
+		speedBoostSeconds = Math.max(0, speedBoostSeconds - deltaSeconds);
+	}
+
+	public void heal(int amount) {
+		setHealth(Math.min(getMaxHealth(), getHealth() + amount));
+	}
+
+	public double getHasteSeconds() {
+		return hasteSeconds;
+	}
+
+	public void boostHaste(double seconds) {
+		hasteSeconds = seconds;
+	}
+
+	public double getSpeedBoostSeconds() {
+		return speedBoostSeconds;
+	}
+
+	public void boostSpeed(double seconds) {
+		speedBoostSeconds = seconds;
 	}
 
 	public double getReviveProgress() {

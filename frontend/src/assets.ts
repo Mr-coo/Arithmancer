@@ -37,7 +37,10 @@ import pumpkin2 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/13.png'
 import bone1 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/14.png'
 import bone2 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/15.png'
 import smallBar from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Bars/SmallBar_Base.png'
-import type { DetailState, EnemyType } from './connection'
+import meatIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_04.png'
+import swordIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_05.png'
+import arrowIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_07.png'
+import type { DetailState, EnemyType, ItemType } from './connection'
 
 // Players are archers, one color each (a room has up to 4 players).
 export const PLAYER_COLORS = ['blue', 'red', 'yellow', 'purple'] as const
@@ -94,6 +97,10 @@ export const ARROW = 'arrow'
 // Effects, each played once: a goblin blowing up, a dust puff, and a dead player's skull.
 export const EXPLOSION = 'explosion'
 export const DUST = 'dust'
+// Items are Free Pack icons: meat heals, a sword speeds up shots, a green arrow speeds up moves. Each loads under
+// its itemKey, and the HUD shows the same pictures for the boosts you have.
+export const ITEM_ICONS: Record<ItemType, string> = { heal: meatIcon, haste: swordIcon, speed: arrowIcon }
+export const itemKey = (type: ItemType) => `item-${type}`
 export const DEAD = 'dead'
 // Health bars are the Free Pack's small bar. Its sheet spaces the pieces 64px apart, so they are put together into
 // one texture: the 15x19 ends at (49, 22) and (256, 22), with the 64x19 middle at (128, 22) stretched between them.
@@ -130,6 +137,9 @@ export function preloadAssets(scene: Phaser.Scene) {
   }
   scene.load.spritesheet(EXPLOSION, explosion, UNIT_FRAME)
   scene.load.spritesheet(DUST, dust, { frameWidth: 64, frameHeight: 64 })
+  for (const [type, url] of Object.entries(ITEM_ICONS)) {
+    scene.load.image(itemKey(type as ItemType), url)
+  }
   scene.load.spritesheet(DEAD, dead, { frameWidth: 128, frameHeight: 128 })
   scene.load.image(BAR_SHEET, smallBar)
 }

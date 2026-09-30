@@ -15,6 +15,7 @@ import com.arithmancer.ws.ServerMessage.EnemyState;
 import com.arithmancer.ws.ServerMessage.FinalScore;
 import com.arithmancer.ws.ServerMessage.GameOver;
 import com.arithmancer.ws.ServerMessage.GameState;
+import com.arithmancer.ws.ServerMessage.ItemState;
 import com.arithmancer.ws.ServerMessage.PlayerState;
 import com.arithmancer.ws.ServerMessage.ShotState;
 import com.arithmancer.ws.SessionRegistry;
@@ -76,6 +77,10 @@ public class GameManager {
 						enemy.getPosition().x(), enemy.getPosition().y(), enemy.getQuestion().text(), enemy.getHealth(),
 						enemy.getMaxHealth()))
 				.toList();
+		List<ItemState> items = game.getItems().stream()
+				.map(item -> new ItemState(item.getId(), item.getType().name().toLowerCase(Locale.ROOT),
+						item.getPosition().x(), item.getPosition().y()))
+				.toList();
 		List<ShotState> shots = game.getShots().stream()
 				.map(shot -> new ShotState(game.getPlayers().indexOf(shot.player()), shot.enemy().getId()))
 				.toList();
@@ -84,10 +89,10 @@ public class GameManager {
 					.map(player -> new PlayerState(player.getNickname(), player.getPosition().x(),
 							player.getPosition().y(), player.getHealth(), player.getMaxHealth(), player.getShotCooldown(),
 							player.getMaxShotCooldown(), player.getScore(), player.getReviveProgress(),
-							player == recipient))
+							player.getHasteSeconds(), player.getSpeedBoostSeconds(), player == recipient))
 					.toList();
 			sessionRegistry.send(recipient.getSessionId(), "state",
-					new GameState(game.getElapsedSeconds(), players, enemies, shots));
+					new GameState(game.getElapsedSeconds(), players, enemies, items, shots));
 		}
 	}
 

@@ -2,6 +2,7 @@ package com.arithmancer.game;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -34,6 +35,14 @@ public class Game {
 	private static final double REVIVE_DISTANCE = 48;
 	private static final double REVIVE_SECONDS = 3;
 	private static final double REVIVE_HEALTH_SHARE = 0.5;
+	// A killed enemy drops an item with DROP_CHANCE, up to MAX_ITEMS lying around, each gone after ITEM_SECONDS. A heal
+	// restores HEAL_AMOUNT health; boosts last BOOST_SECONDS.
+	private static final double DROP_CHANCE = 0.15;
+	private static final int MAX_ITEMS = 6;
+	private static final double ITEM_SECONDS = 20;
+	private static final double PICKUP_DISTANCE = PLAYER_RADIUS + 12;
+	private static final int HEAL_AMOUNT = 30;
+	private static final double BOOST_SECONDS = 8;
 	// Fixed logical view centered on each player, so screen size does not change who can hit what.
 	// The frontend zooms its camera to show this view.
 	private static final double VIEW_WIDTH = 960;
@@ -62,12 +71,14 @@ public class Game {
 	private final List<Player> players;
 	private final List<Enemy> enemies = new ArrayList<>();
 	private final List<Shot> shots = new ArrayList<>();
+	private final List<Item> items = new ArrayList<>();
 	private final Random random = new Random();
 	private final List<Decoration> decorations;
 	private final List<Detail> details;
 	private final PathFinder pathFinder;
 	private double secondsUntilSpawn = SPAWN_INTERVAL_SECONDS;
 	private int nextEnemyId;
+	private int nextItemId;
 	private double elapsedSeconds;
 
 	public Game(String code, List<Player> players) {
@@ -98,6 +109,10 @@ public class Game {
 		return details;
 	}
 
+	public List<Item> getItems() {
+		return items;
+	}
+
 	// Hits from the last tick.
 	public List<Shot> getShots() {
 		return shots;
@@ -118,6 +133,7 @@ public class Game {
 		elapsedSeconds += deltaSeconds;
 		shots.clear();
 		players.forEach(player -> move(player, deltaSeconds));
+		pickUpItems(deltaSeconds);
 		players.forEach(player -> revive(player, deltaSeconds));
 		players.forEach(player -> answer(player, deltaSeconds));
 		spawnEnemies(deltaSeconds);
@@ -184,6 +200,35 @@ public class Game {
 		return List.copyOf(placed);
 	}
 
+	private void dropItem(Position position) {
+		if (items.size() < MAX_ITEMS && random.nextDouble() < DROP_CHANCE) {
+			Item.Type[] types = Item.Type.values();
+			items.add(new Item(nextItemId++, types[random.nextInt(types.length)], position, ITEM_SECONDS));
+		}
+	}
+
+	// Items wear away, and the first standing player touching one picks it up.
+	private void pickUpItems(double deltaSeconds) {
+		for (Iterator<Item> iterator = items.iterator(); iterator.hasNext();) {
+			Item item = iterator.next();
+			item.age(deltaSeconds);
+			Player picker = standingPlayers().stream()
+					.filter(player -> player.getPosition().distanceTo(item.getPosition()) <= PICKUP_DISTANCE)
+					.findFirst()
+					.orElse(null);
+			if (picker != null) {
+				switch (item.getType()) {
+					case HEAL -> picker.heal(HEAL_AMOUNT);
+					case HASTE -> picker.boostHaste(BOOST_SECONDS);
+					case SPEED -> picker.boostSpeed(BOOST_SECONDS);
+				}
+			}
+			if (picker != null || item.isGone()) {
+				iterator.remove();
+			}
+		}
+	}
+
 	// A downed player is revived while a standing teammate stays next to them; progress is lost when nobody is.
 	private void revive(Player player, double deltaSeconds) {
 		if (player.getHealth() > 0) {
@@ -237,6 +282,7 @@ public class Game {
 		if (target.getHealth() <= 0) {
 			enemies.remove(target);
 			player.addPoint();
+			dropItem(target.getPosition());
 		} else {
 			target.setQuestion(newQuestion(target.getType()));
 		}

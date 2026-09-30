@@ -210,6 +210,22 @@ button {
     font-weight: 700;
     color: var(--accent);
   }
+
+  .boosts {
+    justify-content: flex-start;
+    margin-top: 4px;
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    img {
+      width: 24px;
+      height: 24px;
+    }
+  }
 }
 
 .hint {

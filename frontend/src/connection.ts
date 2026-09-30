@@ -11,6 +11,9 @@ export type PlayerState = {
   score: number
   // While downed, how far a teammate has got reviving them, from 0 to 1.
   revive: number
+  // Seconds left of the item boosts: faster shots and faster moves.
+  haste: number
+  speedBoost: number
   you: boolean
 }
 
@@ -31,7 +34,18 @@ export type EnemyState = {
 export type ShotState = { player: number; enemy: number }
 
 // time: seconds since the run started.
-export type GameState = { time: number; players: PlayerState[]; enemies: EnemyState[]; shots: ShotState[] }
+// Dropped by a killed enemy: heal restores health, haste makes shots cool down faster, speed makes moves faster.
+export type ItemType = 'heal' | 'haste' | 'speed'
+
+export type ItemState = { id: number; type: ItemType; x: number; y: number }
+
+export type GameState = {
+  time: number
+  players: PlayerState[]
+  enemies: EnemyState[]
+  items: ItemState[]
+  shots: ShotState[]
+}
 
 export type FinalScore = { nickname: string; score: number; you: boolean }
 
