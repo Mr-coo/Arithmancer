@@ -22,10 +22,28 @@
 
 body {
   margin: 0;
-  /* The tip of the arrow is the click point. */
+}
+
+/* Tiny Swords cursors everywhere, over inputs and the game too: an arrow, a pointing hand on buttons, and a no sign on
+   disabled ones. The numbers are the click point: the arrow's tip, the finger's tip, the sign's center. */
+*,
+::before,
+::after {
   cursor:
     url('../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Cursors/Cursor_01.png') 22 17,
     auto;
+}
+
+button:not(:disabled) {
+  cursor:
+    url('../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Cursors/Cursor_02.png') 25 18,
+    pointer;
+}
+
+button:disabled {
+  cursor:
+    url('../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Cursors/Cursor_03.png') 32 31,
+    not-allowed;
 }
 
 h1 {

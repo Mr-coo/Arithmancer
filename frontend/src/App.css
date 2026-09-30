@@ -100,7 +100,6 @@ button {
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
   background: none;
   border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Blue_3Slides.png') 0 64 fill / 0 48px;
-  cursor: inherit;
 
   &:hover:not(:disabled) {
     border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Hover_3Slides.png');
