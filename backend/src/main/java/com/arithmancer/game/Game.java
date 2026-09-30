@@ -174,23 +174,27 @@ public class Game {
 	private void answer(Player player, double deltaSeconds) {
 		player.coolDown(deltaSeconds);
 		for (Integer answer = player.pollAnswer(); answer != null; answer = player.pollAnswer()) {
-			// Any answer, right or wrong, starts the cooldown, and answers during it are ignored.
-			if (player.getShotCooldown() == 0) {
-				hitEnemy(player, answer);
+			// Any answer starts a cooldown, longer for a wrong one, and answers during it are ignored.
+			if (player.getShotCooldown() > 0) {
+				continue;
+			}
+			if (hitEnemy(player, answer)) {
 				player.startShotCooldown();
+			} else {
+				player.lockAfterWrongAnswer();
 			}
 		}
 	}
 
-	// Of the enemies in the player's view with this answer, the nearest takes a hit.
-	private void hitEnemy(Player player, int answer) {
+	// Of the enemies in the player's view with this answer, the nearest takes a hit. False when none has it.
+	private boolean hitEnemy(Player player, int answer) {
 		Position from = player.getPosition();
 		Enemy target = enemies.stream()
 				.filter(enemy -> enemy.getQuestion().answer() == answer && inView(from, enemy.getPosition()))
 				.min(Comparator.comparingDouble(enemy -> from.distanceTo(enemy.getPosition())))
 				.orElse(null);
 		if (target == null) {
-			return;
+			return false;
 		}
 		shots.add(new Shot(player, target));
 		target.setHealth(target.getHealth() - player.getAttack());
@@ -200,6 +204,7 @@ public class Game {
 		} else {
 			target.setQuestion(Question.random(random));
 		}
+		return true;
 	}
 
 	private static boolean inView(Position center, Position point) {

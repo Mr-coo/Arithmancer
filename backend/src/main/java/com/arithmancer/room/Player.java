@@ -15,13 +15,16 @@ public class Player extends Entity {
 	private static final int ATTACK = 1;
 	private static final double SPEED = 200;
 	private static final double SHOT_COOLDOWN_SECONDS = 0.5;
+	// A wrong answer locks the player's input for longer.
+	private static final double WRONG_ANSWER_LOCK_SECONDS = 1;
 
 	private final String sessionId;
 	private final String nickname;
 	private final Set<String> heldKeys = ConcurrentHashMap.newKeySet();
 	private final Queue<Integer> answers = new ConcurrentLinkedQueue<>();
-	// Seconds until the player can shoot again.
+	// Seconds until the player can shoot again, out of how long the current cooldown lasts.
 	private double shotCooldown;
+	private double maxShotCooldown = SHOT_COOLDOWN_SECONDS;
 	// One point per enemy the player killed.
 	private int score;
 
@@ -65,11 +68,20 @@ public class Player extends Entity {
 	}
 
 	public double getMaxShotCooldown() {
-		return SHOT_COOLDOWN_SECONDS;
+		return maxShotCooldown;
 	}
 
 	public void startShotCooldown() {
-		shotCooldown = SHOT_COOLDOWN_SECONDS;
+		coolDownFor(SHOT_COOLDOWN_SECONDS);
+	}
+
+	public void lockAfterWrongAnswer() {
+		coolDownFor(WRONG_ANSWER_LOCK_SECONDS);
+	}
+
+	private void coolDownFor(double seconds) {
+		shotCooldown = seconds;
+		maxShotCooldown = seconds;
 	}
 
 	public void coolDown(double deltaSeconds) {
