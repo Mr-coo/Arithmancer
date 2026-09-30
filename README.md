@@ -20,7 +20,7 @@ npm install
 npm run dev
 ```
 
-The Vite dev server proxies `/api/*` and `/ws` to the backend on the VPS (43.156.104.167), so the frontend calls relative paths like `fetch('/api/hello')` and needs no CORS setup. To use the local backend container instead, point the targets in `frontend/vite.config.ts` at `localhost:8080`.
+The Vite dev server proxies `/api/*` and `/ws` to the game on the VPS (https://arithmancer.marcolinardi.site), so the frontend calls relative paths like `fetch('/api/hello')` and needs no CORS setup. To use the local backend container instead, point the targets in `frontend/vite.config.ts` at `localhost:8080`.
 
 ## Deploying
 
