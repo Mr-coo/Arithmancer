@@ -8,14 +8,15 @@
 /* A parchment scroll. */
 .panel {
   box-sizing: border-box;
-  width: 400px;
+  width: 480px;
   max-width: calc(100% - 16px);
   margin: 12vh auto 0;
   padding: 0 8px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  border: 48px solid transparent;
+  gap: 18px;
+  font-size: 20px;
+  border: 56px solid transparent;
   border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Banner_Vertical.png') 64 fill round;
 }
 
@@ -69,10 +70,10 @@ label {
 input,
 button {
   box-sizing: border-box;
-  height: 48px;
+  height: 56px;
   font: inherit;
   border-style: solid;
-  border-width: 0 12px;
+  border-width: 0 14px;
 }
 
 input {
@@ -80,7 +81,7 @@ input {
   padding: 0 4px;
   color: var(--text-h);
   background: none;
-  border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Carved_3Slides.png') 0 64 fill / 0 48px round;
+  border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Carved_3Slides.png') 0 64 fill / 0 56px round;
 
   &::placeholder {
     color: var(--text);
@@ -95,12 +96,13 @@ input {
 }
 
 /* The text sits in the middle of the button's face. The enabled face is higher in its image (rows 9 to 40 of 64) than
-   the pressed and disabled ones (13 to 44), so enabled buttons leave more room below the text. */
+   the pressed and disabled ones (13 to 44): at 56px tall, their centers are 21px and 25px down, so enabled buttons
+   leave more room below the text. */
 button {
-  padding: 0 4px 11px;
+  padding: 0 4px 13px;
   color: #161c2e;
   background: none;
-  border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Blue_3Slides.png') 0 64 fill / 0 48px;
+  border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Blue_3Slides.png') 0 64 fill / 0 56px;
 
   &:hover:not(:disabled) {
     filter: brightness(1.08);
