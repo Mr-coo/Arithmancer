@@ -22,11 +22,12 @@
 
 /* A blue ribbon from the Free Pack's 448x640 sheet: the middle piece (64x128 at 192,0) stretches behind the text,
    between the two ends (128x128 at 0,0 and 320,0). */
-.panel h1,
+.panel :is(h1, h2),
 .hud .time {
   position: relative;
   align-self: center;
   box-sizing: border-box;
+  margin: 0;
   height: 56px;
   padding: 0 56px;
   font-size: 24px;

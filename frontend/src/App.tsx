@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { connect, type Connection, type DecorationState, type DetailState, type GameOver } from './connection'
 import { formatTime } from './format'
 import { GameView } from './GameView'
@@ -82,10 +82,11 @@ function App() {
     )
   }
 
+  // The lobby takes the form's place on the home page's scroll; the rest of the page stays as it is.
   if (screen.name === 'lobby') {
     return (
-      <main className="panel">
-        <h1>Room {screen.code}</h1>
+      <Home>
+        <h2>Room {screen.code}</h2>
         <p>Share this code so others can join.</p>
         <ul className="players">
           {screen.players.map((player, i) => (
@@ -102,37 +103,44 @@ function App() {
         ) : (
           <p>Waiting for the host to start…</p>
         )}
-      </main>
+      </Home>
     )
   }
 
+  return (
+    <Home>
+      {screen.name === 'home' && screen.error && <p className="error">{screen.error}</p>}
+      <label>
+        Nickname
+        <input value={nickname} onChange={(event) => setNickname(event.target.value)} />
+      </label>
+      <button type="button" disabled={!nickname.trim() || connecting} onClick={createRoom}>
+        Create room
+      </button>
+      <div className="join">
+        <input
+          aria-label="Room code"
+          placeholder="Room code"
+          value={code}
+          onChange={(event) => setCode(event.target.value)}
+        />
+        <button type="button" disabled={!nickname.trim() || !code.trim() || connecting} onClick={joinRoom}>
+          Join room
+        </button>
+      </div>
+    </Home>
+  )
+}
+
+// The home page: the game's name, then archers facing goblins beside a scroll holding the form or the lobby.
+function Home({ children }: { children: ReactNode }) {
   return (
     <main className="home">
       <HomeBackdrop />
       <h1 className="title">Arithmancer</h1>
       <div className="home-body">
         <HeroScene />
-        <section className="panel">
-          {screen.name === 'home' && screen.error && <p className="error">{screen.error}</p>}
-          <label>
-            Nickname
-            <input value={nickname} onChange={(event) => setNickname(event.target.value)} />
-          </label>
-          <button type="button" disabled={!nickname.trim() || connecting} onClick={createRoom}>
-            Create room
-          </button>
-          <div className="join">
-            <input
-              aria-label="Room code"
-              placeholder="Room code"
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-            />
-            <button type="button" disabled={!nickname.trim() || !code.trim() || connecting} onClick={joinRoom}>
-              Join room
-            </button>
-          </div>
-        </section>
+        <section className="panel">{children}</section>
       </div>
     </main>
   )
