@@ -4,6 +4,7 @@ import {
   ARROW,
   archerKey,
   createAnimations,
+  createHealthBar,
   DEAD,
   DETAIL_SIZE,
   DETAILS,
@@ -14,6 +15,10 @@ import {
   goblinKey,
   GRASS_FRAME,
   GROUND,
+  HEALTH_BAR,
+  HEALTH_BAR_CHANNEL,
+  HEALTH_BAR_FILL,
+  HEALTH_BAR_SIZE,
   PLAYER_COLORS,
   preloadAssets,
   ROCKS,
@@ -26,8 +31,7 @@ import { formatTime } from './format'
 const MOVE_KEYS: Record<string, string> = { KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd' }
 
 const PLAYER_RADIUS = 16
-const HEALTH_BAR_WIDTH = 32
-const HEALTH_BAR_HEIGHT = 4
+const BAR_SCALE = 0.5
 const COOLDOWN_BAR_HEIGHT = 2
 const PROJECTILE_MS = 250
 // Sprite sizes and anchors, measured from the Tiny Swords sheets. Characters stand with their feet on their position.
@@ -79,7 +83,7 @@ const TEXT_RESOLUTION = 2
 type Sprite = {
   body: Phaser.GameObjects.Sprite
   label: Phaser.GameObjects.Text
-  healthBack: Phaser.GameObjects.Rectangle
+  healthBar: Phaser.GameObjects.Image
   healthFill: Phaser.GameObjects.Rectangle
   cooldownFill: Phaser.GameObjects.Rectangle
 }
@@ -129,6 +133,7 @@ class GameScene extends Phaser.Scene {
 
   create() {
     createAnimations(this)
+    createHealthBar(this)
     this.ground = this.add
       .tileSprite(0, 0, this.scale.width, this.scale.height, GROUND, GRASS_FRAME)
       .setOrigin(0)
@@ -197,18 +202,19 @@ class GameScene extends Phaser.Scene {
           sprite.body.play(archerKey(colorOf(i), Math.hypot(dx, dy) > MOVING ? 'run' : 'idle'), true)
         }
       }
-      const barX = sprite.body.x - HEALTH_BAR_WIDTH / 2
-      const barY = sprite.body.y - UNIT_HEIGHT - 6
-      sprite.healthBack.setPosition(barX, barY)
+      const barX = sprite.body.x - (HEALTH_BAR_SIZE.width * BAR_SCALE) / 2
+      const barY = sprite.body.y - UNIT_HEIGHT - HEALTH_BAR_SIZE.height * BAR_SCALE
+      const channelX = barX + HEALTH_BAR_CHANNEL.x * BAR_SCALE
+      sprite.healthBar.setPosition(barX, barY)
       sprite.healthFill
-        .setPosition(barX, barY)
+        .setPosition(channelX, barY + HEALTH_BAR_CHANNEL.y * BAR_SCALE)
         .setScale(Phaser.Math.Clamp(player.health / player.maxHealth, 0, 1), 1)
-      // Shrinks as the shot cooldown runs out, hidden once the player can shoot.
+      // Under the bar, shrinks as the shot cooldown runs out, hidden once the player can shoot.
       sprite.cooldownFill
         .setVisible(player.cooldown > 0)
-        .setPosition(barX, barY + HEALTH_BAR_HEIGHT / 2 + COOLDOWN_BAR_HEIGHT)
+        .setPosition(channelX, barY + HEALTH_BAR_SIZE.height * BAR_SCALE)
         .setScale(Phaser.Math.Clamp(player.cooldown / player.maxCooldown, 0, 1), 1)
-      sprite.label.setPosition(sprite.body.x, barY - 14)
+      sprite.label.setPosition(sprite.body.x, barY - 8)
       const covering = this.decorations.filter((decoration) => isBehind(sprite.body, decoration))
       const depth = covering.length || this.isBehindDetail(sprite.body) ? BEHIND_DEPTH : PLAYER_DEPTH
       if (sprite.body.depth !== depth) {
@@ -363,9 +369,19 @@ class GameScene extends Phaser.Scene {
           resolution: TEXT_RESOLUTION,
         })
         .setOrigin(0.5),
-      healthBack: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 0x7f1d1d).setOrigin(0, 0.5),
-      healthFill: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 0x4ade80).setOrigin(0, 0.5),
-      cooldownFill: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, COOLDOWN_BAR_HEIGHT, 0xfacc15).setOrigin(0, 0.5),
+      healthBar: this.add.image(0, 0, HEALTH_BAR).setOrigin(0).setScale(BAR_SCALE),
+      healthFill: this.add
+        .rectangle(
+          0,
+          0,
+          HEALTH_BAR_CHANNEL.width * BAR_SCALE,
+          HEALTH_BAR_CHANNEL.height * BAR_SCALE,
+          HEALTH_BAR_FILL,
+        )
+        .setOrigin(0),
+      cooldownFill: this.add
+        .rectangle(0, 0, HEALTH_BAR_CHANNEL.width * BAR_SCALE, COOLDOWN_BAR_HEIGHT, 0xfacc15)
+        .setOrigin(0),
     }
     Object.values(sprite).forEach((part) => part.setDepth(PLAYER_DEPTH))
     this.sprites.push(sprite)

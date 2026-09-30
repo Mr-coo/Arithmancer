@@ -35,6 +35,7 @@ import pumpkin1 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/12.png'
 import pumpkin2 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/13.png'
 import bone1 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/14.png'
 import bone2 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/15.png'
+import smallBar from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Bars/SmallBar_Base.png'
 import type { DetailState } from './connection'
 
 // Players are archers, one color each (a room has up to 4 players).
@@ -91,6 +92,14 @@ export const ARROW = 'arrow'
 export const EXPLOSION = 'explosion'
 export const DUST = 'dust'
 export const DEAD = 'dead'
+// Health bars are the Free Pack's small bar. Its sheet spaces the pieces 64px apart, so they are put together into
+// one texture: the 15x19 ends at (49, 22) and (256, 22), with the 64x19 middle at (128, 22) stretched between them.
+// The fill goes in the channel inside.
+export const HEALTH_BAR = 'healthBar'
+const BAR_SHEET = 'barSheet'
+export const HEALTH_BAR_SIZE = { width: 80, height: 19 }
+export const HEALTH_BAR_CHANNEL = { x: 10, y: 8, width: 60, height: 6 }
+export const HEALTH_BAR_FILL = 0xff3e3e
 
 export const archerKey = (color: string, action: 'idle' | 'run' | 'shoot') => `archer-${color}-${action}`
 export const goblinKey = (action: 'idle' | 'run') => `goblin-${action}`
@@ -117,6 +126,19 @@ export function preloadAssets(scene: Phaser.Scene) {
   scene.load.spritesheet(EXPLOSION, explosion, UNIT_FRAME)
   scene.load.spritesheet(DUST, dust, { frameWidth: 64, frameHeight: 64 })
   scene.load.spritesheet(DEAD, dead, { frameWidth: 128, frameHeight: 128 })
+  scene.load.image(BAR_SHEET, smallBar)
+}
+
+export function createHealthBar(scene: Phaser.Scene) {
+  const sheet = scene.textures.get(BAR_SHEET).getSourceImage() as HTMLImageElement
+  const { width, height } = HEALTH_BAR_SIZE
+  const end = 15
+  const bar = scene.textures.createCanvas(HEALTH_BAR, width, height)!
+  const context = bar.getContext()
+  context.drawImage(sheet, 49, 22, end, height, 0, 0, end, height)
+  context.drawImage(sheet, 128, 22, 64, height, end, 0, width - 2 * end, height)
+  context.drawImage(sheet, 256, 22, end, height, width - end, 0, end, height)
+  bar.refresh()
 }
 
 // Archer and tree animations use the same key as their sprite sheet; the goblin's are rows of one sheet.
