@@ -1,0 +1,4 @@
+# DOMAIN is a domain name (HTTPS certificate fetched automatically) or :80 (plain HTTP)
+{$DOMAIN} {
+	reverse_proxy backend:8080
+}

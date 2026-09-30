@@ -21,6 +21,25 @@ npm run dev
 
 The Vite dev server proxies `/api/*` to the backend, so the frontend calls relative paths like `fetch('/api/hello')` and needs no CORS setup.
 
+## Deploying
+
+On the VPS, Caddy is the only public entry point (ports 80 and 443). The backend's port 8080 is bound to 127.0.0.1, so it can't be reached from outside.
+
+One-time setup on the VPS:
+
+1. Install Docker and Git.
+2. Clone the repo into the home directory: `git clone https://github.com/Mr-coo/Arithmancer.git ~/Arithmancer`
+3. Create `~/Arithmancer/.env`:
+
+   ```sh
+   COMPOSE_PROFILES=prod
+   DOMAIN=game.example.com
+   ```
+
+   `COMPOSE_PROFILES=prod` turns Caddy on. Point the domain's A record at the VPS and Caddy fetches an HTTPS certificate for it. Without a domain, leave `DOMAIN` out and Caddy serves plain HTTP on the VPS IP.
+4. Open ports 80 and 443 in the firewall.
+5. Run `docker compose up -d --build` in `~/Arithmancer`.
+
 ## Endpoints
 
 - `GET /api/hello`: sample endpoint
