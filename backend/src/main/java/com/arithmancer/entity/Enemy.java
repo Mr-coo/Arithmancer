@@ -12,8 +12,9 @@ public class Enemy extends Entity {
 	private final int id;
 	private Question question;
 
-	public Enemy(int id, Position position, Question question) {
-		super(MAX_HEALTH, ATTACK, SPEED, position);
+	// speedFactor: how much faster than SPEED, as enemies speed up over a run.
+	public Enemy(int id, Position position, Question question, double speedFactor) {
+		super(MAX_HEALTH, ATTACK, SPEED * speedFactor, position);
 		this.id = id;
 		this.question = question;
 	}

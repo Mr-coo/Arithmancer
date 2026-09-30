@@ -15,9 +15,14 @@ import com.arithmancer.room.Player;
 
 public class Game {
 
-	// Starting values, to tune during development.
+	// Starting values, to tune during development. Spawns come faster over a run, down to a floor.
 	private static final double SPAWN_INTERVAL_SECONDS = 2;
-	private static final int MAX_ENEMIES = 20;
+	private static final double MIN_SPAWN_INTERVAL_SECONDS = 0.6;
+	private static final double SPAWN_INTERVAL_DROP_PER_SECOND = 0.01;
+	private static final int MAX_ENEMIES = 30;
+	// Enemies get up to this much faster, reached after SPEED_UP_SECONDS.
+	private static final double MAX_SPEED_UP = 0.25;
+	private static final double SPEED_UP_SECONDS = 300;
 	// Fixed logical view centered on each player, so screen size does not change who can hit what.
 	// The frontend zooms its camera to show this view.
 	private static final double VIEW_WIDTH = 960;
@@ -202,7 +207,7 @@ public class Game {
 			enemies.remove(target);
 			player.addPoint();
 		} else {
-			target.setQuestion(Question.random(random));
+			target.setQuestion(Question.random(random, elapsedSeconds));
 		}
 		return true;
 	}
@@ -218,12 +223,14 @@ public class Game {
 		if (secondsUntilSpawn > 0 || enemies.size() >= MAX_ENEMIES || standing.isEmpty()) {
 			return;
 		}
-		secondsUntilSpawn = SPAWN_INTERVAL_SECONDS;
+		secondsUntilSpawn = Math.max(MIN_SPAWN_INTERVAL_SECONDS,
+				SPAWN_INTERVAL_SECONDS - SPAWN_INTERVAL_DROP_PER_SECOND * elapsedSeconds);
 		Position center = standing.get(random.nextInt(standing.size())).getPosition();
 		double angle = random.nextDouble(2 * Math.PI);
 		Position position = pushOutOfDecorations(new Position(center.x() + Math.cos(angle) * SPAWN_DISTANCE,
 				center.y() + Math.sin(angle) * SPAWN_DISTANCE), ENEMY_RADIUS);
-		enemies.add(new Enemy(nextEnemyId++, position, Question.random(random)));
+		double speedFactor = 1 + MAX_SPEED_UP * Math.min(1, elapsedSeconds / SPEED_UP_SECONDS);
+		enemies.add(new Enemy(nextEnemyId++, position, Question.random(random, elapsedSeconds), speedFactor));
 	}
 
 	private void chase(Enemy enemy, double deltaSeconds) {
