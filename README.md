@@ -39,6 +39,10 @@ One-time setup on the VPS:
    `COMPOSE_PROFILES=prod` turns Caddy on. Point the domain's A record at the VPS and Caddy fetches an HTTPS certificate for it. Without a domain, leave `DOMAIN` out and Caddy serves plain HTTP on the VPS IP.
 4. Open ports 80 and 443 in the firewall.
 5. Run `docker compose up -d --build` in `~/Arithmancer`.
+6. Create an SSH key pair for deploys and append the public key to `~/.ssh/authorized_keys`. That user must be able to run `docker` (e.g. be in the `docker` group).
+7. In GitHub, under Settings → Secrets and variables → Actions, add `VPS_HOST` (IP or domain), `VPS_USER` and `VPS_SSH_KEY` (the private key).
+
+After that, every push to `master` that touches `backend/`, `caddy/` or `docker-compose.yml` runs the backend tests, then SSHes into the VPS, resets `~/Arithmancer` to `origin/master` and runs `docker compose up -d --build`. It can also be run by hand from the Actions tab.
 
 ## Endpoints
 
