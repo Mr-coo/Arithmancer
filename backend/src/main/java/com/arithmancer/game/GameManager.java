@@ -83,7 +83,8 @@ public class GameManager {
 			List<PlayerState> players = game.getPlayers().stream()
 					.map(player -> new PlayerState(player.getNickname(), player.getPosition().x(),
 							player.getPosition().y(), player.getHealth(), player.getMaxHealth(), player.getShotCooldown(),
-							player.getMaxShotCooldown(), player.getScore(), player == recipient))
+							player.getMaxShotCooldown(), player.getScore(), player.getReviveProgress(),
+							player == recipient))
 					.toList();
 			sessionRegistry.send(recipient.getSessionId(), "state",
 					new GameState(game.getElapsedSeconds(), players, enemies, shots));

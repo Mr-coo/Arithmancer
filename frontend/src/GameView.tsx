@@ -39,6 +39,8 @@ const MOVE_KEYS: Record<string, string> = { KeyW: 'w', KeyA: 'a', KeyS: 's', Key
 
 const PLAYER_RADIUS = 16
 const BAR_SCALE = 0.5
+// A downed player's bar fills green as a teammate revives them.
+const REVIVE_FILL = 0x4ade80
 const COOLDOWN_BAR_HEIGHT = 2
 const PROJECTILE_MS = 250
 // Sprite sizes and anchors, measured from the Tiny Swords sheets. Characters stand with their feet on their position.
@@ -221,7 +223,10 @@ class GameScene extends Phaser.Scene {
       }
       const barY = sprite.body.y - UNIT_HEIGHT - HEALTH_BAR_SIZE.height * BAR_SCALE
       this.placeHealthBar({ frame: sprite.healthBar, fill: sprite.healthFill }, sprite.body.x, barY)
-      sprite.healthFill.setScale(Phaser.Math.Clamp(player.health / player.maxHealth, 0, 1), 1)
+      const downed = player.health <= 0
+      sprite.healthFill
+        .setFillStyle(downed ? REVIVE_FILL : HEALTH_BAR_FILL)
+        .setScale(Phaser.Math.Clamp(downed ? player.revive : player.health / player.maxHealth, 0, 1), 1)
       // Under the bar, shrinks as the shot cooldown runs out, hidden once the player can shoot.
       sprite.cooldownFill
         .setVisible(player.cooldown > 0)

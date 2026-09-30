@@ -31,9 +31,10 @@ public sealed interface ServerMessage {
 			implements ServerMessage {
 	}
 
-	// cooldown: seconds until the player can shoot again, out of maxCooldown. score: enemies killed.
+	// cooldown: seconds until the player can shoot again, out of maxCooldown. score: enemies killed. revive: while
+	// downed, how far a teammate has got reviving them, from 0 to 1.
 	record PlayerState(String nickname, double x, double y, int health, int maxHealth, double cooldown,
-			double maxCooldown, int score, boolean you) {
+			double maxCooldown, int score, double revive, boolean you) {
 	}
 
 	// type: goblin or torch. health: answers still needed to kill it, out of maxHealth.

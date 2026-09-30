@@ -27,6 +27,8 @@ public class Player extends Entity {
 	private double maxShotCooldown = SHOT_COOLDOWN_SECONDS;
 	// One point per enemy the player killed.
 	private int score;
+	// While downed: how far a teammate has got reviving the player, from 0 to 1.
+	private double reviveProgress;
 
 	public Player(String sessionId, String nickname) {
 		super(MAX_HEALTH, ATTACK, SPEED, new Position(0, 0));
@@ -86,6 +88,14 @@ public class Player extends Entity {
 
 	public void coolDown(double deltaSeconds) {
 		shotCooldown = Math.max(0, shotCooldown - deltaSeconds);
+	}
+
+	public double getReviveProgress() {
+		return reviveProgress;
+	}
+
+	public void setReviveProgress(double reviveProgress) {
+		this.reviveProgress = reviveProgress;
 	}
 
 	public int getScore() {

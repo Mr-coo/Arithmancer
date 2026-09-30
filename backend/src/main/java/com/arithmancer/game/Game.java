@@ -29,6 +29,11 @@ public class Game {
 	private static final double TORCH_RAMP_SECONDS = 255;
 	private static final double MAX_TORCH_SHARE = 0.35;
 	private static final double TORCH_THREE_ANSWERS_FROM_SECONDS = 180;
+	// A downed player comes back with REVIVE_HEALTH_SHARE of their health once a standing teammate has stayed within
+	// REVIVE_DISTANCE for REVIVE_SECONDS.
+	private static final double REVIVE_DISTANCE = 48;
+	private static final double REVIVE_SECONDS = 3;
+	private static final double REVIVE_HEALTH_SHARE = 0.5;
 	// Fixed logical view centered on each player, so screen size does not change who can hit what.
 	// The frontend zooms its camera to show this view.
 	private static final double VIEW_WIDTH = 960;
@@ -113,6 +118,7 @@ public class Game {
 		elapsedSeconds += deltaSeconds;
 		shots.clear();
 		players.forEach(player -> move(player, deltaSeconds));
+		players.forEach(player -> revive(player, deltaSeconds));
 		players.forEach(player -> answer(player, deltaSeconds));
 		spawnEnemies(deltaSeconds);
 		enemies.forEach(enemy -> chase(enemy, deltaSeconds));
@@ -178,6 +184,24 @@ public class Game {
 		return List.copyOf(placed);
 	}
 
+	// A downed player is revived while a standing teammate stays next to them; progress is lost when nobody is.
+	private void revive(Player player, double deltaSeconds) {
+		if (player.getHealth() > 0) {
+			return;
+		}
+		boolean helped = standingPlayers().stream()
+				.anyMatch(teammate -> teammate.getPosition().distanceTo(player.getPosition()) <= REVIVE_DISTANCE);
+		if (!helped) {
+			player.setReviveProgress(0);
+			return;
+		}
+		player.setReviveProgress(player.getReviveProgress() + deltaSeconds / REVIVE_SECONDS);
+		if (player.getReviveProgress() >= 1) {
+			player.setReviveProgress(0);
+			player.setHealth((int) Math.round(player.getMaxHealth() * REVIVE_HEALTH_SHARE));
+		}
+	}
+
 	private static int held(Player player, String key) {
 		return player.isHeld(key) ? 1 : 0;
 	}
@@ -185,8 +209,9 @@ public class Game {
 	private void answer(Player player, double deltaSeconds) {
 		player.coolDown(deltaSeconds);
 		for (Integer answer = player.pollAnswer(); answer != null; answer = player.pollAnswer()) {
-			// Any answer starts a cooldown, longer for a wrong one, and answers during it are ignored.
-			if (player.getShotCooldown() > 0) {
+			// Any answer starts a cooldown, longer for a wrong one, and answers during it are ignored. Downed players
+			// cannot shoot.
+			if (player.getShotCooldown() > 0 || player.getHealth() <= 0) {
 				continue;
 			}
 			if (hitEnemy(player, answer)) {

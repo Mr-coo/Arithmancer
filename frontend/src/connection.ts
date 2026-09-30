@@ -9,6 +9,8 @@ export type PlayerState = {
   maxCooldown: number
   // Enemies this player killed.
   score: number
+  // While downed, how far a teammate has got reviving them, from 0 to 1.
+  revive: number
   you: boolean
 }
 
