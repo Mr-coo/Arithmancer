@@ -60,10 +60,14 @@ export const ENEMIES: Record<EnemyType, { sheet: string; idle: number }> = {
 }
 
 export const GROUND = 'ground'
-// The center of the tilemap's grass patch, which repeats seamlessly.
+// The center of the tilemap's grass patch, which repeats seamlessly. The tilemap is 9 tiles of 64px across.
 export const GRASS_FRAME = 10
+export const GROUND_SHEET = tilemap
 export const TREE = 'tree'
+// 8 frames of 192x256 in a row.
+export const TREE_SHEET = tree
 export const ROCKS = ['rock2', 'rock4', 'boulder']
+export const ROCK_IMAGES = [rock2, rock4, boulder]
 // The variants of each detail on the ground, with the box their sprite fills in its 64x64 image, leaving out the
 // shadow: left, top, right, bottom.
 export const DETAIL_SIZE = 64

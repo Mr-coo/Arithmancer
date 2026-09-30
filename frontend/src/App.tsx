@@ -3,6 +3,7 @@ import { connect, type Connection, type DecorationState, type DetailState, type 
 import { formatTime } from './format'
 import { GameView } from './GameView'
 import { HeroScene } from './HeroScene'
+import { HomeBackdrop } from './HomeBackdrop'
 import './App.css'
 
 type Screen =
@@ -107,6 +108,7 @@ function App() {
 
   return (
     <main className="home">
+      <HomeBackdrop />
       <h1 className="title">Arithmancer</h1>
       <div className="home-body">
         <HeroScene />
