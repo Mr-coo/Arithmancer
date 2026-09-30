@@ -14,7 +14,7 @@ public class Player extends Entity {
 	private static final int MAX_HEALTH = 100;
 	private static final int ATTACK = 1;
 	private static final double SPEED = 200;
-	private static final double SHOT_COOLDOWN_SECONDS = 1;
+	private static final double SHOT_COOLDOWN_SECONDS = 0.5;
 
 	private final String sessionId;
 	private final String nickname;
