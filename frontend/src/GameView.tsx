@@ -314,9 +314,8 @@ class GameScene extends Phaser.Scene {
           body: this.add.sprite(enemy.x, enemy.y, enemy.type).setOrigin(feet.x, feet.y).setScale(UNIT_SCALE),
           question: this.add
             .text(enemy.x, enemy.y, '', {
-              fontFamily: 'system-ui',
+              fontFamily: '"Geist Pixel", system-ui',
               fontSize: '16px',
-              fontStyle: 'bold',
               stroke: TEXT_OUTLINE,
               strokeThickness: 4,
               resolution: TEXT_RESOLUTION,
@@ -470,7 +469,7 @@ class GameScene extends Phaser.Scene {
         .setScale(UNIT_SCALE),
       label: this.add
         .text(player.x, player.y, player.nickname, {
-          fontFamily: 'system-ui',
+          fontFamily: '"Geist Pixel", system-ui',
           fontSize: '14px',
           stroke: TEXT_OUTLINE,
           strokeThickness: 3,
