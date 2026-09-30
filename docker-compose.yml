@@ -4,7 +4,17 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     ports:
-      # Only reachable from this machine: the VPS's Caddy forwards to it. PORT in .env picks another port if another
-      # project already uses 8080.
+      # Only reachable from this machine, for local runs and the deploy's check. PORT in .env picks another port if
+      # another project already uses 8080.
       - "127.0.0.1:${PORT:-8080}:8080"
+    networks:
+      # The VPS's Caddy runs in Docker on this shared network and forwards the domain to arithmancer:8080.
+      caddy_net:
+        aliases:
+          - arithmancer
     restart: unless-stopped
+
+# Created once with `docker network create caddy_net`, and shared with the Caddy gateway and other projects.
+networks:
+  caddy_net:
+    external: true
