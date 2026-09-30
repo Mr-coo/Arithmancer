@@ -1,10 +1,60 @@
+/*
+ * UI art from the Tiny Swords packs. The Update 010 images are 9-slice (192x192) and 3-slice (192x64) sheets of 64px
+ * tiles, drawn with border-image. The Free Pack sheets space their 64px tiles 128px apart, so a piece is cut out by
+ * scaling the whole sheet: background-size is sheet / piece and background-position is offset / (sheet - piece). The
+ * gaps between pieces are transparent, so nothing else shows.
+ */
+
+/* A parchment scroll. */
 .panel {
-  width: 320px;
-  max-width: calc(100% - 32px);
-  margin: 15vh auto 0;
+  box-sizing: border-box;
+  width: 400px;
+  max-width: calc(100% - 16px);
+  margin: 12vh auto 0;
+  padding: 0 8px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  border: 48px solid transparent;
+  border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Banner_Vertical.png') 64 fill round;
+}
+
+/* A blue ribbon from the Free Pack's 448x640 sheet: the middle piece (64x128 at 192,0) stretches behind the text,
+   between the two ends (128x128 at 0,0 and 320,0). */
+.panel h1 {
+  position: relative;
+  align-self: center;
+  box-sizing: border-box;
+  height: 56px;
+  padding: 0 56px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 58px;
+  white-space: nowrap;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+  background: url('../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Ribbons/BigRibbons.png')
+    50% 0% / 700% 500% no-repeat content-box;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 56px;
+    height: 56px;
+    background: url('../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Ribbons/BigRibbons.png')
+      0% 0% / 350% 500% no-repeat;
+  }
+
+  &::before {
+    left: 0;
+  }
+
+  &::after {
+    right: 0;
+    background-position: 100% 0%;
+  }
 }
 
 label {
@@ -14,29 +64,56 @@ label {
   color: var(--text-h);
 }
 
+/* Inputs are carved into wood, buttons are blue; both 3-slice images keep their 64x64 ends square. */
 input,
 button {
+  box-sizing: border-box;
+  height: 48px;
   font: inherit;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
+  border-style: solid;
+  border-width: 0 12px;
 }
 
 input {
-  color: var(--text-h);
-  background: var(--bg);
   min-width: 0;
+  padding: 0 4px;
+  color: var(--text-h);
+  background: none;
+  border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Carved_3Slides.png') 0 64 fill / 0 48px round;
+
+  &::placeholder {
+    color: var(--text);
+  }
 }
 
 button {
+  padding: 0 4px 6px;
+  font-weight: 700;
   color: #fff;
-  background: var(--accent);
-  border-color: var(--accent);
-  cursor: pointer;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  background: none;
+  border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Blue_3Slides.png') 0 64 fill / 0 48px;
+  cursor: inherit;
+
+  &:hover:not(:disabled) {
+    border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Hover_3Slides.png');
+    color: var(--text-h);
+    text-shadow: none;
+  }
+
+  /* The pressed face sits 4px lower in the 64px image, 3px at this size. */
+  &:active:not(:disabled) {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Blue_3Slides_Pressed.png');
+    color: #fff;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  }
 
   &:disabled {
-    opacity: 0.5;
-    cursor: default;
+    color: var(--text);
+    text-shadow: none;
+    border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Disable_3Slides.png');
   }
 }
 

@@ -1,36 +1,29 @@
+/* Menus are Tiny Swords parchment on the game's grass, in light and dark mode alike: ink colors on parchment. */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --accent: #7c5cff;
-  --accent-bg: rgba(124, 92, 255, 0.1);
-  --error: #c62828;
+  --text: #6b4f3a;
+  --text-h: #3d2a1e;
+  --bg: #9bb94e;
+  --border: rgba(61, 42, 30, 0.3);
+  --accent: #2b6a86;
+  --accent-bg: rgba(43, 106, 134, 0.15);
+  --error: #a8322d;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
   font: 18px/145% var(--sans);
-  color-scheme: light dark;
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --accent: #9d85ff;
-    --accent-bg: rgba(157, 133, 255, 0.15);
-    --error: #ff8a80;
-  }
-}
-
 body {
   margin: 0;
+  /* The tip of the arrow is the click point. */
+  cursor:
+    url('../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Cursors/Cursor_01.png') 22 17,
+    auto;
 }
 
 h1 {
