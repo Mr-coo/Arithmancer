@@ -105,6 +105,7 @@ public class Game {
 		players.forEach(player -> answer(player, deltaSeconds));
 		spawnEnemies(deltaSeconds);
 		enemies.forEach(enemy -> chase(enemy, deltaSeconds));
+		separateEnemies();
 		enemies.removeIf(this::hitPlayer);
 	}
 
@@ -237,6 +238,32 @@ public class Game {
 		}
 		enemy.setPosition(pushOutOfDecorations(new Position(from.x() + (to.x() - from.x()) / distance * step,
 				from.y() + (to.y() - from.y()) / distance * step), ENEMY_RADIUS));
+	}
+
+	// Overlapping enemies push each other apart, half the overlap each, so they crowd around a player instead of
+	// stacking on the same spot. Whatever is left is resolved over the next ticks.
+	private void separateEnemies() {
+		for (int i = 0; i < enemies.size(); i++) {
+			for (int j = i + 1; j < enemies.size(); j++) {
+				Enemy a = enemies.get(i);
+				Enemy b = enemies.get(j);
+				double distance = a.getPosition().distanceTo(b.getPosition());
+				double overlap = 2 * ENEMY_RADIUS - distance;
+				if (overlap <= 0) {
+					continue;
+				}
+				// Enemies on the exact same spot split in a random direction.
+				double angle = distance > 0
+						? Math.atan2(b.getPosition().y() - a.getPosition().y(), b.getPosition().x() - a.getPosition().x())
+						: random.nextDouble(2 * Math.PI);
+				double pushX = Math.cos(angle) * overlap / 2;
+				double pushY = Math.sin(angle) * overlap / 2;
+				a.setPosition(pushOutOfDecorations(
+						new Position(a.getPosition().x() - pushX, a.getPosition().y() - pushY), ENEMY_RADIUS));
+				b.setPosition(pushOutOfDecorations(
+						new Position(b.getPosition().x() + pushX, b.getPosition().y() + pushY), ENEMY_RADIUS));
+			}
+		}
 	}
 
 	// An enemy touching a standing player deals its attack as damage, then disappears.
