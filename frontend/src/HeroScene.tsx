@@ -2,7 +2,8 @@ import { type CSSProperties, useEffect, useRef } from 'react'
 import { ARCHERS, ENEMIES } from './assets'
 
 // A character on the home page's stage: a 192x192 frame sheet played from one row, standing at (x, y) on the stage and
-// z toward the viewer. Goblins are flipped to face the archers, with a question over their heads like in the game.
+// z toward the viewer. Goblins are flipped to face the archers, with a question over their heads like in the game,
+// questionTop down from the top of the frame.
 type Character = {
   sheet: string
   row?: number
@@ -13,22 +14,35 @@ type Character = {
   z: number
   flip?: boolean
   question?: string
+  questionTop?: number
 }
 
 const CAST: Character[] = [
-  { sheet: ARCHERS.red.idle, frames: 6, seconds: 0.8, x: 30, y: 40, z: -120 },
-  { sheet: ARCHERS.blue.shoot, frames: 8, seconds: 1, x: 80, y: 190, z: 60 },
+  { sheet: ARCHERS.red.idle, frames: 6, seconds: 0.8, x: 0, y: 10, z: -120 },
+  { sheet: ARCHERS.blue.shoot, frames: 8, seconds: 1, x: 50, y: 170, z: 60 },
   {
     sheet: ENEMIES.torch.sheet,
     frames: ENEMIES.torch.idle,
     seconds: 0.9,
-    x: 340,
-    y: 30,
+    x: 290,
+    y: 0,
     z: -140,
     flip: true,
     question: 'log₂ 32',
+    questionTop: 18,
   },
-  { sheet: ENEMIES.goblin.sheet, row: 1, frames: 6, seconds: 0.6, x: 310, y: 180, z: 40, flip: true, question: '7 × 8' },
+  {
+    sheet: ENEMIES.goblin.sheet,
+    row: 1,
+    frames: 6,
+    seconds: 0.6,
+    x: 270,
+    y: 170,
+    z: 40,
+    flip: true,
+    question: '7 × 8',
+    questionTop: 36,
+  },
 ]
 
 // Archers facing goblins on a stage tilted in 3D, which tilts a little further as the mouse moves.
@@ -69,7 +83,11 @@ export function HeroScene() {
                 } as CSSProperties
               }
             />
-            {character.question && <p className="question">{character.question}</p>}
+            {character.question && (
+              <p className="question" style={{ top: character.questionTop }}>
+                {character.question}
+              </p>
+            )}
           </div>
         ))}
       </div>

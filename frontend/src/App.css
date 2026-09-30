@@ -207,7 +207,8 @@ button {
 }
 
 /* A stage tilted in 3D, and a little more with the mouse (--tilt-x and --tilt-y go from -1 to 1). Characters stand at
-   their own depth, so nearer ones look bigger, and lean back against the stage's tilt to stand upright. */
+   their own depth, so nearer ones look bigger, and lean back against the stage's tilt to stand upright. They are drawn
+   1.4 times the size of their frames. */
 .scene {
   --tilt-x: 0;
   --tilt-y: 0;
@@ -239,7 +240,8 @@ button {
   position: absolute;
   top: 0;
   left: 0;
-  transform: translate3d(var(--x), var(--y), var(--z)) rotateX(calc(-12deg + var(--tilt-y) * 6deg));
+  transform: translate3d(var(--x), var(--y), var(--z)) rotateX(calc(-12deg + var(--tilt-y) * 6deg)) scale(1.4);
+  transform-origin: 0 0;
   transition: transform 0.4s ease-out;
 
   /* Its shadow on the ground, under its feet in the 192x192 frame. */
@@ -276,10 +278,9 @@ button {
 
 .question {
   position: absolute;
-  top: 24px;
   left: 0;
   width: 192px;
-  font-size: 22px;
+  font-size: 16px;
   text-align: center;
   color: #fff;
   text-shadow:
