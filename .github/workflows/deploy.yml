@@ -1,11 +1,13 @@
-name: Deploy backend
+name: Deploy
 
 on:
   push:
     branches: [master]
     paths:
       - backend/**
+      - frontend/**
       - caddy/**
+      - .dockerignore
       - docker-compose.yml
       - .github/workflows/deploy.yml
   workflow_dispatch:

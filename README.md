@@ -23,7 +23,7 @@ The Vite dev server proxies `/api/*` and `/ws` to the backend on the VPS (43.156
 
 ## Deploying
 
-On the VPS, Caddy is the only public entry point (ports 80 and 443). The backend's port 8080 is bound to 127.0.0.1, so it can't be reached from outside.
+On the VPS, Caddy is the only public entry point (ports 80 and 443). It serves the built frontend and forwards everything else, like `/ws`, to the backend, so the game and its WebSocket share one origin. The backend's port 8080 is bound to 127.0.0.1, so it can't be reached from outside.
 
 One-time setup on the VPS:
 
@@ -35,7 +35,7 @@ One-time setup on the VPS:
 6. Create an SSH key pair for deploys and append the public key to `~/.ssh/authorized_keys`. That user must be able to run `docker` (e.g. be in the `docker` group).
 7. In GitHub, under Settings → Secrets and variables → Actions, add `VPS_HOST` (IP or domain), `VPS_USER` and `VPS_SSH_KEY` (the private key).
 
-After that, every push to `master` that touches `backend/`, `caddy/` or `docker-compose.yml` runs the backend tests, then SSHes into the VPS, resets `~/Arithmancer` to `origin/master` and runs `docker compose up -d --build`. It can also be run by hand from the Actions tab.
+After that, every push to `master` that touches `backend/`, `frontend/`, `caddy/` or `docker-compose.yml` runs the backend tests, then SSHes into the VPS, resets `~/Arithmancer` to `origin/master` and runs `docker compose up -d --build`. It can also be run by hand from the Actions tab.
 
 ## Endpoints
 

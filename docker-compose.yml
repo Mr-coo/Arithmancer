@@ -7,7 +7,9 @@ services:
     restart: unless-stopped
 
   caddy:
-    build: ./caddy
+    build:
+      context: .
+      dockerfile: caddy/Dockerfile
     # Off for local dev; the VPS turns it on with COMPOSE_PROFILES=prod in .env
     profiles: [prod]
     ports:
