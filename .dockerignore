@@ -1,6 +1,11 @@
-# Only the caddy image builds from the repo root; it needs the frontend source and the Caddyfile
+# The image builds from the repo root: the frontend's source, then the backend's
 *
-!caddy/Caddyfile
+!backend
 !frontend
+!caddy/Caddyfile
+backend/target
+backend/.mvn
+backend/mvnw
+backend/mvnw.cmd
 frontend/node_modules
 frontend/dist

@@ -1,6 +1,8 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       # Only reachable from this machine; the public goes through Caddy
       - "127.0.0.1:8080:8080"
