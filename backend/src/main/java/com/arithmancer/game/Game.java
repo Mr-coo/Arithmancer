@@ -40,7 +40,6 @@ public class Game {
 	private static final double DROP_CHANCE = 0.15;
 	private static final int MAX_ITEMS = 6;
 	private static final double ITEM_SECONDS = 20;
-	private static final double PICKUP_DISTANCE = PLAYER_RADIUS + 12;
 	private static final int HEAL_AMOUNT = 30;
 	private static final double BOOST_SECONDS = 8;
 	// Fixed logical view centered on each player, so screen size does not change who can hit what.
@@ -53,6 +52,8 @@ public class Game {
 	private static final double PLAYER_RADIUS = 16;
 	private static final double ENEMY_RADIUS = 14;
 	private static final double CONTACT_DISTANCE = PLAYER_RADIUS + ENEMY_RADIUS;
+	// A player touching an item picks it up.
+	private static final double PICKUP_DISTANCE = PLAYER_RADIUS + 12;
 	// Trees and stones are scattered around the start point, keeping it clear and leaving room to walk between them.
 	private static final int TREES = 60;
 	private static final int STONES = 30;
