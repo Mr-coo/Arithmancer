@@ -23,6 +23,12 @@ public class Game {
 	// Enemies get up to this much faster, reached after SPEED_UP_SECONDS.
 	private static final double MAX_SPEED_UP = 0.25;
 	private static final double SPEED_UP_SECONDS = 300;
+	// Torch goblins appear after TORCH_FROM_SECONDS, becoming up to MAX_TORCH_SHARE of spawns over TORCH_RAMP_SECONDS.
+	// They need 2 answers, 3 from TORCH_THREE_ANSWERS_FROM_SECONDS on.
+	private static final double TORCH_FROM_SECONDS = 45;
+	private static final double TORCH_RAMP_SECONDS = 255;
+	private static final double MAX_TORCH_SHARE = 0.35;
+	private static final double TORCH_THREE_ANSWERS_FROM_SECONDS = 180;
 	// Fixed logical view centered on each player, so screen size does not change who can hit what.
 	// The frontend zooms its camera to show this view.
 	private static final double VIEW_WIDTH = 960;
@@ -207,7 +213,7 @@ public class Game {
 			enemies.remove(target);
 			player.addPoint();
 		} else {
-			target.setQuestion(Question.random(random, elapsedSeconds));
+			target.setQuestion(newQuestion(target.getType()));
 		}
 		return true;
 	}
@@ -230,7 +236,16 @@ public class Game {
 		Position position = pushOutOfDecorations(new Position(center.x() + Math.cos(angle) * SPAWN_DISTANCE,
 				center.y() + Math.sin(angle) * SPAWN_DISTANCE), ENEMY_RADIUS);
 		double speedFactor = 1 + MAX_SPEED_UP * Math.min(1, elapsedSeconds / SPEED_UP_SECONDS);
-		enemies.add(new Enemy(nextEnemyId++, position, Question.random(random, elapsedSeconds), speedFactor));
+		double torchShare = MAX_TORCH_SHARE
+				* Math.clamp((elapsedSeconds - TORCH_FROM_SECONDS) / TORCH_RAMP_SECONDS, 0.0, 1.0);
+		Enemy.Type type = random.nextDouble() < torchShare ? Enemy.Type.TORCH : Enemy.Type.GOBLIN;
+		int maxHealth = type == Enemy.Type.GOBLIN ? 1 : elapsedSeconds < TORCH_THREE_ANSWERS_FROM_SECONDS ? 2 : 3;
+		enemies.add(new Enemy(nextEnemyId++, type, maxHealth, position, newQuestion(type), speedFactor));
+	}
+
+	// Torch goblins ask powers, logarithms and limits; goblins ask sums that get harder over the run.
+	private Question newQuestion(Enemy.Type type) {
+		return type == Enemy.Type.TORCH ? Question.advanced(random) : Question.random(random, elapsedSeconds);
 	}
 
 	private void chase(Enemy enemy, double deltaSeconds) {

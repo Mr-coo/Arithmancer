@@ -11,8 +11,7 @@ import {
   detailKey,
   DUST,
   EXPLOSION,
-  GOBLIN,
-  goblinKey,
+  enemyKey,
   GRASS_FRAME,
   GROUND,
   HEALTH_BAR,
@@ -24,7 +23,15 @@ import {
   ROCKS,
   TREE,
 } from './assets'
-import type { Connection, DecorationState, DetailState, GameState, PlayerState, ShotState } from './connection'
+import type {
+  Connection,
+  DecorationState,
+  DetailState,
+  EnemyType,
+  GameState,
+  PlayerState,
+  ShotState,
+} from './connection'
 import { formatTime } from './format'
 
 // Physical key positions, so WASD also works on other keyboard layouts.
@@ -37,11 +44,14 @@ const PROJECTILE_MS = 250
 // Sprite sizes and anchors, measured from the Tiny Swords sheets. Characters stand with their feet on their position.
 const UNIT_SCALE = 0.5
 const ARCHER_FEET = { x: 95 / 192, y: 128 / 192 }
-const GOBLIN_FEET = { x: 95 / 192, y: 127 / 192 }
 // From the feet to the top of the head, and to the chest where arrows leave and land.
 const UNIT_HEIGHT = 40
-const GOBLIN_HEIGHT = 30
 const AIM_HEIGHT = 20
+// Each enemy type's feet in its 192x192 frame, and its height from the feet to the top of its head.
+const ENEMY_BODIES: Record<EnemyType, { feet: Point; height: number }> = {
+  goblin: { feet: { x: 95 / 192, y: 127 / 192 }, height: 30 },
+  torch: { feet: { x: 88 / 192, y: 125 / 192 }, height: 36 },
+}
 const TREE_SCALE = 0.74
 // The middle of the trunk, which sits on the tree's solid circle.
 const TREE_BASE = { x: 98 / 192, y: 224 / 256 }
@@ -92,9 +102,14 @@ type Sprite = {
 
 type Point = { x: number; y: number }
 
+type HealthBar = { frame: Phaser.GameObjects.Image; fill: Phaser.GameObjects.Rectangle }
+
 type EnemySprite = {
+  type: EnemyType
   body: Phaser.GameObjects.Sprite
   question: Phaser.GameObjects.Text
+  // Enemies that take more than one answer show how many are left.
+  healthBar?: HealthBar
   // Latest server position, and how fast it moved (units per second).
   target: Point
   velocity: Point
@@ -204,17 +219,13 @@ class GameScene extends Phaser.Scene {
           sprite.body.play(archerKey(colorOf(i), Math.hypot(dx, dy) > MOVING ? 'run' : 'idle'), true)
         }
       }
-      const barX = sprite.body.x - (HEALTH_BAR_SIZE.width * BAR_SCALE) / 2
       const barY = sprite.body.y - UNIT_HEIGHT - HEALTH_BAR_SIZE.height * BAR_SCALE
-      const channelX = barX + HEALTH_BAR_CHANNEL.x * BAR_SCALE
-      sprite.healthBar.setPosition(barX, barY)
-      sprite.healthFill
-        .setPosition(channelX, barY + HEALTH_BAR_CHANNEL.y * BAR_SCALE)
-        .setScale(Phaser.Math.Clamp(player.health / player.maxHealth, 0, 1), 1)
+      this.placeHealthBar({ frame: sprite.healthBar, fill: sprite.healthFill }, sprite.body.x, barY)
+      sprite.healthFill.setScale(Phaser.Math.Clamp(player.health / player.maxHealth, 0, 1), 1)
       // Under the bar, shrinks as the shot cooldown runs out, hidden once the player can shoot.
       sprite.cooldownFill
         .setVisible(player.cooldown > 0)
-        .setPosition(channelX, barY + HEALTH_BAR_SIZE.height * BAR_SCALE)
+        .setPosition(sprite.healthFill.x, barY + HEALTH_BAR_SIZE.height * BAR_SCALE)
         .setScale(Phaser.Math.Clamp(player.cooldown / player.maxCooldown, 0, 1), 1)
       sprite.label.setPosition(sprite.body.x, barY - 8)
       const covering = this.decorations.filter((decoration) => isBehind(sprite.body, decoration))
@@ -282,11 +293,10 @@ class GameScene extends Phaser.Scene {
       ids.add(enemy.id)
       let sprite = this.enemySprites.get(enemy.id)
       if (!sprite) {
+        const { feet } = ENEMY_BODIES[enemy.type]
         sprite = {
-          body: this.add
-            .sprite(enemy.x, enemy.y, GOBLIN)
-            .setOrigin(GOBLIN_FEET.x, GOBLIN_FEET.y)
-            .setScale(UNIT_SCALE),
+          type: enemy.type,
+          body: this.add.sprite(enemy.x, enemy.y, enemy.type).setOrigin(feet.x, feet.y).setScale(UNIT_SCALE),
           question: this.add
             .text(enemy.x, enemy.y, '', {
               fontFamily: 'system-ui',
@@ -298,6 +308,7 @@ class GameScene extends Phaser.Scene {
             })
             .setOrigin(0.5)
             .setDepth(ENEMY_DEPTH),
+          healthBar: enemy.maxHealth > 1 ? this.addHealthBar(ENEMY_DEPTH) : undefined,
           target: { x: enemy.x, y: enemy.y },
           velocity: { x: 0, y: 0 },
         }
@@ -311,13 +322,14 @@ class GameScene extends Phaser.Scene {
         sprite.target = { x: enemy.x, y: enemy.y }
       }
       sprite.question.setText(enemy.question)
+      sprite.healthBar?.fill.setScale(Phaser.Math.Clamp(enemy.health / enemy.maxHealth, 0, 1), 1)
     }
     for (const [id, sprite] of this.enemySprites) {
       if (!ids.has(id)) {
         // Remove enemies the server no longer sends, once any arrow at them has arrived: in a puff of dust if an
         // arrow killed them, otherwise they reached a player and blew up.
         if (!this.targeted.has(id)) {
-          const center = { x: sprite.body.x, y: sprite.body.y - GOBLIN_HEIGHT / 2 }
+          const center = { x: sprite.body.x, y: sprite.body.y - ENEMY_BODIES[sprite.type].height / 2 }
           if (this.shotDown.delete(id)) {
             this.playEffect(DUST, center, 1)
           } else {
@@ -325,6 +337,8 @@ class GameScene extends Phaser.Scene {
           }
           sprite.body.destroy()
           sprite.question.destroy()
+          sprite.healthBar?.frame.destroy()
+          sprite.healthBar?.fill.destroy()
           this.enemySprites.delete(id)
           continue
         }
@@ -340,8 +354,15 @@ class GameScene extends Phaser.Scene {
       if (Math.abs(sprite.velocity.x) > MOVING) {
         sprite.body.setFlipX(sprite.velocity.x < 0)
       }
-      sprite.body.play(goblinKey(Math.hypot(sprite.velocity.x, sprite.velocity.y) > MOVING ? 'run' : 'idle'), true)
-      sprite.question.setPosition(sprite.body.x, sprite.body.y - GOBLIN_HEIGHT - 12)
+      const action = Math.hypot(sprite.velocity.x, sprite.velocity.y) > MOVING ? 'run' : 'idle'
+      sprite.body.play(enemyKey(sprite.type, action), true)
+      // The question sits above the head, and above the health bar if it has one.
+      let top = sprite.body.y - ENEMY_BODIES[sprite.type].height
+      if (sprite.healthBar) {
+        top -= HEALTH_BAR_SIZE.height * BAR_SCALE
+        this.placeHealthBar(sprite.healthBar, sprite.body.x, top)
+      }
+      sprite.question.setPosition(sprite.body.x, top - 12)
     }
   }
 
@@ -360,7 +381,27 @@ class GameScene extends Phaser.Scene {
     effect.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => effect.destroy())
   }
 
+  // A Tiny Swords health bar: the frame, and the fill in its channel, which is scaled to the share of health left.
+  private addHealthBar(depth: number): HealthBar {
+    const { width, height } = HEALTH_BAR_CHANNEL
+    return {
+      frame: this.add.image(0, 0, HEALTH_BAR).setOrigin(0).setScale(BAR_SCALE).setDepth(depth),
+      fill: this.add
+        .rectangle(0, 0, width * BAR_SCALE, height * BAR_SCALE, HEALTH_BAR_FILL)
+        .setOrigin(0)
+        .setDepth(depth),
+    }
+  }
+
+  // Centers the bar on x, with its top edge at y.
+  private placeHealthBar({ frame, fill }: HealthBar, x: number, y: number) {
+    const left = x - (HEALTH_BAR_SIZE.width * BAR_SCALE) / 2
+    frame.setPosition(left, y)
+    fill.setPosition(left + HEALTH_BAR_CHANNEL.x * BAR_SCALE, y + HEALTH_BAR_CHANNEL.y * BAR_SCALE)
+  }
+
   private addSprite(player: PlayerState, index: number): Sprite {
+    const healthBar = this.addHealthBar(PLAYER_DEPTH)
     const sprite = {
       body: this.add
         .sprite(player.x, player.y, archerKey(colorOf(index), 'idle'))
@@ -375,16 +416,8 @@ class GameScene extends Phaser.Scene {
           resolution: TEXT_RESOLUTION,
         })
         .setOrigin(0.5),
-      healthBar: this.add.image(0, 0, HEALTH_BAR).setOrigin(0).setScale(BAR_SCALE),
-      healthFill: this.add
-        .rectangle(
-          0,
-          0,
-          HEALTH_BAR_CHANNEL.width * BAR_SCALE,
-          HEALTH_BAR_CHANNEL.height * BAR_SCALE,
-          HEALTH_BAR_FILL,
-        )
-        .setOrigin(0),
+      healthBar: healthBar.frame,
+      healthFill: healthBar.fill,
       cooldownFill: this.add
         .rectangle(0, 0, HEALTH_BAR_CHANNEL.width * BAR_SCALE, COOLDOWN_BAR_HEIGHT, 0xfacc15)
         .setOrigin(0),

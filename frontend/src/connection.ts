@@ -12,7 +12,18 @@ export type PlayerState = {
   you: boolean
 }
 
-export type EnemyState = { id: number; x: number; y: number; question: string }
+export type EnemyType = 'goblin' | 'torch'
+
+// health: answers still needed to kill it, out of maxHealth.
+export type EnemyState = {
+  id: number
+  type: EnemyType
+  x: number
+  y: number
+  question: string
+  health: number
+  maxHealth: number
+}
 
 // A hit from the last tick: player is an index in players, enemy is the id of the enemy hit.
 export type ShotState = { player: number; enemy: number }

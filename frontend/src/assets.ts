@@ -18,6 +18,7 @@ import purpleIdle from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Arch
 import purpleRun from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Archer/Archer_Run.png'
 import purpleShoot from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Archer/Archer_Shoot.png'
 import tntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Red/TNT_Red.png'
+import torchGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/Torch/Purple/Torch_Purple.png'
 import explosion from '../Tiny Swords/Tiny Swords (Update 010)/Effects/Explosion/Explosions.png'
 import dead from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Knights/Troops/Dead/Dead.png'
 import dust from '../asset/Tiny Swords (Free Pack)/Particle FX/Dust_02.png'
@@ -36,7 +37,7 @@ import pumpkin2 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/13.png'
 import bone1 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/14.png'
 import bone2 from '../Tiny Swords/Tiny Swords (Update 010)/Deco/15.png'
 import smallBar from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Bars/SmallBar_Base.png'
-import type { DetailState } from './connection'
+import type { DetailState, EnemyType } from './connection'
 
 // Players are archers, one color each (a room has up to 4 players).
 export const PLAYER_COLORS = ['blue', 'red', 'yellow', 'purple'] as const
@@ -48,10 +49,12 @@ const ARCHERS = {
   purple: { idle: purpleIdle, run: purpleRun, shoot: purpleShoot },
 }
 
-// Enemies are TNT goblins. Their sheet has one animation per row, 7 frames wide: idle (6 frames), run (6),
-// then throw (7, unused).
-export const GOBLIN = 'goblin'
-const GOBLIN_FRAMES = { idle: { start: 0, end: 5 }, run: { start: 7, end: 12 } }
+// Enemies, loaded under their type's name. Each sheet has one animation per row, 7 frames wide: idle, run, then
+// attacks (unused). Goblins are TNT goblins, with 6 idle frames; torch goblins have 7.
+const ENEMIES: Record<EnemyType, { sheet: string; idle: number }> = {
+  goblin: { sheet: tntGoblin, idle: 6 },
+  torch: { sheet: torchGoblin, idle: 7 },
+}
 
 export const GROUND = 'ground'
 // The center of the tilemap's grass patch, which repeats seamlessly.
@@ -102,7 +105,7 @@ export const HEALTH_BAR_CHANNEL = { x: 10, y: 8, width: 60, height: 6 }
 export const HEALTH_BAR_FILL = 0xff3e3e
 
 export const archerKey = (color: string, action: 'idle' | 'run' | 'shoot') => `archer-${color}-${action}`
-export const goblinKey = (action: 'idle' | 'run') => `goblin-${action}`
+export const enemyKey = (type: EnemyType, action: 'idle' | 'run') => `${type}-${action}`
 export const detailKey = (type: string, variant: number) => `${type}-${variant}`
 
 const UNIT_FRAME = { frameWidth: 192, frameHeight: 192 }
@@ -122,7 +125,9 @@ export function preloadAssets(scene: Phaser.Scene) {
       scene.load.spritesheet(archerKey(color, action as 'idle' | 'run' | 'shoot'), url, UNIT_FRAME)
     }
   }
-  scene.load.spritesheet(GOBLIN, tntGoblin, UNIT_FRAME)
+  for (const [type, { sheet }] of Object.entries(ENEMIES)) {
+    scene.load.spritesheet(type, sheet, UNIT_FRAME)
+  }
   scene.load.spritesheet(EXPLOSION, explosion, UNIT_FRAME)
   scene.load.spritesheet(DUST, dust, { frameWidth: 64, frameHeight: 64 })
   scene.load.spritesheet(DEAD, dead, { frameWidth: 128, frameHeight: 128 })
@@ -141,7 +146,7 @@ export function createHealthBar(scene: Phaser.Scene) {
   bar.refresh()
 }
 
-// Archer and tree animations use the same key as their sprite sheet; the goblin's are rows of one sheet.
+// Archer and tree animations use the same key as their sprite sheet; an enemy's are rows of one sheet.
 export function createAnimations(scene: Phaser.Scene) {
   const loop = (key: string, frameRate: number, repeat = -1) =>
     scene.anims.create({ key, frames: scene.anims.generateFrameNumbers(key), frameRate, repeat })
@@ -150,13 +155,16 @@ export function createAnimations(scene: Phaser.Scene) {
     loop(archerKey(color, 'run'), 10)
     loop(archerKey(color, 'shoot'), 24, 0)
   }
-  for (const [action, frames] of Object.entries(GOBLIN_FRAMES)) {
-    scene.anims.create({
-      key: goblinKey(action as 'idle' | 'run'),
-      frames: scene.anims.generateFrameNumbers(GOBLIN, frames),
-      frameRate: 10,
-      repeat: -1,
-    })
+  for (const [type, { idle }] of Object.entries(ENEMIES) as [EnemyType, { idle: number }][]) {
+    const rows = { idle: { start: 0, end: idle - 1 }, run: { start: 7, end: 12 } }
+    for (const [action, frames] of Object.entries(rows)) {
+      scene.anims.create({
+        key: enemyKey(type, action as 'idle' | 'run'),
+        frames: scene.anims.generateFrameNumbers(type, frames),
+        frameRate: 10,
+        repeat: -1,
+      })
+    }
   }
   loop(TREE, 6)
   loop(EXPLOSION, 18, 0)

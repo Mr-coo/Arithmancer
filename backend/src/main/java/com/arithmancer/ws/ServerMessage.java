@@ -36,7 +36,8 @@ public sealed interface ServerMessage {
 			double maxCooldown, int score, boolean you) {
 	}
 
-	record EnemyState(int id, double x, double y, String question) {
+	// type: goblin or torch. health: answers still needed to kill it, out of maxHealth.
+	record EnemyState(int id, String type, double x, double y, String question, int health, int maxHealth) {
 	}
 
 	// player: index in players, enemy: the id of the enemy hit.

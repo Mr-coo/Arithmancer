@@ -1,6 +1,7 @@
 package com.arithmancer.game;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
@@ -71,8 +72,9 @@ public class GameManager {
 
 	private void sendState(Game game) {
 		List<EnemyState> enemies = game.getEnemies().stream()
-				.map(enemy -> new EnemyState(enemy.getId(), enemy.getPosition().x(), enemy.getPosition().y(),
-						enemy.getQuestion().text()))
+				.map(enemy -> new EnemyState(enemy.getId(), enemy.getType().name().toLowerCase(Locale.ROOT),
+						enemy.getPosition().x(), enemy.getPosition().y(), enemy.getQuestion().text(), enemy.getHealth(),
+						enemy.getMaxHealth()))
 				.toList();
 		List<ShotState> shots = game.getShots().stream()
 				.map(shot -> new ShotState(game.getPlayers().indexOf(shot.player()), shot.enemy().getId()))
