@@ -71,6 +71,10 @@ const TICKS_PER_SECOND = 20
 const SMOOTHING = 0.3
 // Below this many pixels of movement per frame, a character plays its idle animation.
 const MOVING = 0.5
+// The server's logical view around each player: the camera zooms to fit it, so you see what you can hit.
+const VIEW = { width: 960, height: 540 }
+// Texts are drawn at this many pixels per unit, so they stay sharp when zoomed in.
+const TEXT_RESOLUTION = 2
 
 type Sprite = {
   body: Phaser.GameObjects.Sprite
@@ -129,7 +133,11 @@ class GameScene extends Phaser.Scene {
       .tileSprite(0, 0, this.scale.width, this.scale.height, GROUND, GRASS_FRAME)
       .setOrigin(0)
       .setScrollFactor(0)
-    this.scale.on('resize', (size: Phaser.Structs.Size) => this.ground?.setSize(size.width, size.height))
+    this.fitCamera()
+    this.scale.on('resize', (size: Phaser.Structs.Size) => {
+      this.ground?.setSize(size.width, size.height)
+      this.fitCamera()
+    })
     // Characters walk over details, but one whose feet are on a detail, above its bottom edge, is behind it. The box
     // is widened by the character's radius.
     this.detailCovers = this.details.map((detail, i) => {
@@ -272,7 +280,12 @@ class GameScene extends Phaser.Scene {
             .setOrigin(GOBLIN_FEET.x, GOBLIN_FEET.y)
             .setScale(UNIT_SCALE),
           question: this.add
-            .text(enemy.x, enemy.y, '', { fontFamily: 'system-ui', fontSize: '16px', fontStyle: 'bold' })
+            .text(enemy.x, enemy.y, '', {
+              fontFamily: 'system-ui',
+              fontSize: '16px',
+              fontStyle: 'bold',
+              resolution: TEXT_RESOLUTION,
+            })
             .setOrigin(0.5)
             .setDepth(ENEMY_DEPTH),
           target: { x: enemy.x, y: enemy.y },
@@ -322,6 +335,12 @@ class GameScene extends Phaser.Scene {
     }
   }
 
+  // Never zoomed out, so the screen-sized ground still covers the screen.
+  private fitCamera() {
+    const { width, height } = this.scale
+    this.cameras.main.setZoom(Math.max(1, Math.min(width / VIEW.width, height / VIEW.height)))
+  }
+
   private isBehindDetail(feet: Point) {
     return this.detailCovers.some((cover) => cover.contains(feet.x, feet.y))
   }
@@ -338,7 +357,11 @@ class GameScene extends Phaser.Scene {
         .setOrigin(ARCHER_FEET.x, ARCHER_FEET.y)
         .setScale(UNIT_SCALE),
       label: this.add
-        .text(player.x, player.y, player.nickname, { fontFamily: 'system-ui', fontSize: '14px' })
+        .text(player.x, player.y, player.nickname, {
+          fontFamily: 'system-ui',
+          fontSize: '14px',
+          resolution: TEXT_RESOLUTION,
+        })
         .setOrigin(0.5),
       healthBack: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 0x7f1d1d).setOrigin(0, 0.5),
       healthFill: this.add.rectangle(0, 0, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 0x4ade80).setOrigin(0, 0.5),

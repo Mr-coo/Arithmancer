@@ -19,10 +19,11 @@ public class Game {
 	private static final double SPAWN_INTERVAL_SECONDS = 2;
 	private static final int MAX_ENEMIES = 20;
 	// Fixed logical view centered on each player, so screen size does not change who can hit what.
-	private static final double VIEW_WIDTH = 1280;
-	private static final double VIEW_HEIGHT = 720;
+	// The frontend zooms its camera to show this view.
+	private static final double VIEW_WIDTH = 960;
+	private static final double VIEW_HEIGHT = 540;
 	// Roughly outside the view.
-	private static final double SPAWN_DISTANCE = 750;
+	private static final double SPAWN_DISTANCE = 600;
 	// Sizes as drawn by the frontend.
 	private static final double PLAYER_RADIUS = 16;
 	private static final double ENEMY_RADIUS = 14;
