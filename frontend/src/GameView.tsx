@@ -79,6 +79,8 @@ const MOVING = 0.5
 const VIEW = { width: 960, height: 540 }
 // Texts are drawn at this many pixels per unit, so they stay sharp when zoomed in.
 const TEXT_RESOLUTION = 2
+// Texts are outlined in the menus' dark ink, so they read on grass, trees and stones alike.
+const TEXT_OUTLINE = '#3d2a1e'
 
 type Sprite = {
   body: Phaser.GameObjects.Sprite
@@ -290,6 +292,8 @@ class GameScene extends Phaser.Scene {
               fontFamily: 'system-ui',
               fontSize: '16px',
               fontStyle: 'bold',
+              stroke: TEXT_OUTLINE,
+              strokeThickness: 4,
               resolution: TEXT_RESOLUTION,
             })
             .setOrigin(0.5)
@@ -366,6 +370,8 @@ class GameScene extends Phaser.Scene {
         .text(player.x, player.y, player.nickname, {
           fontFamily: 'system-ui',
           fontSize: '14px',
+          stroke: TEXT_OUTLINE,
+          strokeThickness: 3,
           resolution: TEXT_RESOLUTION,
         })
         .setOrigin(0.5),
