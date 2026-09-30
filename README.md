@@ -5,7 +5,7 @@
 
 ## Running locally
 
-Start the backend container (it serves on http://localhost:8080):
+Start the game's container, which builds the frontend and serves it with the backend on http://localhost:8080:
 
 ```sh
 docker compose up --build
@@ -23,19 +23,25 @@ The Vite dev server proxies `/api/*` and `/ws` to the backend on the VPS (43.156
 
 ## Deploying
 
-On the VPS, Caddy is the only public entry point (ports 80 and 443). It serves the built frontend and forwards everything else, like `/ws`, to the backend, so the game and its WebSocket share one origin. The backend's port 8080 is bound to 127.0.0.1, so it can't be reached from outside.
+On the VPS, the game listens on one port bound to 127.0.0.1 (8080 unless `.env` sets `PORT`): Spring Boot serves the built frontend, `/ws` and `/api` together. A Caddy installed on the VPS itself, shared with other projects, forwards a domain to it and handles HTTPS:
+
+```
+game.example.com {
+	reverse_proxy localhost:8080
+}
+```
 
 One-time setup on the VPS:
 
-1. Install Docker and Git.
+1. Install Docker, Git and curl.
 2. Clone the repo into the home directory: `git clone https://github.com/Mr-coo/Arithmancer.git ~/arithmancer`
-3. Copy `.env.example` to `.env` in `~/arithmancer`. `COMPOSE_PROFILES=prod` turns Caddy on. To use a domain, point its A record at the VPS and set `DOMAIN`; Caddy fetches an HTTPS certificate for it. Without `DOMAIN`, Caddy serves plain HTTP on the VPS IP.
-4. Open ports 80 and 443 in the firewall.
-5. Run `docker compose up -d --build` in `~/arithmancer`.
+3. Optionally copy `.env.example` to `.env` in `~/arithmancer` and set `PORT`, if another project already uses 8080.
+4. Run `docker compose up -d --build` in `~/arithmancer`.
+5. Add the site above to the VPS's Caddyfile and reload Caddy.
 6. Create an SSH key pair for deploys and append the public key to `~/.ssh/authorized_keys`. That user must be able to run `docker` (e.g. be in the `docker` group).
 7. In GitHub, under Settings → Secrets and variables → Actions, add `VPS_HOST` (IP or domain), `VPS_USER` and `VPS_SSH_KEY` (the private key).
 
-After that, every push to `master` that touches `backend/`, `frontend/`, `caddy/` or `docker-compose.yml` runs the backend tests, then SSHes into the VPS, resets `~/arithmancer` to `origin/master` and runs `docker compose up -d --build`. It can also be run by hand from the Actions tab.
+After that, every push to `master` that touches `backend/`, `frontend/` or `docker-compose.yml` runs the backend tests, then SSHes into the VPS, resets `~/arithmancer` to `origin/master`, runs `docker compose up -d --build` and waits for the game to answer on its port. It can also be run by hand from the Actions tab.
 
 ## Endpoints
 

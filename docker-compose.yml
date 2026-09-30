@@ -4,28 +4,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     ports:
-      # Only reachable from this machine; the public goes through Caddy
-      - "127.0.0.1:8080:8080"
+      # Only reachable from this machine: the VPS's Caddy forwards to it. PORT in .env picks another port if another
+      # project already uses 8080.
+      - "127.0.0.1:${PORT:-8080}:8080"
     restart: unless-stopped
-
-  caddy:
-    build:
-      context: .
-      dockerfile: caddy/Dockerfile
-    # Off for local dev; the VPS turns it on with COMPOSE_PROFILES=prod in .env
-    profiles: [prod]
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      DOMAIN: ${DOMAIN:-:80}
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - backend
-    restart: unless-stopped
-
-volumes:
-  caddy_data:
-  caddy_config:

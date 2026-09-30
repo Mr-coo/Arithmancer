@@ -2,7 +2,6 @@
 *
 !backend
 !frontend
-!caddy/Caddyfile
 backend/target
 backend/.mvn
 backend/mvnw
