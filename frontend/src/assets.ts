@@ -40,6 +40,7 @@ import smallBar from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/B
 import meatIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_04.png'
 import swordIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_05.png'
 import arrowIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_07.png'
+import itemBadge from '../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Hover.png'
 import type { DetailState, EnemyType, ItemType } from './connection'
 
 // Players are archers, one color each (a room has up to 4 players).
@@ -101,6 +102,10 @@ export const DUST = 'dust'
 // its itemKey, and the HUD shows the same pictures for the boosts you have.
 export const ITEM_ICONS: Record<ItemType, string> = { heal: meatIcon, haste: swordIcon, speed: arrowIcon }
 export const itemKey = (type: ItemType) => `item-${type}`
+// On the ground, each icon sits on a light badge with a glowing gold rim, so it stands out on the grass. Its face is
+// centered at (32, 28) in the 64x64 image.
+export const ITEM_BADGE = 'itemBadge'
+export const ITEM_BADGE_CENTER = { x: 32 / 64, y: 28 / 64 }
 export const DEAD = 'dead'
 // Health bars are the Free Pack's small bar. Its sheet spaces the pieces 64px apart, so they are put together into
 // one texture: the 15x19 ends at (49, 22) and (256, 22), with the 64x19 middle at (128, 22) stretched between them.
@@ -140,6 +145,7 @@ export function preloadAssets(scene: Phaser.Scene) {
   for (const [type, url] of Object.entries(ITEM_ICONS)) {
     scene.load.image(itemKey(type as ItemType), url)
   }
+  scene.load.image(ITEM_BADGE, itemBadge)
   scene.load.spritesheet(DEAD, dead, { frameWidth: 128, frameHeight: 128 })
   scene.load.image(BAR_SHEET, smallBar)
 }

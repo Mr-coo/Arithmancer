@@ -18,6 +18,8 @@ import {
   HEALTH_BAR_CHANNEL,
   HEALTH_BAR_FILL,
   HEALTH_BAR_SIZE,
+  ITEM_BADGE,
+  ITEM_BADGE_CENTER,
   ITEM_ICONS,
   itemKey,
   PLAYER_COLORS,
@@ -73,8 +75,9 @@ const SHOOT_MS = 333
 const SKULL_FEET = { x: 67 / 128, y: 94 / 128 }
 const SKULL_SCALE = 0.6
 const EXPLOSION_SCALE = 0.7
-// Items lie on the ground, bobbing so they catch the eye.
-const ITEM_SCALE = 0.5
+// Items lie on the ground on a badge, bobbing so they catch the eye.
+const ITEM_BADGE_SCALE = 0.8
+const ITEM_ICON_SCALE = 0.55
 const ITEM_BOB = 4
 // Draw order, bottom to top: characters behind a decoration or detail, decorations and details, enemies, then the
 // other players, so an enemy on top of a player does not hide their name or health. Enemies' questions always stay
@@ -145,7 +148,7 @@ class GameScene extends Phaser.Scene {
   // When each player's shoot animation ends, by player index.
   private shootingUntil: number[] = []
   private enemySprites = new Map<number, EnemySprite>()
-  private itemSprites = new Map<number, Phaser.GameObjects.Image>()
+  private itemSprites = new Map<number, Phaser.GameObjects.Image[]>()
   // Enemies with a projectile on the way, kept on screen until it arrives.
   private targeted = new Set<number>()
   // Enemies killed by an arrow. Any other enemy the server drops reached a player and blew up.
@@ -384,26 +387,29 @@ class GameScene extends Phaser.Scene {
     for (const item of this.latest.items) {
       ids.add(item.id)
       if (!this.itemSprites.has(item.id)) {
-        const image = this.add
-          .image(item.x, item.y, itemKey(item.type))
-          .setScale(ITEM_SCALE)
-          .setDepth(DECORATION_DEPTH)
+        const images = [
+          this.add
+            .image(item.x, item.y, ITEM_BADGE)
+            .setOrigin(ITEM_BADGE_CENTER.x, ITEM_BADGE_CENTER.y)
+            .setScale(ITEM_BADGE_SCALE),
+          this.add.image(item.x, item.y, itemKey(item.type)).setScale(ITEM_ICON_SCALE),
+        ].map((image) => image.setDepth(DECORATION_DEPTH))
         this.tweens.add({
-          targets: image,
+          targets: images,
           y: item.y - ITEM_BOB,
           duration: 600,
           yoyo: true,
           repeat: -1,
           ease: 'Sine.easeInOut',
         })
-        this.itemSprites.set(item.id, image)
+        this.itemSprites.set(item.id, images)
       }
     }
-    for (const [id, image] of this.itemSprites) {
+    for (const [id, images] of this.itemSprites) {
       if (!ids.has(id)) {
-        this.playEffect(DUST, image, 0.6)
-        this.tweens.killTweensOf(image)
-        image.destroy()
+        this.playEffect(DUST, images[0], 0.6)
+        this.tweens.killTweensOf(images)
+        images.forEach((image) => image.destroy())
         this.itemSprites.delete(id)
       }
     }
