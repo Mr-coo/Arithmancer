@@ -76,8 +76,9 @@ const EXPLOSION_SCALE = 0.7
 // Items lie on the ground with a gold glow that brightens and dims, bobbing up and down, so they catch the eye.
 const ITEM_SCALE = 0.65
 const ITEM_BOB = 4
-const ITEM_GLOW_COLOR = 0xffe38a
-const ITEM_GLOW = { dim: 1, bright: 5 }
+const ITEM_GLOW_COLOR = 0xfff1a8
+// How far the glow reaches, and its strength as it dims and brightens.
+const ITEM_GLOW = { scale: 1.6, dim: 2, bright: 7 }
 // Draw order, bottom to top: characters behind a decoration or detail, decorations and details, enemies, then the
 // other players, so an enemy on top of a player does not hide their name or health. Enemies' questions always stay
 // above decorations, so they can be read.
@@ -392,7 +393,7 @@ class GameScene extends Phaser.Scene {
           .setDepth(DECORATION_DEPTH)
           .enableFilters()
         // Filters need WebGL; with the canvas renderer the item just has no glow.
-        const glow = image.filters?.internal.addGlow(ITEM_GLOW_COLOR, ITEM_GLOW.bright)
+        const glow = image.filters?.internal.addGlow(ITEM_GLOW_COLOR, ITEM_GLOW.bright, 0, ITEM_GLOW.scale)
         // Pad the image so the glow is not cut off at its edges.
         glow?.setPaddingOverride(null)
         this.tweens.add({
