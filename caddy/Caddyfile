@@ -3,7 +3,7 @@
 	root * /srv
 
 	# Files of the built frontend are served directly; everything else (/ws, /api, ...) goes to Spring Boot
-	@frontend file
+	@frontend file {path} {path}/index.html
 	handle @frontend {
 		file_server
 	}
