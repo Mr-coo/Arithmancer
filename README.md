@@ -29,14 +29,7 @@ One-time setup on the VPS:
 
 1. Install Docker and Git.
 2. Clone the repo into the home directory: `git clone https://github.com/Mr-coo/Arithmancer.git ~/Arithmancer`
-3. Create `~/Arithmancer/.env`:
-
-   ```sh
-   COMPOSE_PROFILES=prod
-   DOMAIN=game.example.com
-   ```
-
-   `COMPOSE_PROFILES=prod` turns Caddy on. Point the domain's A record at the VPS and Caddy fetches an HTTPS certificate for it. Without a domain, leave `DOMAIN` out and Caddy serves plain HTTP on the VPS IP.
+3. Copy `.env.example` to `.env` in `~/Arithmancer`. `COMPOSE_PROFILES=prod` turns Caddy on. To use a domain, point its A record at the VPS and set `DOMAIN`; Caddy fetches an HTTPS certificate for it. Without `DOMAIN`, Caddy serves plain HTTP on the VPS IP.
 4. Open ports 80 and 443 in the firewall.
 5. Run `docker compose up -d --build` in `~/Arithmancer`.
 6. Create an SSH key pair for deploys and append the public key to `~/.ssh/authorized_keys`. That user must be able to run `docker` (e.g. be in the `docker` group).
