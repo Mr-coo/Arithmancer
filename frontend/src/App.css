@@ -345,7 +345,7 @@ button {
   inset: 0;
 }
 
-/* The time on a ribbon, over a carved board with everyone's score. */
+/* The time on a ribbon, over a parchment scroll with everyone's score. */
 .hud {
   position: fixed;
   top: 12px;
@@ -355,20 +355,22 @@ button {
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 
+  /* The scroll of the battle's problem, drawn at 9/16: its parchment starts 27px in from the top, 19px in from the
+     sides, and ends 23px above the bottom. The margins pull those empty edges in, so the ribbon overlaps the scroll's
+     top edge. */
   ul {
     min-width: 150px;
-    margin: -16px 0 0;
-    padding: 12px 4px 0;
+    margin: -34px -12px 0;
+    padding: 4px 4px 0;
     list-style: none;
     font-size: 16px;
     color: var(--text-h);
-    border: 20px solid transparent;
-    border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Carved_9Slides.png') 64 fill round;
+    border: 36px solid transparent;
+    border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Banner_Horizontal.png') 64 fill round;
 
     /* Without a ribbon above it, as in the battle. */
     &:first-child {
-      margin-top: 0;
-      padding-top: 0;
+      margin-top: -24px;
     }
   }
 
