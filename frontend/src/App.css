@@ -401,14 +401,18 @@ button {
   }
 }
 
-/* The battle's turn and time on a ribbon at the top middle of the screen, above the scene. */
+/* The battle's turn and time on a ribbon above the problem's scroll, just over the ribbon on its top edge. */
 .turn {
-  position: fixed;
-  top: 12px;
+  position: absolute;
+  bottom: calc(100% + 36px);
   left: 50%;
   transform: translateX(-50%);
   font-variant-numeric: tabular-nums;
-  pointer-events: none;
+}
+
+/* With no ribbon on the scroll, it sits on the scroll's top edge itself. */
+.problem:not(:has(.status)) .turn {
+  bottom: calc(100% - 10px);
 }
 
 /* The battle's problem on a parchment scroll at the bottom: a ribbon across its top with the damage charged this turn,
