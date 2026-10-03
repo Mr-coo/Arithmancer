@@ -47,22 +47,23 @@ const WARRIOR_HEIGHT = 40
 // How far in front of the goblin striking warriors stop, and how far apart they stand.
 const REACH = 44
 const STRIKE_SPACING = 12
-// A strike is a run to the goblin, a swing whose blade lands LAND_MS in, and a run back.
-const RUN_MS = 250
-const LAND_MS = 170
-const SWING_MS = 333
+// A strike is a run to the goblin, a swing whose blade lands LAND_MS in, and a run back. It takes 1.6 seconds, in the
+// first half of the goblin's turn.
+const RUN_MS = 500
+const LAND_MS = 300
+const SWING_MS = 600
 // A new goblin runs in from past the stage's right edge.
-const ENTER_MS = 500
+const ENTER_MS = 800
 // The goblin strikes back by lunging this far toward the warriors and back. Each warrior hit flashes, and raises its
 // shield for the 6 frames of its guard animation.
 const LUNGE = 120
-const LUNGE_MS = 200
-const FLASH_MS = 150
-const GUARD_MS = 500
+const LUNGE_MS = 400
+const FLASH_MS = 250
+const GUARD_MS = 750
 const HIT_TINT = 0xff8080
 const HIT_COLOR = '#ffb3b3'
 // Damage numbers float up and fade.
-const POP_MS = 700
+const POP_MS = 1000
 const POP_RISE = 28
 // Decorations are scattered over SCATTER, around the stage, but none touch the arena, where the characters stand and
 // move: the warriors' column, the lane where they fight, and the lane the goblin comes in by from the right. Each kind

@@ -21,8 +21,9 @@ public class Battle {
 
 	// Starting values, to tune during development.
 	private static final double TURN_SECONDS = 15;
-	// The warriors strike as the goblin's turn starts; the goblin acts halfway through it.
-	private static final double ENEMY_TURN_SECONDS = 2;
+	// The warriors strike as the goblin's turn starts; the goblin acts halfway through it, once their strikes have
+	// played out on screen.
+	private static final double ENEMY_TURN_SECONDS = 4;
 	// A wrong answer locks the player's options for this long, while the turn goes on.
 	private static final double WRONG_ANSWER_LOCK_SECONDS = 3;
 	// Each problem offers the answer and WRONG_OPTIONS other numbers, at least 0 and at most WRONG_OPTION_RANGE from it.

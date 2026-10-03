@@ -72,7 +72,8 @@ export const ARCHERS = {
   purple: { idle: purpleIdle, run: purpleRun, shoot: purpleShoot },
 }
 
-// In turn-based battles, players are warriors instead: 192x192 frames, with 8 idle, 6 run, 4 for each attack and 6 guard.
+// In turn-based battles, players are warriors instead: 192x192 frames, with 8 idle, 6 run, 4 for each attack and 6
+// guard.
 export const WARRIORS = {
   blue: {
     idle: blueWarriorIdle,
@@ -289,9 +290,10 @@ export function createAnimations(scene: Phaser.Scene) {
     loop(archerKey(color, 'shoot'), 24, 0)
     loop(warriorKey(color, 'idle'), 10)
     loop(warriorKey(color, 'run'), 10)
-    loop(warriorKey(color, 'attack1'), 12, 0)
-    loop(warriorKey(color, 'attack2'), 12, 0)
-    loop(warriorKey(color, 'guard'), 12, 0)
+    // Swings and guards are slow enough to follow.
+    loop(warriorKey(color, 'attack1'), 7, 0)
+    loop(warriorKey(color, 'attack2'), 7, 0)
+    loop(warriorKey(color, 'guard'), 8, 0)
   }
   for (const [type, { idle }] of Object.entries(ENEMIES) as [EnemyType, { idle: number }][]) {
     const rows = { idle: { start: 0, end: idle - 1 }, run: { start: 7, end: 12 } }
