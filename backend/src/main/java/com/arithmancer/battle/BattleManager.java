@@ -11,8 +11,10 @@ import org.springframework.stereotype.Component;
 
 import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
+import com.arithmancer.ws.ServerMessage.BattleOver;
 import com.arithmancer.ws.ServerMessage.BattleState;
 import com.arithmancer.ws.ServerMessage.FighterState;
+import com.arithmancer.ws.ServerMessage.FinalScore;
 import com.arithmancer.ws.ServerMessage.FoeState;
 import com.arithmancer.ws.ServerMessage.ProblemState;
 import com.arithmancer.ws.SessionRegistry;
@@ -51,6 +53,24 @@ public class BattleManager {
 		for (Battle battle : battles) {
 			battle.tick(1.0 / TICKS_PER_SECOND);
 			sendState(battle);
+			if (battle.isOver()) {
+				end(battle);
+			}
+		}
+	}
+
+	// Each player's score is the damage they dealt.
+	private void end(Battle battle) {
+		battles.remove(battle);
+		log.info("Battle {} over after {} turns, {} goblins beaten", battle.getCode(), battle.getTurn(),
+				battle.getBeaten());
+		for (Player recipient : battle.getPlayers()) {
+			List<FinalScore> scores = battle.getPlayers().stream()
+					.map(player -> new FinalScore(player.getNickname(), battle.getFighter(player).getDamageDealt(),
+							player == recipient))
+					.toList();
+			sessionRegistry.send(recipient.getSessionId(), "battleOver",
+					new BattleOver(battle.getTurn(), battle.getBeaten(), scores));
 		}
 	}
 
@@ -60,6 +80,7 @@ public class BattleManager {
 		FoeState enemy = new FoeState(foe.getId(), foe.getType().name().toLowerCase(Locale.ROOT), foe.getHealth(),
 				foe.getMaxHealth());
 		List<Integer> strikes = battle.getStrikes().stream().map(players::indexOf).toList();
+		List<Integer> hits = battle.getHits().stream().map(players::indexOf).toList();
 		for (Player recipient : players) {
 			List<FighterState> fighters = players.stream().map(player -> {
 				Fighter fighter = battle.getFighter(player);
@@ -70,7 +91,7 @@ public class BattleManager {
 			ProblemState problem = new ProblemState(you.getProblemId(), you.getProblem().text(), you.getOptions());
 			sessionRegistry.send(recipient.getSessionId(), "battleState",
 					new BattleState(battle.getTurn(), battle.getPhase().name().toLowerCase(Locale.ROOT),
-							battle.getSecondsLeft(), fighters, enemy, problem, you.getLockSeconds(), strikes));
+							battle.getSecondsLeft(), fighters, enemy, problem, you.getLockSeconds(), strikes, hits));
 		}
 	}
 

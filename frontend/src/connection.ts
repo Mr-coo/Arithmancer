@@ -86,7 +86,7 @@ export type FoeState = { id: number; type: EnemyType; health: number; maxHealth:
 export type ProblemState = { id: number; text: string; options: number[] }
 
 // problem and locked (seconds until a wrong answer stops locking your options) are yours. strikes: indices in players
-// of the warriors striking the goblin on this tick.
+// of the warriors striking the goblin on this tick; hits: of the players the goblin strikes.
 export type BattleState = {
   turn: number
   phase: 'players' | 'enemy'
@@ -96,7 +96,11 @@ export type BattleState = {
   problem: ProblemState
   locked: number
   strikes: number[]
+  hits: number[]
 }
+
+// turns: the turns the team lasted. beaten: goblins beaten. Each player's score is the damage they dealt.
+export type BattleOver = { turns: number; beaten: number; players: FinalScore[] }
 
 type RoomContent = { code: string; players: string[] }
 
@@ -108,6 +112,7 @@ type ServerMessages = {
   gameOver: GameOver
   battleStarted: RoomContent
   battleState: BattleState
+  battleOver: BattleOver
 }
 
 type ClientMessages = {

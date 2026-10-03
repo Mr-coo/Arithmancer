@@ -12,7 +12,7 @@ import com.arithmancer.math.Question;
 import com.arithmancer.room.Player;
 
 // A turn-based battle against one goblin at a time. On the players' turn, everyone answers their own problems at
-// once, charging up a strike. On the goblin's turn, the warriors strike.
+// once, charging up a strike. On the goblin's turn, the warriors strike, then the goblin strikes back.
 public class Battle {
 
 	public enum Phase {
@@ -35,9 +35,11 @@ public class Battle {
 	private final List<Player> players;
 	private final Map<Player, Fighter> fighters = new HashMap<>();
 	private final List<Player> strikes = new ArrayList<>();
+	private final List<Player> hits = new ArrayList<>();
 	private final Random random = new Random();
 	private Foe foe;
 	private int nextFoeId;
+	private int beaten;
 	private Phase phase = Phase.PLAYERS;
 	private double secondsLeft = TURN_SECONDS;
 	private boolean enemyActed;
@@ -86,10 +88,25 @@ public class Battle {
 		return strikes;
 	}
 
+	// The players the goblin struck on the last tick.
+	public List<Player> getHits() {
+		return hits;
+	}
+
+	public int getBeaten() {
+		return beaten;
+	}
+
+	// The battle is lost once every player is downed.
+	public boolean isOver() {
+		return standingPlayers().isEmpty();
+	}
+
 	public void tick(double deltaSeconds) {
 		elapsedSeconds += deltaSeconds;
 		secondsLeft -= deltaSeconds;
 		strikes.clear();
+		hits.clear();
 		players.forEach(player -> answer(player, deltaSeconds));
 		if (phase == Phase.PLAYERS && secondsLeft <= 0) {
 			strike();
@@ -131,11 +148,17 @@ public class Battle {
 		enemyActed = false;
 	}
 
-	// A beaten goblin is replaced by the next one.
+	// A beaten goblin is replaced by the next one. Otherwise the goblin strikes every standing player.
 	private void enemyActs() {
 		enemyActed = true;
 		if (foe.getHealth() <= 0) {
+			beaten++;
 			foe = nextFoe();
+			return;
+		}
+		for (Player player : standingPlayers()) {
+			player.setHealth(Math.max(0, player.getHealth() - foe.getAttack()));
+			hits.add(player);
 		}
 	}
 
@@ -148,6 +171,11 @@ public class Battle {
 			fighter.lock(0);
 			pose(fighter);
 		}
+	}
+
+	// Players at 0 health are downed: they cannot answer, and the goblin leaves them alone.
+	private List<Player> standingPlayers() {
+		return players.stream().filter(player -> player.getHealth() > 0).toList();
 	}
 
 	private Foe nextFoe() {

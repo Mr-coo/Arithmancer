@@ -1,6 +1,6 @@
 import { type ReactNode, useState } from 'react'
 import { BattleView } from './BattleView'
-import { connect, type Connection, type DecorationState, type DetailState, type GameOver } from './connection'
+import { connect, type Connection, type DecorationState, type DetailState, type FinalScore } from './connection'
 import { formatTime } from './format'
 import { GameView } from './GameView'
 import { HeroScene } from './HeroScene'
@@ -12,7 +12,10 @@ type Screen =
   | { name: 'lobby'; code: string; players: string[]; host: boolean }
   | { name: 'game'; decorations: DecorationState[]; details: DetailState[] }
   | { name: 'battle' }
-  | ({ name: 'gameOver' } & GameOver)
+  | { name: 'gameOver'; summary: string; players: FinalScore[] }
+
+// "1 goblin", "4 goblins".
+const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? '' : 's'}`
 
 function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' })
@@ -33,8 +36,14 @@ function App() {
       setScreen((current) => ({ name: 'lobby', code, players, host: current.name === 'lobby' && current.host })),
     )
     opened.on('gameStarted', ({ decorations, details }) => setScreen({ name: 'game', decorations, details }))
-    opened.on('gameOver', (results) => setScreen({ name: 'gameOver', ...results }))
+    opened.on('gameOver', ({ time, players }) =>
+      setScreen({ name: 'gameOver', summary: `You survived ${formatTime(time)}.`, players }),
+    )
     opened.on('battleStarted', () => setScreen({ name: 'battle' }))
+    opened.on('battleOver', ({ turns, beaten, players }) => {
+      const summary = `You beat ${count(beaten, 'goblin')} in ${count(turns, 'turn')}.`
+      setScreen({ name: 'gameOver', summary, players })
+    })
     setConnection(opened)
     setConnecting(false)
     return opened
@@ -78,7 +87,7 @@ function App() {
     return (
       <main className="panel">
         <h1>Game over</h1>
-        <p>You survived {formatTime(screen.time)}.</p>
+        <p>{screen.summary}</p>
         <ul className="players results">
           {screen.players.map((player, i) => (
             <li key={i} className={player.you ? 'you' : undefined}>

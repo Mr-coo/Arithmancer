@@ -5,6 +5,7 @@ import {
   BAR_SCALE,
   createAnimations,
   createHealthBar,
+  DEAD,
   DUST,
   ENEMY_BODIES,
   enemyKey,
@@ -17,6 +18,8 @@ import {
   placeHealthBar,
   playEffect,
   preloadAssets,
+  SKULL_FEET,
+  SKULL_SCALE,
   textStyle,
   UNIT_SCALE,
   WARRIOR_FEET,
@@ -43,6 +46,14 @@ const LAND_MS = 170
 const SWING_MS = 333
 // A new goblin runs in from past the stage's right edge.
 const ENTER_MS = 500
+// The goblin strikes back by lunging this far toward the warriors and back. Each warrior hit flashes, and raises its
+// shield for the 6 frames of its guard animation.
+const LUNGE = 120
+const LUNGE_MS = 200
+const FLASH_MS = 150
+const GUARD_MS = 500
+const HIT_TINT = 0xff8080
+const HIT_COLOR = '#ffb3b3'
 // Damage numbers float up and fade.
 const POP_MS = 700
 const POP_RISE = 28
@@ -68,8 +79,8 @@ const colorOf = (player: number) => PLAYER_COLORS[player % PLAYER_COLORS.length]
 
 class BattleScene extends Phaser.Scene {
   latest?: BattleState
-  // States with strikes, played once the scene is running.
-  pendingStrikes: BattleState[] = []
+  // States with strikes or hits, played once the scene is running.
+  pending: BattleState[] = []
   private warriors: Warrior[] = []
   private goblin?: Goblin
 
@@ -104,12 +115,25 @@ class BattleScene extends Phaser.Scene {
       }
       this.goblin = this.addGoblin(state.enemy, this.goblin !== undefined)
     }
-    for (const strikes of this.pendingStrikes.splice(0)) {
-      this.playStrikes(strikes)
+    for (const event of this.pending.splice(0)) {
+      if (event.strikes.length > 0) {
+        this.playStrikes(event)
+      }
+      if (event.hits.length > 0) {
+        this.playHits(event)
+      }
     }
     state.players.forEach((player, i) => {
       const warrior = this.warriors[i]
       this.follow(warrior, player.health)
+      // A downed warrior is a skull.
+      const downed = warrior.shownHealth <= 0
+      const isSkull = warrior.body.anims.currentAnim?.key === DEAD
+      if (downed && !isSkull) {
+        warrior.body.setOrigin(SKULL_FEET.x, SKULL_FEET.y).setScale(SKULL_SCALE).play(DEAD)
+      } else if (!downed && isSkull) {
+        warrior.body.setOrigin(WARRIOR_FEET.x, WARRIOR_FEET.y).setScale(UNIT_SCALE).play(warriorKey(colorOf(i), 'idle'))
+      }
       const barY = warrior.body.y - WARRIOR_HEIGHT - HEALTH_BAR_SIZE.height * BAR_SCALE
       placeHealthBar(warrior.healthBar, warrior.body.x, barY)
       warrior.healthBar.fill.setScale(Phaser.Math.Clamp(warrior.shownHealth / player.maxHealth, 0, 1), 1)
@@ -163,6 +187,37 @@ class BattleScene extends Phaser.Scene {
     })
   }
 
+  // The goblin lunges at the warriors. As it lands, each warrior hit raises its shield, flashes, and its bar drops.
+  private playHits(state: BattleState) {
+    const goblin = this.goblin
+    if (!goblin || goblin.gone) {
+      return
+    }
+    goblin.body.play(enemyKey(goblin.type, 'run'))
+    this.tweens.add({
+      targets: goblin.body,
+      x: GOBLIN_X - LUNGE,
+      duration: LUNGE_MS,
+      yoyo: true,
+      onComplete: () => goblin.body.play(enemyKey(goblin.type, 'idle')),
+    })
+    for (const player of state.hits) {
+      const warrior = this.warriors[player]
+      const damage = warrior.shownHealth - state.players[player].health
+      warrior.holdUntil = this.time.now + LUNGE_MS
+      this.time.delayedCall(LUNGE_MS, () => {
+        warrior.body.play(warriorKey(colorOf(player), 'guard')).setTint(HIT_TINT)
+        this.time.delayedCall(FLASH_MS, () => warrior.body.clearTint())
+        this.time.delayedCall(GUARD_MS, () => {
+          if (warrior.shownHealth > 0) {
+            warrior.body.play(warriorKey(colorOf(player), 'idle'))
+          }
+        })
+        this.pop({ x: warrior.body.x, y: warrior.body.y - WARRIOR_HEIGHT }, `-${damage}`, HIT_COLOR)
+      })
+    }
+  }
+
   // The bar follows the server's health, unless a blow has yet to land.
   private follow(character: Character, health: number) {
     if (this.time.now >= character.holdUntil) {
@@ -170,8 +225,11 @@ class BattleScene extends Phaser.Scene {
     }
   }
 
-  private pop(at: Point, text: string) {
-    const label = this.add.text(at.x, at.y, text, textStyle(20, 4)).setOrigin(0.5).setDepth(TEXT_DEPTH)
+  private pop(at: Point, text: string, color = '#ffffff') {
+    const label = this.add
+      .text(at.x, at.y, text, { ...textStyle(20, 4), color })
+      .setOrigin(0.5)
+      .setDepth(TEXT_DEPTH)
     this.tweens.add({
       targets: label,
       y: at.y - POP_RISE,
@@ -269,8 +327,8 @@ export function BattleView({ connection }: { connection: Connection }) {
     })
     const stopState = connection.on('battleState', (state) => {
       scene.latest = state
-      if (state.strikes.length > 0) {
-        scene.pendingStrikes.push(state)
+      if (state.strikes.length > 0 || state.hits.length > 0) {
+        scene.pending.push(state)
       }
       setState(state)
     })
@@ -329,7 +387,9 @@ export function BattleView({ connection }: { connection: Connection }) {
             </ul>
           </div>
           <section className="problem">
-            {state.phase === 'players' ? (
+            {(you?.health ?? 0) <= 0 ? (
+              <p className="problem-text">You're down.</p>
+            ) : state.phase === 'players' ? (
               <>
                 <p>
                   {state.locked > 0 ? `Wrong! Thinking… ${Math.ceil(state.locked)}s` : `Damage this turn: ${charge}`}
