@@ -185,8 +185,9 @@ public class Battle {
 		return players.stream().filter(player -> player.getHealth() > 0).toList();
 	}
 
+	// Torch goblins, whose torch swing reads well as an attack.
 	private Foe nextFoe() {
-		return new Foe(nextFoeId++, Enemy.Type.GOBLIN, GOBLIN_HEALTH_PER_PLAYER * players.size(), GOBLIN_ATTACK);
+		return new Foe(nextFoeId++, Enemy.Type.TORCH, GOBLIN_HEALTH_PER_PLAYER * players.size(), GOBLIN_ATTACK);
 	}
 
 	// Problems follow the real-time ramp by how long the battle has lasted.
