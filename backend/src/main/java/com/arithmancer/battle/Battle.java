@@ -21,9 +21,10 @@ public class Battle {
 
 	// Starting values, to tune during development.
 	private static final double TURN_SECONDS = 15;
-	// The warriors strike as the goblin's turn starts; the goblin acts halfway through it, once their strikes have
-	// played out on screen.
-	private static final double ENEMY_TURN_SECONDS = 4;
+	// The warriors strike as the goblin's turn starts. The goblin acts ENEMY_ACTS_AT_SECONDS in, once their strikes have
+	// played out on screen, and its turn lasts until its own move has too.
+	private static final double ENEMY_TURN_SECONDS = 5;
+	private static final double ENEMY_ACTS_AT_SECONDS = 2.8;
 	// A wrong answer locks the player's options for this long, while the turn goes on.
 	private static final double WRONG_ANSWER_LOCK_SECONDS = 3;
 	// Each problem offers the answer and WRONG_OPTIONS other numbers, at least 0 and at most WRONG_OPTION_RANGE from it.
@@ -111,7 +112,7 @@ public class Battle {
 		players.forEach(player -> answer(player, deltaSeconds));
 		if (phase == Phase.PLAYERS && secondsLeft <= 0) {
 			strike();
-		} else if (phase == Phase.ENEMY && !enemyActed && secondsLeft <= ENEMY_TURN_SECONDS / 2) {
+		} else if (phase == Phase.ENEMY && !enemyActed && secondsLeft <= ENEMY_TURN_SECONDS - ENEMY_ACTS_AT_SECONDS) {
 			enemyActs();
 		} else if (phase == Phase.ENEMY && secondsLeft <= 0) {
 			startTurn();
