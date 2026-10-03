@@ -41,7 +41,7 @@ Arithmancer is an endless co-op browser game. Players survive enemies by solving
 - Enemies spawn just outside the players' views.
 
 ### Turn-based mode
-- A side-view battle: the players' warriors on the left, one goblin at a time on the right.
+- A side-view battle: the players' warriors on the left, one goblin at a time on the right, with trees, rocks, bushes, mushrooms, pumpkins and bones scattered around them, the same for everyone in the room.
 - The players' turn and the goblin's turn alternate.
 - On the players' turn (15 seconds), everyone answers at once. Each player gets their own math problem with 4 options, picked with the keys 1–4 or a click. The options are the answer and 3 other numbers near it; the whole answer counts, not just its last digit.
 - Each right answer adds to the player's charge, one more than the last: 1, then 2, then 3. A wrong answer locks that player's options for 3 seconds while the turn goes on. Every answer brings a new problem.

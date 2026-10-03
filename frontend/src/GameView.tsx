@@ -8,6 +8,7 @@ import {
   createAnimations,
   createHealthBar,
   DEAD,
+  DETAIL_SCALE,
   DETAIL_SIZE,
   DETAILS,
   detailKey,
@@ -32,6 +33,8 @@ import {
   SKULL_FEET,
   SKULL_SCALE,
   TREE,
+  TREE_BASE,
+  TREE_SCALE,
   textStyle,
   UNIT_SCALE,
 } from './assets'
@@ -59,16 +62,12 @@ const ARCHER_FEET = { x: 95 / 192, y: 128 / 192 }
 // From the feet to the top of the head, and to the chest where arrows leave and land.
 const UNIT_HEIGHT = 40
 const AIM_HEIGHT = 20
-const TREE_SCALE = 0.74
-// The middle of the trunk, which sits on the tree's solid circle.
-const TREE_BASE = { x: 98 / 192, y: 224 / 256 }
 // Width and vertical center of each rock in ROCKS, so it can be scaled to its solid circle.
 const ROCK_SIZES = [
   { width: 46, centerY: 33 / 64 },
   { width: 54, centerY: 33 / 64 },
   { width: 39, centerY: 30 / 64 },
 ]
-const DETAIL_SCALE = 0.75
 const ARROW_SCALE = 0.6
 // 8 frames at 24 per second.
 const SHOOT_MS = 333

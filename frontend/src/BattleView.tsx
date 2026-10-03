@@ -6,6 +6,9 @@ import {
   createAnimations,
   createHealthBar,
   DEAD,
+  DETAIL_SCALE,
+  DETAILS,
+  detailKey,
   DUST,
   ENEMY_BODIES,
   enemyKey,
@@ -18,14 +21,18 @@ import {
   placeHealthBar,
   playEffect,
   preloadAssets,
+  ROCKS,
   SKULL_FEET,
   SKULL_SCALE,
+  TREE,
+  TREE_BASE,
+  TREE_SCALE,
   textStyle,
   UNIT_SCALE,
   WARRIOR_FEET,
   warriorKey,
 } from './assets'
-import type { BattleState, Connection, EnemyType, FoeState } from './connection'
+import type { BattleState, Connection, DetailState, EnemyType, FoeState } from './connection'
 
 // The battle is drawn on a fixed stage that the camera zooms to fit: the warriors in a column on the left, the goblin
 // on the right. Characters stand above the middle, leaving the bottom to the problem.
@@ -57,6 +64,37 @@ const HIT_COLOR = '#ffb3b3'
 // Damage numbers float up and fade.
 const POP_MS = 700
 const POP_RISE = 28
+// Decorations are scattered over SCATTER, around the stage, but none touch the arena, where the characters stand and
+// move: the warriors' column, the lane where they fight, and the lane the goblin comes in by from the right. Each kind
+// takes up a box around where it stands, a tree mostly above it.
+const SCATTER = { left: -320, top: -200, right: 960, bottom: 600 }
+const ARENA = [
+  { left: 150, top: 15, right: 250, bottom: 280 },
+  { left: 150, top: 95, right: 520, bottom: 235 },
+  { left: 380, top: 85, right: 780, bottom: 205 },
+]
+const TREE_BOX = { left: -60, top: -180, right: 60, bottom: 10 }
+const SMALL_BOX = { left: -26, top: -26, right: 26, bottom: 26 }
+const TREE_COUNT = 14
+const ROCK_COUNT = 10
+const DETAIL_COUNT = 90
+const TREE_SPACING = 100
+const DECORATION_SPACING = 40
+const ROCK_SCALE = 0.8
+// Types listed more than once are more common.
+const DETAIL_TYPES: DetailState['type'][] = [
+  'bush',
+  'bush',
+  'bush',
+  'mushroom',
+  'mushroom',
+  'pebble',
+  'pumpkin',
+  'pumpkin',
+  'bone',
+]
+// The ground, then decorations ordered by how low they stand, then the characters.
+const GROUND_DEPTH = -1
 const GOBLIN_DEPTH = 1
 const WARRIOR_DEPTH = 2
 const TEXT_DEPTH = 3
@@ -77,7 +115,22 @@ type Goblin = Character & { id: number; type: EnemyType; gone: boolean }
 
 const colorOf = (player: number) => PLAYER_COLORS[player % PLAYER_COLORS.length]
 
+type Box = { left: number; top: number; right: number; bottom: number }
+
+// Random numbers from 0 to 1 that are the same for the same seed: an FNV-1a hash of it, fed to mulberry32.
+function seededRandom(seed: string) {
+  let state = [...seed].reduce((hash, char) => Math.imul(hash ^ char.charCodeAt(0), 16777619), 2166136261)
+  return () => {
+    state = (state + 0x6d2b79f5) | 0
+    let t = Math.imul(state ^ (state >>> 15), 1 | state)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
 class BattleScene extends Phaser.Scene {
+  // The room's code, which lays out the decorations.
+  code = ''
   latest?: BattleState
   // States with strikes or hits, played once the scene is running.
   pending: BattleState[] = []
@@ -93,8 +146,10 @@ class BattleScene extends Phaser.Scene {
     createHealthBar(this)
     // Grass well past the stage, so it fills screens of any shape.
     this.add
-      .tileSprite(-STAGE.width, -STAGE.height, 3 * STAGE.width, 3 * STAGE.height, GROUND, GRASS_FRAME)
+      .tileSprite(-2 * STAGE.width, -2 * STAGE.height, 5 * STAGE.width, 5 * STAGE.height, GROUND, GRASS_FRAME)
       .setOrigin(0)
+      .setDepth(GROUND_DEPTH)
+    this.scatterDecorations()
     this.fitCamera()
     this.scale.on('resize', () => this.fitCamera())
   }
@@ -302,6 +357,53 @@ class BattleScene extends Phaser.Scene {
     goblin.gone = true
   }
 
+  // Trees, rocks, bushes, mushrooms, pebbles, pumpkins and bones around the arena, laid out from the room code so
+  // everyone in the room sees the same ones.
+  private scatterDecorations() {
+    const random = seededRandom(this.code)
+    const pick = <T,>(items: readonly T[]) => items[Math.floor(random() * items.length)]
+    const placed: { at: Point; spacing: number }[] = []
+    const scatter = (count: number, box: Box, spacing: number, add: (at: Point) => Phaser.GameObjects.Image) => {
+      for (let attempt = 0, added = 0; attempt < 50 * count && added < count; attempt++) {
+        const at = {
+          x: SCATTER.left + random() * (SCATTER.right - SCATTER.left),
+          y: SCATTER.top + random() * (SCATTER.bottom - SCATTER.top),
+        }
+        const inArena = ARENA.some(
+          (area) =>
+            at.x + box.right > area.left &&
+            at.x + box.left < area.right &&
+            at.y + box.bottom > area.top &&
+            at.y + box.top < area.bottom,
+        )
+        const crowded = placed.some(
+          (other) => Phaser.Math.Distance.BetweenPoints(other.at, at) < Math.max(other.spacing, spacing),
+        )
+        if (!inArena && !crowded) {
+          placed.push({ at, spacing })
+          // Under the characters; lower ones in front of higher ones.
+          add(at).setDepth(at.y / 10000)
+          added++
+        }
+      }
+    }
+    scatter(TREE_COUNT, TREE_BOX, TREE_SPACING, (at) =>
+      this.add
+        .sprite(at.x, at.y, TREE)
+        .setOrigin(TREE_BASE.x, TREE_BASE.y)
+        .setScale(TREE_SCALE)
+        .play({ key: TREE, startFrame: Math.floor(random() * 8) }),
+    )
+    scatter(ROCK_COUNT, SMALL_BOX, DECORATION_SPACING, (at) =>
+      this.add.image(at.x, at.y, pick(ROCKS)).setScale(ROCK_SCALE),
+    )
+    scatter(DETAIL_COUNT, SMALL_BOX, DECORATION_SPACING, (at) => {
+      const type = pick(DETAIL_TYPES)
+      const variant = Math.floor(random() * DETAILS[type].length)
+      return this.add.image(at.x, at.y, detailKey(type, variant)).setScale(DETAIL_SCALE)
+    })
+  }
+
   private fitCamera() {
     const { width, height } = this.scale
     this.cameras.main
@@ -310,7 +412,7 @@ class BattleScene extends Phaser.Scene {
   }
 }
 
-export function BattleView({ connection }: { connection: Connection }) {
+export function BattleView({ connection, code }: { connection: Connection; code: string }) {
   const parent = useRef<HTMLDivElement>(null)
   const [state, setState] = useState<BattleState>()
   // The problem you last answered: the options wait for the next one, so a second press cannot land on it.
@@ -318,6 +420,7 @@ export function BattleView({ connection }: { connection: Connection }) {
 
   useEffect(() => {
     const scene = new BattleScene('battle')
+    scene.code = code
     const game = new Phaser.Game({
       type: Phaser.AUTO,
       parent: parent.current!,
@@ -336,7 +439,7 @@ export function BattleView({ connection }: { connection: Connection }) {
       stopState()
       game.destroy(true)
     }
-  }, [connection])
+  }, [connection, code])
 
   const you = state?.players.find((player) => player.you)
   const canAnswer =

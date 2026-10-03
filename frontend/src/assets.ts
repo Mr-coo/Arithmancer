@@ -121,11 +121,15 @@ export const GROUND_SHEET = tilemap
 export const TREE = 'tree'
 // 8 frames of 192x256 in a row.
 export const TREE_SHEET = tree
+// The middle of the trunk, where the tree stands.
+export const TREE_BASE = { x: 98 / 192, y: 224 / 256 }
+export const TREE_SCALE = 0.74
 export const ROCKS = ['rock2', 'rock4', 'boulder']
 export const ROCK_IMAGES = [rock2, rock4, boulder]
 // The variants of each detail on the ground, with the box their sprite fills in its 64x64 image, leaving out the
 // shadow: left, top, right, bottom.
 export const DETAIL_SIZE = 64
+export const DETAIL_SCALE = 0.75
 export const DETAILS: Record<DetailState['type'], { url: string; box: number[] }[]> = {
   bush: [
     { url: bush1, box: [16, 21, 47, 40] },

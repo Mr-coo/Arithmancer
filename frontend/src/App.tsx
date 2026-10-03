@@ -11,7 +11,7 @@ type Screen =
   | { name: 'home'; error?: string }
   | { name: 'lobby'; code: string; players: string[]; host: boolean }
   | { name: 'game'; decorations: DecorationState[]; details: DetailState[] }
-  | { name: 'battle' }
+  | { name: 'battle'; code: string }
   | { name: 'gameOver'; summary: string; players: FinalScore[] }
 
 // "1 goblin", "4 goblins".
@@ -39,7 +39,7 @@ function App() {
     opened.on('gameOver', ({ time, players }) =>
       setScreen({ name: 'gameOver', summary: `You survived ${formatTime(time)}.`, players }),
     )
-    opened.on('battleStarted', () => setScreen({ name: 'battle' }))
+    opened.on('battleStarted', ({ code }) => setScreen({ name: 'battle', code }))
     opened.on('battleOver', ({ turns, beaten, players }) => {
       const summary = `You beat ${count(beaten, 'goblin')} in ${count(turns, 'turn')}.`
       setScreen({ name: 'gameOver', summary, players })
@@ -77,7 +77,7 @@ function App() {
   if (screen.name === 'battle' && connection) {
     return (
       <>
-        <BattleView connection={connection} />
+        <BattleView connection={connection} code={screen.code} />
         <p className="hint">Pick with 1–4 or a click. Right answers hit harder; wrong ones cost you 3 seconds.</p>
       </>
     )
