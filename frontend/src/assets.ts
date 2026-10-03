@@ -17,6 +17,26 @@ import yellowShoot from '../asset/Tiny Swords (Free Pack)/Units/Yellow Units/Arc
 import purpleIdle from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Archer/Archer_Idle.png'
 import purpleRun from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Archer/Archer_Run.png'
 import purpleShoot from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Archer/Archer_Shoot.png'
+import blueWarriorIdle from '../asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Idle.png'
+import blueWarriorRun from '../asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Run.png'
+import blueWarriorAttack1 from '../asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Attack1.png'
+import blueWarriorAttack2 from '../asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Attack2.png'
+import blueWarriorGuard from '../asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Guard.png'
+import redWarriorIdle from '../asset/Tiny Swords (Free Pack)/Units/Red Units/Warrior/Warrior_Idle.png'
+import redWarriorRun from '../asset/Tiny Swords (Free Pack)/Units/Red Units/Warrior/Warrior_Run.png'
+import redWarriorAttack1 from '../asset/Tiny Swords (Free Pack)/Units/Red Units/Warrior/Warrior_Attack1.png'
+import redWarriorAttack2 from '../asset/Tiny Swords (Free Pack)/Units/Red Units/Warrior/Warrior_Attack2.png'
+import redWarriorGuard from '../asset/Tiny Swords (Free Pack)/Units/Red Units/Warrior/Warrior_Guard.png'
+import yellowWarriorIdle from '../asset/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png'
+import yellowWarriorRun from '../asset/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Run.png'
+import yellowWarriorAttack1 from '../asset/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Attack1.png'
+import yellowWarriorAttack2 from '../asset/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Attack2.png'
+import yellowWarriorGuard from '../asset/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Guard.png'
+import purpleWarriorIdle from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Warrior/Warrior_Idle.png'
+import purpleWarriorRun from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Warrior/Warrior_Run.png'
+import purpleWarriorAttack1 from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Warrior/Warrior_Attack1.png'
+import purpleWarriorAttack2 from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Warrior/Warrior_Attack2.png'
+import purpleWarriorGuard from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Warrior/Warrior_Guard.png'
 import tntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Red/TNT_Red.png'
 import torchGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/Torch/Purple/Torch_Purple.png'
 import explosion from '../Tiny Swords/Tiny Swords (Update 010)/Effects/Explosion/Explosions.png'
@@ -51,6 +71,41 @@ export const ARCHERS = {
   yellow: { idle: yellowIdle, run: yellowRun, shoot: yellowShoot },
   purple: { idle: purpleIdle, run: purpleRun, shoot: purpleShoot },
 }
+
+// In turn-based battles, players are warriors instead: 192x192 frames, with 8 idle, 6 run, 4 for each attack and 6 guard.
+export const WARRIORS = {
+  blue: {
+    idle: blueWarriorIdle,
+    run: blueWarriorRun,
+    attack1: blueWarriorAttack1,
+    attack2: blueWarriorAttack2,
+    guard: blueWarriorGuard,
+  },
+  red: {
+    idle: redWarriorIdle,
+    run: redWarriorRun,
+    attack1: redWarriorAttack1,
+    attack2: redWarriorAttack2,
+    guard: redWarriorGuard,
+  },
+  yellow: {
+    idle: yellowWarriorIdle,
+    run: yellowWarriorRun,
+    attack1: yellowWarriorAttack1,
+    attack2: yellowWarriorAttack2,
+    guard: yellowWarriorGuard,
+  },
+  purple: {
+    idle: purpleWarriorIdle,
+    run: purpleWarriorRun,
+    attack1: purpleWarriorAttack1,
+    attack2: purpleWarriorAttack2,
+    guard: purpleWarriorGuard,
+  },
+}
+export type WarriorAction = keyof (typeof WARRIORS)['blue']
+// The warrior's feet in its frame.
+export const WARRIOR_FEET = { x: 95 / 192, y: 129 / 192 }
 
 // Enemies, loaded under their type's name. Each sheet has one animation per row, 7 frames wide: idle, run, then
 // attacks (unused). Goblins are TNT goblins, with 6 idle frames; torch goblins have 7.
@@ -134,6 +189,7 @@ const TEXT_RESOLUTION = 2
 const TEXT_OUTLINE = '#3d2a1e'
 
 export const archerKey = (color: string, action: 'idle' | 'run' | 'shoot') => `archer-${color}-${action}`
+export const warriorKey = (color: string, action: WarriorAction) => `warrior-${color}-${action}`
 export const enemyKey = (type: EnemyType, action: 'idle' | 'run') => `${type}-${action}`
 export const detailKey = (type: string, variant: number) => `${type}-${variant}`
 
@@ -152,6 +208,9 @@ export function preloadAssets(scene: Phaser.Scene) {
   for (const color of PLAYER_COLORS) {
     for (const [action, url] of Object.entries(ARCHERS[color])) {
       scene.load.spritesheet(archerKey(color, action as 'idle' | 'run' | 'shoot'), url, UNIT_FRAME)
+    }
+    for (const [action, url] of Object.entries(WARRIORS[color])) {
+      scene.load.spritesheet(warriorKey(color, action as WarriorAction), url, UNIT_FRAME)
     }
   }
   for (const [type, { sheet }] of Object.entries(ENEMIES)) {
@@ -216,7 +275,7 @@ export function textStyle(fontSize: number, strokeThickness: number): Phaser.Typ
   }
 }
 
-// Archer and tree animations use the same key as their sprite sheet; an enemy's are rows of one sheet.
+// Archer, warrior and tree animations use the same key as their sprite sheet; an enemy's are rows of one sheet.
 export function createAnimations(scene: Phaser.Scene) {
   const loop = (key: string, frameRate: number, repeat = -1) =>
     scene.anims.create({ key, frames: scene.anims.generateFrameNumbers(key), frameRate, repeat })
@@ -224,6 +283,11 @@ export function createAnimations(scene: Phaser.Scene) {
     loop(archerKey(color, 'idle'), 8)
     loop(archerKey(color, 'run'), 10)
     loop(archerKey(color, 'shoot'), 24, 0)
+    loop(warriorKey(color, 'idle'), 10)
+    loop(warriorKey(color, 'run'), 10)
+    loop(warriorKey(color, 'attack1'), 12, 0)
+    loop(warriorKey(color, 'attack2'), 12, 0)
+    loop(warriorKey(color, 'guard'), 12, 0)
   }
   for (const [type, { idle }] of Object.entries(ENEMIES) as [EnemyType, { idle: number }][]) {
     const rows = { idle: { start: 0, end: idle - 1 }, run: { start: 7, end: 12 } }

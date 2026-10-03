@@ -12,6 +12,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import com.arithmancer.battle.Battle;
+import com.arithmancer.battle.BattleManager;
 import com.arithmancer.game.Game;
 import com.arithmancer.game.GameManager;
 import com.arithmancer.room.Player;
@@ -22,6 +24,7 @@ import com.arithmancer.ws.ClientMessage.CreateRoom;
 import com.arithmancer.ws.ClientMessage.Input;
 import com.arithmancer.ws.ClientMessage.JoinRoom;
 import com.arithmancer.ws.ClientMessage.StartGame;
+import com.arithmancer.ws.ServerMessage.BattleStarted;
 import com.arithmancer.ws.ServerMessage.DecorationState;
 import com.arithmancer.ws.ServerMessage.DetailState;
 import com.arithmancer.ws.ServerMessage.GameStarted;
@@ -39,13 +42,15 @@ public class GameGateway extends TextWebSocketHandler {
 	private final JsonMapper jsonMapper;
 	private final RoomRegistry roomRegistry;
 	private final GameManager gameManager;
+	private final BattleManager battleManager;
 	private final SessionRegistry sessionRegistry;
 
 	public GameGateway(JsonMapper jsonMapper, RoomRegistry roomRegistry, GameManager gameManager,
-			SessionRegistry sessionRegistry) {
+			BattleManager battleManager, SessionRegistry sessionRegistry) {
 		this.jsonMapper = jsonMapper;
 		this.roomRegistry = roomRegistry;
 		this.gameManager = gameManager;
+		this.battleManager = battleManager;
 		this.sessionRegistry = sessionRegistry;
 	}
 
@@ -61,7 +66,7 @@ public class GameGateway extends TextWebSocketHandler {
 			case CreateRoom createRoom -> createRoom(session, createRoom);
 			case JoinRoom joinRoom -> joinRoom(session, joinRoom);
 			case Input input -> input(session, input);
-			case StartGame startGame -> startGame(session);
+			case StartGame startGame -> startGame(session, startGame);
 			case Answer answer -> answer(session, answer);
 			case null -> session.close(CloseStatus.BAD_DATA.withReason("Invalid message"));
 		}
@@ -138,7 +143,7 @@ public class GameGateway extends TextWebSocketHandler {
 		send(session, "input", new ServerMessage.Input(key, input.action()));
 	}
 
-	private void startGame(WebSocketSession session) throws IOException {
+	private void startGame(WebSocketSession session, StartGame startGame) throws IOException {
 		Room room = roomRegistry.findBySession(session.getId());
 		if (room == null) {
 			session.close(CloseStatus.BAD_DATA.withReason("Not in a room"));
@@ -150,6 +155,12 @@ public class GameGateway extends TextWebSocketHandler {
 		}
 		if (!roomRegistry.remove(room)) {
 			session.close(CloseStatus.BAD_DATA.withReason("Not in a room"));
+			return;
+		}
+		if (startGame.mode() == Mode.TURN_BASED) {
+			Battle battle = battleManager.start(room);
+			sendAll(battle.getPlayers(), "battleStarted",
+					new BattleStarted(battle.getCode(), nicknames(battle.getPlayers())));
 			return;
 		}
 		Game game = gameManager.start(room);
@@ -171,6 +182,9 @@ public class GameGateway extends TextWebSocketHandler {
 			return;
 		}
 		Player player = gameManager.findPlayer(session.getId());
+		if (player == null) {
+			player = battleManager.findPlayer(session.getId());
+		}
 		if (player != null) {
 			player.submitAnswer(answer.value());
 		}

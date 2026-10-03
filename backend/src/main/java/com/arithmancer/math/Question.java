@@ -2,9 +2,10 @@ package com.arithmancer.math;
 
 import java.util.Random;
 
-public record Question(String text, int answer) {
+public record Question(String text, int result) {
 
-	// Answers are one digit, so a single key press answers a question: bigger results count by their last digit.
+	// In real-time games, answers are one digit, so a single key press answers a question: bigger results count by
+	// their last digit.
 	private static final int DIGITS = 10;
 	// Starting values, to tune during development: runs start with small + and -, then × and ÷ and larger numbers are
 	// added.
@@ -36,9 +37,13 @@ public record Question(String text, int answer) {
 		};
 	}
 
-	// The answer to a question whose result is this.
 	static Question of(String text, int result) {
-		return new Question(text, result % DIGITS);
+		return new Question(text, result);
+	}
+
+	// The one-digit answer that real-time games accept: the result's last digit.
+	public int answer() {
+		return result % DIGITS;
 	}
 
 	// Results and numbers from 0 to max.

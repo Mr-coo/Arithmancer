@@ -1,4 +1,5 @@
 import { type ReactNode, useState } from 'react'
+import { BattleView } from './BattleView'
 import { connect, type Connection, type DecorationState, type DetailState, type GameOver } from './connection'
 import { formatTime } from './format'
 import { GameView } from './GameView'
@@ -10,6 +11,7 @@ type Screen =
   | { name: 'home'; error?: string }
   | { name: 'lobby'; code: string; players: string[]; host: boolean }
   | { name: 'game'; decorations: DecorationState[]; details: DetailState[] }
+  | { name: 'battle' }
   | ({ name: 'gameOver' } & GameOver)
 
 function App() {
@@ -32,6 +34,7 @@ function App() {
     )
     opened.on('gameStarted', ({ decorations, details }) => setScreen({ name: 'game', decorations, details }))
     opened.on('gameOver', (results) => setScreen({ name: 'gameOver', ...results }))
+    opened.on('battleStarted', () => setScreen({ name: 'battle' }))
     setConnection(opened)
     setConnecting(false)
     return opened
@@ -58,6 +61,15 @@ function App() {
       <>
         <GameView connection={connection} decorations={screen.decorations} details={screen.details} />
         <p className="hint">Move with WASD. Press the last digit of an enemy's answer to shoot it.</p>
+      </>
+    )
+  }
+
+  if (screen.name === 'battle' && connection) {
+    return (
+      <>
+        <BattleView connection={connection} />
+        <p className="hint">Pick with 1–4 or a click. Right answers hit harder; wrong ones cost you 3 seconds.</p>
       </>
     )
   }
@@ -97,9 +109,14 @@ function App() {
           ))}
         </ul>
         {screen.host ? (
-          <button type="button" onClick={() => connection?.send('startGame', {})}>
-            Start game
-          </button>
+          <>
+            <button type="button" onClick={() => connection?.send('startGame', { mode: 'realTime' })}>
+              Start real-time
+            </button>
+            <button type="button" onClick={() => connection?.send('startGame', { mode: 'turnBased' })}>
+              Start turn-based
+            </button>
+          </>
         ) : (
           <p>Waiting for the host to start…</p>
         )}

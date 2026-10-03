@@ -392,6 +392,51 @@ button {
   }
 }
 
+/* The battle's problem on a carved board at the bottom, with its options below it. */
+.problem {
+  position: fixed;
+  left: 50%;
+  bottom: 72px;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: min(640px, calc(100% - 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px;
+  font-size: 18px;
+  text-align: center;
+  color: var(--text-h);
+  border: 20px solid transparent;
+  border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Carved_9Slides.png') 64 fill round;
+
+  p {
+    margin: 0;
+  }
+
+  .problem-text {
+    font-size: 40px;
+    line-height: 1.2;
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  kbd {
+    font: inherit;
+    opacity: 0.6;
+  }
+}
+
+@media (max-width: 600px) {
+  .problem .options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .hint {
   position: fixed;
   left: 12px;

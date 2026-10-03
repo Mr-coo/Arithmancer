@@ -70,15 +70,16 @@ public class WebSocketDocs {
 						- `{"type":"input","content":{"key":"a","action":"down"}}` sends a key press (`down`) or release (`up`) \
 						of exactly one letter. \
 						Reply: the same message echoed back.
-						- `{"type":"startGame","content":{}}` starts the game. Only the host (room creator) can send it, \
-						and nobody can join after. \
-						Reply, to every player, with the trees and stones on the map. Players and enemies cannot walk into a \
+						- `{"type":"startGame","content":{"mode":"realTime"}}` starts the game. Only the host (room creator) can \
+						send it, and nobody can join after. `mode` is `realTime` (the default) or `turnBased`. \
+						For a real-time game, the reply, to every player, comes with the trees and stones on the map. Players and enemies cannot walk into a \
 						decoration's solid circle (`x`, `y`, `radius`); a character touching its cover circle is behind it. \
 						`details` are bushes, mushrooms, pebbles, pumpkins and bones on the ground, which characters walk over: \
 						`{"type":"gameStarted","content":{"code":"KQXB","players":["Marco","Ana"],"decorations":[{"type":"tree","x":320.0,"y":-140.0,"radius":14.0,"coverX":320.0,"coverY":-207.0,"coverRadius":50.0}],"details":[{"type":"mushroom","x":150.0,"y":80.0}]}}`
 						- `{"type":"answer","content":{"value":4}}` answers a question during a game. Of the enemies in your \
 						view with that answer, the nearest takes a hit. After any answer, right or wrong, your answers are \
-						ignored for a cooldown (1 second). No reply: the hit shows up in the next state.
+						ignored for a cooldown (1 second). No reply: the hit shows up in the next state. \
+						In a turn-based game, `value` is the option you pick for your problem.
 
 						During a game, every player gets the state 20 times per second. `time` is the seconds since the run \
 						started, `score` counts the enemies a player killed, `you` marks the receiving player, \
@@ -88,6 +89,16 @@ public class WebSocketDocs {
 						When every player is dead (health 0), the game ends and every player gets the results. \
 						`time` is how long the team survived: \
 						`{"type":"gameOver","content":{"time":83.2,"players":[{"nickname":"Marco","score":5,"you":true},{"nickname":"Ana","score":3,"you":false}]}}`
+
+						A turn-based game starts with `{"type":"battleStarted","content":{"code":"KQXB","players":["Marco","Ana"]}}`. \
+						Then every player gets the battle 20 times per second. On the players' turn (`phase` `players`), \
+						everyone answers their own `problem` by picking one of its `options`. Each right answer adds to your \
+						`charge`, one more than the last (1, 2, 3...); a wrong one locks your answers for `locked` seconds \
+						(3). The problem's `id` changes with every new problem. On the enemy's turn (`phase` `enemy`), the \
+						warriors with a charge strike the goblin for it: `strikes` lists them (indices in `players`) on that \
+						tick. A beaten goblin is replaced by the next one halfway through the enemy's turn. `score` is the \
+						damage a player dealt: \
+						`{"type":"battleState","content":{"turn":3,"phase":"players","secondsLeft":9.45,"players":[{"nickname":"Marco","health":100,"maxHealth":100,"charge":3,"score":12,"you":true}],"enemy":{"id":1,"type":"goblin","health":20,"maxHealth":30},"problem":{"id":14,"text":"7 + 5","options":[11,12,4,17]},"locked":0.0,"strikes":[]}}`
 
 						Anything else closes the connection with status 1007 (bad data).""")
 				.addParametersItem(new QueryParameter()

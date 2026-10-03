@@ -57,4 +57,26 @@ public sealed interface ServerMessage {
 	record FinalScore(String nickname, int score, boolean you) {
 	}
 
+	record BattleStarted(String code, List<String> players) implements ServerMessage {
+	}
+
+	// phase: players or enemy, with secondsLeft in it. problem and locked (seconds until a wrong answer stops locking
+	// the options) are the receiving player's. strikes: indices in players of the warriors striking the goblin on this
+	// tick.
+	record BattleState(int turn, String phase, double secondsLeft, List<FighterState> players, FoeState enemy,
+			ProblemState problem, double locked, List<Integer> strikes) implements ServerMessage {
+	}
+
+	// charge: the damage the player's right answers add up to this turn. score: damage dealt over the battle.
+	record FighterState(String nickname, int health, int maxHealth, int charge, int score, boolean you) {
+	}
+
+	// type: goblin or torch.
+	record FoeState(int id, String type, int health, int maxHealth) {
+	}
+
+	// id: changes with every new problem.
+	record ProblemState(int id, String text, List<Integer> options) {
+	}
+
 }

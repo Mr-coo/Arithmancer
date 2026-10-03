@@ -12,7 +12,7 @@
 - Commit after each feature is done, without waiting to be asked.
 
 ## Game design
-Arithmancer is an endless co-op browser game. Players survive enemies by solving math questions shown above the enemies' heads. All numbers here are starting values to tune during development.
+Arithmancer is an endless co-op browser game. Players survive enemies by solving math questions shown above the enemies' heads. All numbers here are starting values to tune during development. There are two modes, which the host picks in the lobby: real-time, described first, and turn-based.
 
 ### Core loop
 - 2D top-down. Move with WASD or the arrow keys. Type answers with the digit keys, Backspace and Enter.
@@ -39,6 +39,13 @@ Arithmancer is an endless co-op browser game. Players survive enemies by solving
 - A large fixed-size world, several screens wide, with walls at the edges.
 - Each player's camera follows them, and players can split up.
 - Enemies spawn just outside the players' views.
+
+### Turn-based mode
+- A side-view battle: the players' warriors on the left, one goblin at a time on the right.
+- The players' turn and the goblin's turn alternate.
+- On the players' turn (15 seconds), everyone answers at once. Each player gets their own math problem with 4 options, picked with the keys 1–4 or a click. The options are the answer and 3 other numbers near it; the whole answer counts, not just its last digit.
+- Each right answer adds to the player's charge, one more than the last: 1, then 2, then 3. A wrong answer locks that player's options for 3 seconds while the turn goes on. Every answer brings a new problem.
+- When the players' turn ends, every warrior with a charge strikes the goblin for it. A beaten goblin is replaced by the next one.
 
 ### Rooms
 - A player creates a room and gets a short room code. Others use the code to join the lobby.

@@ -67,6 +67,37 @@ export type DecorationState = {
 // Drawn on the ground at (x, y). Characters walk over it.
 export type DetailState = { type: 'bush' | 'mushroom' | 'pebble' | 'pumpkin' | 'bone'; x: number; y: number }
 
+// What a room plays: the endless real-time game, or the turn-based battle.
+export type Mode = 'realTime' | 'turnBased'
+
+// charge: the damage this player's right answers add up to this turn. score: damage dealt over the battle.
+export type FighterState = {
+  nickname: string
+  health: number
+  maxHealth: number
+  charge: number
+  score: number
+  you: boolean
+}
+
+export type FoeState = { id: number; type: EnemyType; health: number; maxHealth: number }
+
+// id changes with every new problem.
+export type ProblemState = { id: number; text: string; options: number[] }
+
+// problem and locked (seconds until a wrong answer stops locking your options) are yours. strikes: indices in players
+// of the warriors striking the goblin on this tick.
+export type BattleState = {
+  turn: number
+  phase: 'players' | 'enemy'
+  secondsLeft: number
+  players: FighterState[]
+  enemy: FoeState
+  problem: ProblemState
+  locked: number
+  strikes: number[]
+}
+
 type RoomContent = { code: string; players: string[] }
 
 type ServerMessages = {
@@ -75,12 +106,14 @@ type ServerMessages = {
   gameStarted: RoomContent & { decorations: DecorationState[]; details: DetailState[] }
   state: GameState
   gameOver: GameOver
+  battleStarted: RoomContent
+  battleState: BattleState
 }
 
 type ClientMessages = {
   createRoom: { nickname: string }
   joinRoom: { code: string; nickname: string }
-  startGame: Record<string, never>
+  startGame: { mode: Mode }
   input: { key: string; action: 'down' | 'up' }
   answer: { value: number }
 }
