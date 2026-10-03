@@ -54,10 +54,13 @@ const LAND_MS = 300
 const SWING_MS = 600
 // A new goblin runs in from past the stage's right edge.
 const ENTER_MS = 1500
-// The goblin strikes back by lunging this far toward the warriors and back. Each warrior hit flashes, and raises its
-// shield for the 6 frames of its guard animation.
-const LUNGE = 120
-const LUNGE_MS = 700
+// The goblin strikes back by running up to the warriors, GOBLIN_REACH in front of them, and attacking. Its blow lands
+// IMPACT_MS into its attack: each warrior hit flashes, and raises its shield for the 6 frames of its guard animation.
+// Then the goblin runs back. It takes 2.6 seconds.
+const GOBLIN_REACH = 60
+const GOBLIN_RUN_MS = 900
+const ATTACK_MS = 800
+const IMPACT_MS = 450
 const FLASH_MS = 250
 const GUARD_MS = 750
 const HIT_TINT = 0xff8080
@@ -243,25 +246,38 @@ class BattleScene extends Phaser.Scene {
     })
   }
 
-  // The goblin lunges at the warriors. As it lands, each warrior hit raises its shield, flashes, and its bar drops.
+  // The goblin runs up to the warriors and attacks. As its blow lands, each warrior hit raises its shield, flashes, and
+  // its bar drops. Then the goblin runs back to its spot.
   private playHits(state: BattleState) {
     const goblin = this.goblin
     if (!goblin || goblin.gone) {
       return
     }
-    goblin.body.play(enemyKey(goblin.type, 'run'))
+    const run = enemyKey(goblin.type, 'run')
+    goblin.body.setFlipX(true).play(run)
     this.tweens.add({
       targets: goblin.body,
-      x: GOBLIN_X - LUNGE,
-      duration: LUNGE_MS,
-      yoyo: true,
-      onComplete: () => goblin.body.play(enemyKey(goblin.type, 'idle')),
+      x: WARRIOR_X + GOBLIN_REACH,
+      duration: GOBLIN_RUN_MS,
+      onComplete: () => {
+        goblin.body.play(enemyKey(goblin.type, 'attack'))
+        this.time.delayedCall(ATTACK_MS, () => {
+          goblin.body.setFlipX(false).play(run)
+          this.tweens.add({
+            targets: goblin.body,
+            x: GOBLIN_X,
+            duration: GOBLIN_RUN_MS,
+            onComplete: () => goblin.body.setFlipX(true).play(enemyKey(goblin.type, 'idle')),
+          })
+        })
+      },
     })
+    const landsIn = GOBLIN_RUN_MS + IMPACT_MS
     for (const player of state.hits) {
       const warrior = this.warriors[player]
       const damage = warrior.shownHealth - state.players[player].health
-      warrior.holdUntil = this.time.now + LUNGE_MS
-      this.time.delayedCall(LUNGE_MS, () => {
+      warrior.holdUntil = this.time.now + landsIn
+      this.time.delayedCall(landsIn, () => {
         warrior.body.play(warriorKey(colorOf(player), 'guard')).setTint(HIT_TINT)
         this.time.delayedCall(FLASH_MS, () => warrior.body.clearTint())
         this.time.delayedCall(GUARD_MS, () => {

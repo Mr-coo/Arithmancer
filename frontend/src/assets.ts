@@ -109,10 +109,11 @@ export type WarriorAction = keyof (typeof WARRIORS)['blue']
 export const WARRIOR_FEET = { x: 95 / 192, y: 129 / 192 }
 
 // Enemies, loaded under their type's name. Each sheet has one animation per row, 7 frames wide: idle, run, then
-// attacks (unused). Goblins are TNT goblins, with 6 idle frames; torch goblins have 7.
-export const ENEMIES: Record<EnemyType, { sheet: string; idle: number }> = {
-  goblin: { sheet: tntGoblin, idle: 6 },
-  torch: { sheet: torchGoblin, idle: 7 },
+// attacks, the first of them to the side. Goblins are TNT goblins, with 6 idle frames and 7 swinging their dynamite;
+// torch goblins have 7 idle and 6 swinging their torch.
+export const ENEMIES: Record<EnemyType, { sheet: string; idle: number; attack: number }> = {
+  goblin: { sheet: tntGoblin, idle: 6, attack: 7 },
+  torch: { sheet: torchGoblin, idle: 7, attack: 6 },
 }
 
 export const GROUND = 'ground'
@@ -195,7 +196,7 @@ const TEXT_OUTLINE = '#3d2a1e'
 
 export const archerKey = (color: string, action: 'idle' | 'run' | 'shoot') => `archer-${color}-${action}`
 export const warriorKey = (color: string, action: WarriorAction) => `warrior-${color}-${action}`
-export const enemyKey = (type: EnemyType, action: 'idle' | 'run') => `${type}-${action}`
+export const enemyKey = (type: EnemyType, action: 'idle' | 'run' | 'attack') => `${type}-${action}`
 export const detailKey = (type: string, variant: number) => `${type}-${variant}`
 
 const UNIT_FRAME = { frameWidth: 192, frameHeight: 192 }
@@ -295,7 +296,7 @@ export function createAnimations(scene: Phaser.Scene) {
     loop(warriorKey(color, 'attack2'), 7, 0)
     loop(warriorKey(color, 'guard'), 8, 0)
   }
-  for (const [type, { idle }] of Object.entries(ENEMIES) as [EnemyType, { idle: number }][]) {
+  for (const [type, { idle, attack }] of Object.entries(ENEMIES) as [EnemyType, (typeof ENEMIES)[EnemyType]][]) {
     const rows = { idle: { start: 0, end: idle - 1 }, run: { start: 7, end: 12 } }
     for (const [action, frames] of Object.entries(rows)) {
       scene.anims.create({
@@ -305,6 +306,12 @@ export function createAnimations(scene: Phaser.Scene) {
         repeat: -1,
       })
     }
+    // Played once, slowly enough to follow.
+    scene.anims.create({
+      key: enemyKey(type, 'attack'),
+      frames: scene.anims.generateFrameNumbers(type, { start: 14, end: 13 + attack }),
+      frameRate: 9,
+    })
   }
   loop(TREE, 6)
   loop(EXPLOSION, 18, 0)

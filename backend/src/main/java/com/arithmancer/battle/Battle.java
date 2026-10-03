@@ -23,7 +23,7 @@ public class Battle {
 	private static final double TURN_SECONDS = 15;
 	// The warriors strike as the goblin's turn starts. The goblin acts ENEMY_ACTS_AT_SECONDS in, once their strikes have
 	// played out on screen, and its turn lasts until its own move has too.
-	private static final double ENEMY_TURN_SECONDS = 5;
+	private static final double ENEMY_TURN_SECONDS = 6;
 	private static final double ENEMY_ACTS_AT_SECONDS = 2.8;
 	// A wrong answer locks the player's options for this long, while the turn goes on.
 	private static final double WRONG_ANSWER_LOCK_SECONDS = 3;
