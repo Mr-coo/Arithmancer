@@ -495,14 +495,15 @@ export function BattleView({ connection, code }: { connection: Connection; code:
               <p className="problem-text">You're down.</p>
             ) : state.phase === 'players' ? (
               <>
-                <p>
+                <p className={state.locked > 0 ? 'status wrong' : 'status'}>
                   {state.locked > 0 ? `Wrong! Thinking… ${Math.ceil(state.locked)}s` : `Damage this turn: ${charge}`}
                 </p>
                 <p className="problem-text">{state.problem.text}</p>
                 <div className="options">
                   {state.problem.options.map((option, i) => (
                     <button key={i} type="button" disabled={!canAnswer} onClick={() => pick(i)}>
-                      <kbd>{OPTION_KEYS[i]}</kbd> {option}
+                      <kbd>{OPTION_KEYS[i]}</kbd>
+                      {option}
                     </button>
                   ))}
                 </div>

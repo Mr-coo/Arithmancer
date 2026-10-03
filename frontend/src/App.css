@@ -392,42 +392,91 @@ button {
   }
 }
 
-/* The battle's problem on a carved board at the bottom, with its options below it. */
+/* The battle's problem on a parchment scroll at the bottom: a ribbon across its top with the damage charged this turn,
+   the problem in ink, and the options on square blue buttons. The scroll's parchment starts 48 of its 64px top slice
+   in, 34px in from the sides, and ends 41px above the bottom, all drawn at 3/4. */
 .problem {
   position: fixed;
   left: 50%;
-  bottom: 72px;
+  bottom: 56px;
   transform: translateX(-50%);
   box-sizing: border-box;
-  width: min(640px, calc(100% - 24px));
+  width: min(600px, calc(100% - 24px));
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 4px;
-  font-size: 18px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
   text-align: center;
-  color: var(--text-h);
-  border: 20px solid transparent;
-  border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Carved_9Slides.png') 64 fill round;
+  color: #3d2a1e;
+  border: 48px solid transparent;
+  border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Banner_Horizontal.png') 64 fill round;
 
   p {
     margin: 0;
   }
 
+  /* A yellow ribbon on the scroll's top edge, red while a wrong answer locks the options. */
+  .status {
+    box-sizing: border-box;
+    margin-top: -34px;
+    height: 40px;
+    padding: 0 4px;
+    font-size: 16px;
+    line-height: 36px;
+    white-space: nowrap;
+    border-style: solid;
+    border-width: 0 32px;
+    border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Ribbons/Ribbon_Yellow_3Slides.png') 0 64 fill / 0 40px;
+
+    &.wrong {
+      color: #fff4d6;
+      border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Ribbons/Ribbon_Red_3Slides.png');
+    }
+  }
+
   .problem-text {
-    font-size: 40px;
-    line-height: 1.2;
+    font-size: 44px;
+    line-height: 1.15;
   }
 
   .options {
+    align-self: stretch;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    gap: 10px;
   }
 
+  /* Square blue buttons, their 64px slices drawn at 24px. The number centers on the face of whichever image shows: the
+     regular face is 4px higher in its image (rows 10 to 167 of 192) than the pressed and disabled ones (14 to 171), so
+     it leaves more room below. */
+  .options button {
+    position: relative;
+    height: 72px;
+    padding: 0 0 6px;
+    font-size: 30px;
+    border-width: 0;
+    border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Blue_9Slides.png') 64 fill / 24px;
+
+    &:active:not(:disabled) {
+      padding-bottom: 3px;
+      border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Blue_9Slides_Pressed.png');
+    }
+
+    &:disabled {
+      padding-bottom: 3px;
+      border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Disable_9Slides.png');
+    }
+  }
+
+  /* The key that picks the option, small in the button's corner, apart from the number. */
   kbd {
+    position: absolute;
+    top: 7px;
+    left: 11px;
     font: inherit;
-    opacity: 0.6;
+    font-size: 14px;
+    opacity: 0.7;
   }
 }
 
