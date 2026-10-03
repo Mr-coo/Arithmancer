@@ -101,7 +101,8 @@ public class WebSocketDocs {
 						damage a player dealt: \
 						`{"type":"battleState","content":{"turn":3,"phase":"players","secondsLeft":9.45,"players":[{"nickname":"Marco","health":100,"maxHealth":100,"charge":3,"score":12,"you":true}],"enemy":{"id":1,"type":"goblin","health":20,"maxHealth":30},"problem":{"id":14,"text":"7 + 5","options":[11,12,4,17]},"locked":0.0,"strikes":[],"hits":[]}}`
 
-						When every player is downed (health 0), the battle ends and every player gets the results: the \
+						When every player is downed (health 0), the battle ends with that enemy's turn and every player gets \
+						the results: the \
 						`turns` the team lasted, the goblins `beaten`, and each player's damage dealt as `score`: \
 						`{"type":"battleOver","content":{"turns":9,"beaten":4,"players":[{"nickname":"Marco","score":61,"you":true},{"nickname":"Ana","score":48,"you":false}]}}`
 

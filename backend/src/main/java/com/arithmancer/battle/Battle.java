@@ -45,6 +45,7 @@ public class Battle {
 	private Phase phase = Phase.PLAYERS;
 	private double secondsLeft = TURN_SECONDS;
 	private boolean enemyActed;
+	private boolean over;
 	private int turn = 1;
 	private double elapsedSeconds;
 
@@ -99,9 +100,9 @@ public class Battle {
 		return beaten;
 	}
 
-	// The battle is lost once every player is downed.
+	// The battle is lost once every player is downed, at the end of the goblin's turn, so its last attack plays out.
 	public boolean isOver() {
-		return standingPlayers().isEmpty();
+		return over;
 	}
 
 	public void tick(double deltaSeconds) {
@@ -115,7 +116,11 @@ public class Battle {
 		} else if (phase == Phase.ENEMY && !enemyActed && secondsLeft <= ENEMY_TURN_SECONDS - ENEMY_ACTS_AT_SECONDS) {
 			enemyActs();
 		} else if (phase == Phase.ENEMY && secondsLeft <= 0) {
-			startTurn();
+			if (standingPlayers().isEmpty()) {
+				over = true;
+			} else {
+				startTurn();
+			}
 		}
 	}
 
