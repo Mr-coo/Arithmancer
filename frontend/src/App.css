@@ -23,7 +23,8 @@
 /* A blue ribbon from the Free Pack's 448x640 sheet: the middle piece (64x128 at 192,0) stretches behind the text,
    between the two ends (128x128 at 0,0 and 320,0). */
 .panel :is(h1, h2),
-.hud .time {
+.hud .time,
+.turn {
   position: relative;
   align-self: center;
   box-sizing: border-box;
@@ -363,6 +364,12 @@ button {
     color: var(--text-h);
     border: 20px solid transparent;
     border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Carved_9Slides.png') 64 fill round;
+
+    /* Without a ribbon above it, as in the battle. */
+    &:first-child {
+      margin-top: 0;
+      padding-top: 0;
+    }
   }
 
   li {
@@ -390,6 +397,16 @@ button {
       height: 24px;
     }
   }
+}
+
+/* The battle's turn and time on a ribbon at the top middle of the screen, above the scene. */
+.turn {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
 
 /* The battle's problem on a parchment scroll at the bottom: a ribbon across its top with the damage charged this turn,

@@ -493,10 +493,10 @@ export function BattleView({ connection, code }: { connection: Connection; code:
       <div ref={parent} className="game" />
       {state && (
         <>
+          <p className="turn">
+            Turn {state.turn} · {state.phase === 'players' ? `${Math.ceil(state.secondsLeft)}s` : "Goblin's turn"}
+          </p>
           <div className="hud">
-            <p className="time">
-              Turn {state.turn} · {state.phase === 'players' ? `${Math.ceil(state.secondsLeft)}s` : "Goblin's turn"}
-            </p>
             <ul>
               {state.players.map((player, i) => (
                 <li key={i} className={player.you ? 'you' : undefined}>
