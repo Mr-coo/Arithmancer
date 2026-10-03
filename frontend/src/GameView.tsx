@@ -2,7 +2,9 @@ import Phaser from 'phaser'
 import { useEffect, useRef, useState } from 'react'
 import {
   ARROW,
+  addHealthBar,
   archerKey,
+  BAR_SCALE,
   createAnimations,
   createHealthBar,
   DEAD,
@@ -10,20 +12,28 @@ import {
   DETAILS,
   detailKey,
   DUST,
+  ENEMY_BODIES,
   EXPLOSION,
   enemyKey,
   GRASS_FRAME,
   GROUND,
-  HEALTH_BAR,
   HEALTH_BAR_CHANNEL,
   HEALTH_BAR_FILL,
   HEALTH_BAR_SIZE,
+  type HealthBar,
   ITEM_ICONS,
   itemKey,
   PLAYER_COLORS,
+  type Point,
+  placeHealthBar,
+  playEffect,
   preloadAssets,
   ROCKS,
+  SKULL_FEET,
+  SKULL_SCALE,
   TREE,
+  textStyle,
+  UNIT_SCALE,
 } from './assets'
 import type {
   Connection,
@@ -40,22 +50,15 @@ import { formatTime } from './format'
 const MOVE_KEYS: Record<string, string> = { KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd' }
 
 const PLAYER_RADIUS = 16
-const BAR_SCALE = 0.5
 // A downed player's bar fills green as a teammate revives them.
 const REVIVE_FILL = 0x4ade80
 const COOLDOWN_BAR_HEIGHT = 2
 const PROJECTILE_MS = 250
-// Sprite sizes and anchors, measured from the Tiny Swords sheets. Characters stand with their feet on their position.
-const UNIT_SCALE = 0.5
+// The archer's feet in its 192x192 frame.
 const ARCHER_FEET = { x: 95 / 192, y: 128 / 192 }
 // From the feet to the top of the head, and to the chest where arrows leave and land.
 const UNIT_HEIGHT = 40
 const AIM_HEIGHT = 20
-// Each enemy type's feet in its 192x192 frame, and its height from the feet to the top of its head.
-const ENEMY_BODIES: Record<EnemyType, { feet: Point; height: number }> = {
-  goblin: { feet: { x: 95 / 192, y: 127 / 192 }, height: 30 },
-  torch: { feet: { x: 88 / 192, y: 125 / 192 }, height: 36 },
-}
 const TREE_SCALE = 0.74
 // The middle of the trunk, which sits on the tree's solid circle.
 const TREE_BASE = { x: 98 / 192, y: 224 / 256 }
@@ -69,9 +72,6 @@ const DETAIL_SCALE = 0.75
 const ARROW_SCALE = 0.6
 // 8 frames at 24 per second.
 const SHOOT_MS = 333
-// A dead player is a skull, standing where its shadow rests in the 128x128 frame.
-const SKULL_FEET = { x: 67 / 128, y: 94 / 128 }
-const SKULL_SCALE = 0.6
 const EXPLOSION_SCALE = 0.7
 // Items lie on the ground with a gold glow that brightens and dims, bobbing up and down, so they catch the eye.
 const ITEM_SCALE = 0.65
@@ -97,10 +97,6 @@ const SMOOTHING = 0.3
 const MOVING = 0.5
 // The server's logical view around each player: the camera zooms to fit it, so you see what you can hit.
 const VIEW = { width: 960, height: 540 }
-// Texts are drawn at this many pixels per unit, so they stay sharp when zoomed in.
-const TEXT_RESOLUTION = 2
-// Texts are outlined in the menus' dark ink, so they read on grass, trees and stones alike.
-const TEXT_OUTLINE = '#3d2a1e'
 
 type Sprite = {
   body: Phaser.GameObjects.Sprite
@@ -109,10 +105,6 @@ type Sprite = {
   healthFill: Phaser.GameObjects.Rectangle
   cooldownFill: Phaser.GameObjects.Rectangle
 }
-
-type Point = { x: number; y: number }
-
-type HealthBar = { frame: Phaser.GameObjects.Image; fill: Phaser.GameObjects.Rectangle }
 
 type EnemySprite = {
   type: EnemyType
@@ -231,7 +223,7 @@ class GameScene extends Phaser.Scene {
         }
       }
       const barY = sprite.body.y - UNIT_HEIGHT - HEALTH_BAR_SIZE.height * BAR_SCALE
-      this.placeHealthBar({ frame: sprite.healthBar, fill: sprite.healthFill }, sprite.body.x, barY)
+      placeHealthBar({ frame: sprite.healthBar, fill: sprite.healthFill }, sprite.body.x, barY)
       const downed = player.health <= 0
       sprite.healthFill
         .setFillStyle(downed ? REVIVE_FILL : HEALTH_BAR_FILL)
@@ -312,17 +304,8 @@ class GameScene extends Phaser.Scene {
         sprite = {
           type: enemy.type,
           body: this.add.sprite(enemy.x, enemy.y, enemy.type).setOrigin(feet.x, feet.y).setScale(UNIT_SCALE),
-          question: this.add
-            .text(enemy.x, enemy.y, '', {
-              fontFamily: '"Geist Pixel", system-ui',
-              fontSize: '16px',
-              stroke: TEXT_OUTLINE,
-              strokeThickness: 4,
-              resolution: TEXT_RESOLUTION,
-            })
-            .setOrigin(0.5)
-            .setDepth(ENEMY_DEPTH),
-          healthBar: enemy.maxHealth > 1 ? this.addHealthBar(ENEMY_DEPTH) : undefined,
+          question: this.add.text(enemy.x, enemy.y, '', textStyle(16, 4)).setOrigin(0.5).setDepth(ENEMY_DEPTH),
+          healthBar: enemy.maxHealth > 1 ? addHealthBar(this, ENEMY_DEPTH) : undefined,
           target: { x: enemy.x, y: enemy.y },
           velocity: { x: 0, y: 0 },
         }
@@ -345,9 +328,9 @@ class GameScene extends Phaser.Scene {
         if (!this.targeted.has(id)) {
           const center = { x: sprite.body.x, y: sprite.body.y - ENEMY_BODIES[sprite.type].height / 2 }
           if (this.shotDown.delete(id)) {
-            this.playEffect(DUST, center, 1)
+            playEffect(this, DUST, center, 1, EFFECT_DEPTH)
           } else {
-            this.playEffect(EXPLOSION, center, EXPLOSION_SCALE)
+            playEffect(this, EXPLOSION, center, EXPLOSION_SCALE, EFFECT_DEPTH)
           }
           sprite.body.destroy()
           sprite.question.destroy()
@@ -374,7 +357,7 @@ class GameScene extends Phaser.Scene {
       let top = sprite.body.y - ENEMY_BODIES[sprite.type].height
       if (sprite.healthBar) {
         top -= HEALTH_BAR_SIZE.height * BAR_SCALE
-        this.placeHealthBar(sprite.healthBar, sprite.body.x, top)
+        placeHealthBar(sprite.healthBar, sprite.body.x, top)
       }
       sprite.question.setPosition(sprite.body.x, top - 12)
     }
@@ -418,7 +401,7 @@ class GameScene extends Phaser.Scene {
     }
     for (const [id, { image, glow }] of this.itemSprites) {
       if (!ids.has(id)) {
-        this.playEffect(DUST, image, 0.6)
+        playEffect(this, DUST, image, 0.6, EFFECT_DEPTH)
         this.tweens.killTweensOf([image, ...(glow ? [glow] : [])])
         image.destroy()
         this.itemSprites.delete(id)
@@ -436,46 +419,14 @@ class GameScene extends Phaser.Scene {
     return this.detailCovers.some((cover) => cover.contains(feet.x, feet.y))
   }
 
-  private playEffect(key: string, at: Point, scale: number) {
-    const effect = this.add.sprite(at.x, at.y, key).setScale(scale).setDepth(EFFECT_DEPTH).play(key)
-    effect.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => effect.destroy())
-  }
-
-  // A Tiny Swords health bar: the frame, and the fill in its channel, which is scaled to the share of health left.
-  private addHealthBar(depth: number): HealthBar {
-    const { width, height } = HEALTH_BAR_CHANNEL
-    return {
-      frame: this.add.image(0, 0, HEALTH_BAR).setOrigin(0).setScale(BAR_SCALE).setDepth(depth),
-      fill: this.add
-        .rectangle(0, 0, width * BAR_SCALE, height * BAR_SCALE, HEALTH_BAR_FILL)
-        .setOrigin(0)
-        .setDepth(depth),
-    }
-  }
-
-  // Centers the bar on x, with its top edge at y.
-  private placeHealthBar({ frame, fill }: HealthBar, x: number, y: number) {
-    const left = x - (HEALTH_BAR_SIZE.width * BAR_SCALE) / 2
-    frame.setPosition(left, y)
-    fill.setPosition(left + HEALTH_BAR_CHANNEL.x * BAR_SCALE, y + HEALTH_BAR_CHANNEL.y * BAR_SCALE)
-  }
-
   private addSprite(player: PlayerState, index: number): Sprite {
-    const healthBar = this.addHealthBar(PLAYER_DEPTH)
+    const healthBar = addHealthBar(this, PLAYER_DEPTH)
     const sprite = {
       body: this.add
         .sprite(player.x, player.y, archerKey(colorOf(index), 'idle'))
         .setOrigin(ARCHER_FEET.x, ARCHER_FEET.y)
         .setScale(UNIT_SCALE),
-      label: this.add
-        .text(player.x, player.y, player.nickname, {
-          fontFamily: '"Geist Pixel", system-ui',
-          fontSize: '14px',
-          stroke: TEXT_OUTLINE,
-          strokeThickness: 3,
-          resolution: TEXT_RESOLUTION,
-        })
-        .setOrigin(0.5),
+      label: this.add.text(player.x, player.y, player.nickname, textStyle(14, 3)).setOrigin(0.5),
       healthBar: healthBar.frame,
       healthFill: healthBar.fill,
       cooldownFill: this.add

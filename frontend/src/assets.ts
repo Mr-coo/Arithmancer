@@ -114,6 +114,24 @@ const BAR_SHEET = 'barSheet'
 export const HEALTH_BAR_SIZE = { width: 80, height: 19 }
 export const HEALTH_BAR_CHANNEL = { x: 10, y: 8, width: 60, height: 6 }
 export const HEALTH_BAR_FILL = 0xff3e3e
+export const BAR_SCALE = 0.5
+
+export type Point = { x: number; y: number }
+
+// Characters are drawn at half the size of their 192x192 frames, standing with their feet on their position.
+export const UNIT_SCALE = 0.5
+// Each enemy type's feet in its 192x192 frame, and its height from the feet to the top of its head.
+export const ENEMY_BODIES: Record<EnemyType, { feet: Point; height: number }> = {
+  goblin: { feet: { x: 95 / 192, y: 127 / 192 }, height: 30 },
+  torch: { feet: { x: 88 / 192, y: 125 / 192 }, height: 36 },
+}
+// A dead player is a skull, standing where its shadow rests in the 128x128 frame.
+export const SKULL_FEET = { x: 67 / 128, y: 94 / 128 }
+export const SKULL_SCALE = 0.6
+// Texts are drawn at this many pixels per unit, so they stay sharp when zoomed in.
+const TEXT_RESOLUTION = 2
+// Texts are outlined in the menus' dark ink, so they read on grass, trees and stones alike.
+const TEXT_OUTLINE = '#3d2a1e'
 
 export const archerKey = (color: string, action: 'idle' | 'run' | 'shoot') => `archer-${color}-${action}`
 export const enemyKey = (type: EnemyType, action: 'idle' | 'run') => `${type}-${action}`
@@ -158,6 +176,44 @@ export function createHealthBar(scene: Phaser.Scene) {
   context.drawImage(sheet, 128, 22, 64, height, end, 0, width - 2 * end, height)
   context.drawImage(sheet, 256, 22, end, height, width - end, 0, end, height)
   bar.refresh()
+}
+
+export type HealthBar = { frame: Phaser.GameObjects.Image; fill: Phaser.GameObjects.Rectangle }
+
+// A Tiny Swords health bar: the frame, and the fill in its channel, which is scaled to the share of health left.
+export function addHealthBar(scene: Phaser.Scene, depth: number): HealthBar {
+  const { width, height } = HEALTH_BAR_CHANNEL
+  return {
+    frame: scene.add.image(0, 0, HEALTH_BAR).setOrigin(0).setScale(BAR_SCALE).setDepth(depth),
+    fill: scene.add
+      .rectangle(0, 0, width * BAR_SCALE, height * BAR_SCALE, HEALTH_BAR_FILL)
+      .setOrigin(0)
+      .setDepth(depth),
+  }
+}
+
+// Centers the bar on x, with its top edge at y.
+export function placeHealthBar({ frame, fill }: HealthBar, x: number, y: number) {
+  const left = x - (HEALTH_BAR_SIZE.width * BAR_SCALE) / 2
+  frame.setPosition(left, y)
+  fill.setPosition(left + HEALTH_BAR_CHANNEL.x * BAR_SCALE, y + HEALTH_BAR_CHANNEL.y * BAR_SCALE)
+}
+
+// Plays an effect once at a point, then removes it.
+export function playEffect(scene: Phaser.Scene, key: string, at: Point, scale: number, depth: number) {
+  const effect = scene.add.sprite(at.x, at.y, key).setScale(scale).setDepth(depth).play(key)
+  effect.once('animationcomplete', () => effect.destroy())
+}
+
+// In-world texts, such as questions and nicknames, in the menus' font.
+export function textStyle(fontSize: number, strokeThickness: number): Phaser.Types.GameObjects.Text.TextStyle {
+  return {
+    fontFamily: '"Geist Pixel", system-ui',
+    fontSize: `${fontSize}px`,
+    stroke: TEXT_OUTLINE,
+    strokeThickness,
+    resolution: TEXT_RESOLUTION,
+  }
 }
 
 // Archer and tree animations use the same key as their sprite sheet; an enemy's are rows of one sheet.
