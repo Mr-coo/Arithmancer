@@ -11,6 +11,9 @@
 - Make one commit only has 1 feature
 - Commit after each feature is done, without waiting to be asked.
 
+## Testing
+- To test a change, push it to `master`, wait for it to deploy, and test it on https://arithmancer.marcolinardi.site instead of running it locally.
+
 ## Game design
 Arithmancer is an endless co-op browser game. Players survive enemies by solving math questions shown above the enemies' heads. All numbers here are starting values to tune during development. There are two modes, which the host picks in the lobby: real-time, described first, and turn-based.
 
