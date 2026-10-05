@@ -82,9 +82,11 @@ public class WebSocketDocs {
 						In a turn-based game, `value` is the option you pick for your problem.
 
 						During a game, every player gets the state 20 times per second. `time` is the seconds since the run \
-						started, `score` counts the enemies a player killed, `you` marks the receiving player, \
+						started. Enemies come in rounds: each `round` is a herd, bigger and spawning faster than the last, \
+						that starts coming once `roundStartsIn` counts down to 0 (5 seconds), and the next round starts once \
+						the herd is all gone. `score` counts the enemies a player killed, `you` marks the receiving player, \
 						and `shots` lists the hits from that tick (`player` is an index in `players`): \
-						`{"type":"state","content":{"time":12.35,"players":[{"nickname":"Marco","x":0.0,"y":-10.0,"health":100,"maxHealth":100,"cooldown":0.25,"maxCooldown":0.5,"score":3,"revive":0.0,"haste":0.0,"speedBoost":0.0,"you":true}],"enemies":[{"id":0,"type":"goblin","x":420.0,"y":-310.0,"question":"7 - 3","health":1,"maxHealth":1}],"items":[{"id":0,"type":"heal","x":120.0,"y":40.0}],"shots":[{"player":0,"enemy":1}]}}`
+						`{"type":"state","content":{"time":12.35,"round":2,"roundStartsIn":0.0,"players":[{"nickname":"Marco","x":0.0,"y":-10.0,"health":100,"maxHealth":100,"cooldown":0.25,"maxCooldown":0.5,"score":3,"revive":0.0,"haste":0.0,"speedBoost":0.0,"you":true}],"enemies":[{"id":0,"type":"goblin","x":420.0,"y":-310.0,"question":"7 - 3","health":1,"maxHealth":1}],"items":[{"id":0,"type":"heal","x":120.0,"y":40.0}],"shots":[{"player":0,"enemy":1}]}}`
 
 						When every player is dead (health 0), the game ends and every player gets the results. \
 						`time` is how long the team survived: \

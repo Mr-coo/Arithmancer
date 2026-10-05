@@ -128,7 +128,7 @@ function isBehind(point: Point, decoration: DecorationState) {
 const colorOf = (player: number) => PLAYER_COLORS[player % PLAYER_COLORS.length]
 
 class GameScene extends Phaser.Scene {
-  latest: GameState = { time: 0, players: [], enemies: [], items: [], shots: [] }
+  latest: GameState = { time: 0, round: 0, roundStartsIn: 0, players: [], enemies: [], items: [], shots: [] }
   pendingShots: ShotState[] = []
   decorations: DecorationState[] = []
   details: DetailState[] = []
@@ -514,7 +514,11 @@ export function GameView({
       <div ref={parent} className="game" />
       {hud && (
         <div className="hud">
-          <p className="time">{formatTime(hud.time)}</p>
+          <p className="time">
+            {hud.roundStartsIn > 0
+              ? `Round ${hud.round} in ${Math.ceil(hud.roundStartsIn)}s`
+              : `Round ${hud.round} · ${formatTime(hud.time)}`}
+          </p>
           <ul>
             {hud.players.map((player, i) => (
               <li key={i} className={player.you ? 'you' : undefined}>

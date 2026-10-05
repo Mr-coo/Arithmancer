@@ -92,7 +92,8 @@ public class GameManager {
 							player.getHasteSeconds(), player.getSpeedBoostSeconds(), player == recipient))
 					.toList();
 			sessionRegistry.send(recipient.getSessionId(), "state",
-					new GameState(game.getElapsedSeconds(), players, enemies, items, shots));
+					new GameState(game.getElapsedSeconds(), game.getRound(), game.getRoundStartsIn(), players, enemies,
+							items, shots));
 		}
 	}
 

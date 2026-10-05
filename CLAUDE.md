@@ -16,7 +16,7 @@ Arithmancer is an endless co-op browser game. Players survive enemies by solving
 
 ### Core loop
 - 2D top-down. Move with WASD or the arrow keys. Type answers with the digit keys, Backspace and Enter.
-- Enemies spawn continuously, chase the nearest player who is not downed, and deal contact damage.
+- Enemies come in rounds, chase the nearest player who is not downed, and deal contact damage.
 - Each enemy shows a math question above its head. When a player submits a number, the enemy whose answer matches takes a hit. If several match, the enemy nearest that player is hit.
 - A player can only hit enemies inside their own view.
 - Questions are shared: all players see the same question on an enemy, and the first correct answer lands the hit.
@@ -25,7 +25,8 @@ Arithmancer is an endless co-op browser game. Players survive enemies by solving
 
 ### Enemies
 - Basic enemies die after 1 correct answer. Tougher types appear over time and need 2–3 answers. Each hit gives the enemy a new question.
-- Spawn rate, enemy speed and the share of tougher types increase over time.
+- Each round is a herd, bigger and spawning faster than the last. A round starts after a 5-second break, and the next one once its herd is all gone.
+- Enemy speed and the share of tougher types increase over time.
 
 ### Math
 - Answers are always whole numbers ≥ 0.

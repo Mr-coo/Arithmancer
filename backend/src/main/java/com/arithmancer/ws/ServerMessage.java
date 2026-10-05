@@ -26,9 +26,10 @@ public sealed interface ServerMessage {
 	record DetailState(String type, double x, double y) {
 	}
 
-	// time: seconds since the run started.
-	record GameState(double time, List<PlayerState> players, List<EnemyState> enemies, List<ItemState> items,
-			List<ShotState> shots) implements ServerMessage {
+	// time: seconds since the run started. round: the current round, whose herd starts coming in roundStartsIn
+	// seconds, 0 once it has.
+	record GameState(double time, int round, double roundStartsIn, List<PlayerState> players, List<EnemyState> enemies,
+			List<ItemState> items, List<ShotState> shots) implements ServerMessage {
 	}
 
 	// cooldown: seconds until the player can shoot again, out of maxCooldown. score: enemies killed. revive: while

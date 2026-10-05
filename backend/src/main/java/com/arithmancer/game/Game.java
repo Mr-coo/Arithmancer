@@ -16,10 +16,15 @@ import com.arithmancer.room.Player;
 
 public class Game {
 
-	// Starting values, to tune during development. Spawns come faster over a run, down to a floor.
+	// Starting values, to tune during development. Enemies come in rounds, each a herd of HERD_SIZE enemies and
+	// HERD_GROWTH more every round. They spawn SPAWN_INTERVAL_SECONDS apart, SPAWN_INTERVAL_FACTOR as long every round,
+	// down to a floor. Every round starts after ROUND_BREAK_SECONDS, the next once the herd is all gone.
+	private static final int HERD_SIZE = 8;
+	private static final int HERD_GROWTH = 4;
 	private static final double SPAWN_INTERVAL_SECONDS = 2;
-	private static final double MIN_SPAWN_INTERVAL_SECONDS = 0.6;
-	private static final double SPAWN_INTERVAL_DROP_PER_SECOND = 0.01;
+	private static final double SPAWN_INTERVAL_FACTOR = 0.85;
+	private static final double MIN_SPAWN_INTERVAL_SECONDS = 0.4;
+	private static final double ROUND_BREAK_SECONDS = 5;
 	private static final int MAX_ENEMIES = 30;
 	// Enemies get up to this much faster, reached after SPEED_UP_SECONDS.
 	private static final double MAX_SPEED_UP = 0.25;
@@ -77,7 +82,12 @@ public class Game {
 	private final List<Decoration> decorations;
 	private final List<Detail> details;
 	private final PathFinder pathFinder;
-	private double secondsUntilSpawn = SPAWN_INTERVAL_SECONDS;
+	private int round;
+	// Enemies of this round's herd still to spawn.
+	private int herdLeft;
+	// Seconds left of the break before this round's herd starts coming.
+	private double roundStartsIn;
+	private double secondsUntilSpawn;
 	private int nextEnemyId;
 	private int nextItemId;
 	private double elapsedSeconds;
@@ -88,6 +98,7 @@ public class Game {
 		this.decorations = scatterDecorations();
 		this.details = scatterDetails();
 		this.pathFinder = new PathFinder(decorations, ENEMY_RADIUS);
+		startRound();
 	}
 
 	public String getCode() {
@@ -122,6 +133,15 @@ public class Game {
 	// How long the run has lasted.
 	public double getElapsedSeconds() {
 		return elapsedSeconds;
+	}
+
+	public int getRound() {
+		return round;
+	}
+
+	// Seconds until this round's herd starts coming, 0 once it has.
+	public double getRoundStartsIn() {
+		return roundStartsIn;
 	}
 
 	// The run is lost once every player is dead.
@@ -295,14 +315,27 @@ public class Game {
 				&& Math.abs(point.y() - center.y()) <= VIEW_HEIGHT / 2;
 	}
 
+	// After the break, the round's herd spawns one enemy at a time. Once it has all spawned and none are left, the next
+	// round starts.
 	private void spawnEnemies(double deltaSeconds) {
+		if (roundStartsIn > 0) {
+			roundStartsIn = Math.max(0, roundStartsIn - deltaSeconds);
+			return;
+		}
+		if (herdLeft == 0) {
+			if (enemies.isEmpty()) {
+				startRound();
+			}
+			return;
+		}
 		secondsUntilSpawn -= deltaSeconds;
 		List<Player> standing = standingPlayers();
 		if (secondsUntilSpawn > 0 || enemies.size() >= MAX_ENEMIES || standing.isEmpty()) {
 			return;
 		}
 		secondsUntilSpawn = Math.max(MIN_SPAWN_INTERVAL_SECONDS,
-				SPAWN_INTERVAL_SECONDS - SPAWN_INTERVAL_DROP_PER_SECOND * elapsedSeconds);
+				SPAWN_INTERVAL_SECONDS * Math.pow(SPAWN_INTERVAL_FACTOR, round - 1));
+		herdLeft--;
 		Position center = standing.get(random.nextInt(standing.size())).getPosition();
 		double angle = random.nextDouble(2 * Math.PI);
 		Position position = pushOutOfDecorations(new Position(center.x() + Math.cos(angle) * SPAWN_DISTANCE,
@@ -313,6 +346,14 @@ public class Game {
 		Enemy.Type type = random.nextDouble() < torchShare ? Enemy.Type.TORCH : Enemy.Type.GOBLIN;
 		int maxHealth = type == Enemy.Type.GOBLIN ? 1 : elapsedSeconds < TORCH_THREE_ANSWERS_FROM_SECONDS ? 2 : 3;
 		enemies.add(new Enemy(nextEnemyId++, type, maxHealth, position, newQuestion(type), speedFactor));
+	}
+
+	// The next round's herd is bigger, and its first enemy comes as soon as the break is over.
+	private void startRound() {
+		round++;
+		herdLeft = HERD_SIZE + HERD_GROWTH * (round - 1);
+		roundStartsIn = ROUND_BREAK_SECONDS;
+		secondsUntilSpawn = 0;
 	}
 
 	// Torch goblins ask powers, logarithms and limits; goblins ask sums that get harder over the run.

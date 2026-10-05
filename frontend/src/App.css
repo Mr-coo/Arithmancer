@@ -345,7 +345,7 @@ button {
   inset: 0;
 }
 
-/* The time on a ribbon, over a parchment scroll with everyone's score. */
+/* The round and time on a ribbon, over a parchment scroll with everyone's score. */
 .hud {
   position: fixed;
   top: 12px;

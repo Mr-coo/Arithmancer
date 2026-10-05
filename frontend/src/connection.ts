@@ -39,8 +39,11 @@ export type ItemType = 'heal' | 'haste' | 'speed'
 
 export type ItemState = { id: number; type: ItemType; x: number; y: number }
 
+// round: the current round, whose herd starts coming in roundStartsIn seconds, 0 once it has.
 export type GameState = {
   time: number
+  round: number
+  roundStartsIn: number
   players: PlayerState[]
   enemies: EnemyState[]
   items: ItemState[]
