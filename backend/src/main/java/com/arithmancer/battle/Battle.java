@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Random;
 
 import com.arithmancer.entity.Enemy;
+import com.arithmancer.math.BattleTopic;
 import com.arithmancer.math.Problem;
-import com.arithmancer.math.Topic;
 import com.arithmancer.room.Player;
 
 // A turn-based battle against one goblin at a time. On the players' turn, everyone answers their own problems at
@@ -32,7 +32,7 @@ public class Battle {
 
 	private final String code;
 	private final List<Player> players;
-	private final Topic topic;
+	private final BattleTopic topic;
 	private final Map<Player, Fighter> fighters = new HashMap<>();
 	private final List<Player> strikes = new ArrayList<>();
 	private final List<Player> hits = new ArrayList<>();
@@ -47,7 +47,7 @@ public class Battle {
 	private int turn = 1;
 	private double elapsedSeconds;
 
-	public Battle(String code, List<Player> players, Topic topic) {
+	public Battle(String code, List<Player> players, BattleTopic topic) {
 		this.code = code;
 		this.players = List.copyOf(players);
 		this.topic = topic;

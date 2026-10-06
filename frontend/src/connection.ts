@@ -73,8 +73,10 @@ export type DetailState = { type: 'bush' | 'mushroom' | 'pebble' | 'pumpkin' | '
 // What a room plays: the endless real-time game, or the turn-based battle.
 export type Mode = 'realTime' | 'turnBased'
 
-// What every question in a run is about, picked by the host.
-export type Topic = 'addition' | 'subtraction' | 'multiplication' | 'division' | 'powers' | 'logarithms' | 'limits'
+// What every question in a run is about, picked by the host from the mode's own topics.
+export type SurvivalTopic = 'addition' | 'subtraction' | 'multiplication' | 'division' | 'powers' | 'logarithms'
+export type BattleTopic = 'limits'
+export type Topic = SurvivalTopic | BattleTopic
 
 // charge: the damage this player's right answers add up to this turn. score: damage dealt over the battle.
 export type FighterState = {

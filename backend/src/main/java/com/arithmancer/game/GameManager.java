@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.arithmancer.math.Topic;
+import com.arithmancer.math.SurvivalTopic;
 import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
 import com.arithmancer.ws.ServerMessage.EnemyState;
@@ -35,7 +35,7 @@ public class GameManager {
 		this.sessionRegistry = sessionRegistry;
 	}
 
-	public Game start(Room room, Topic topic) {
+	public Game start(Room room, SurvivalTopic topic) {
 		Game game = new Game(room.code(), room.players(), topic);
 		games.add(game);
 		log.info("Started game {} with {} players", game.getCode(), game.getPlayers().size());

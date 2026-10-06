@@ -8,7 +8,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import com.arithmancer.math.Topic;
+import com.arithmancer.math.BattleTopic;
 import com.arithmancer.room.Player;
 
 class BattleTest {
@@ -16,11 +16,11 @@ class BattleTest {
 	private static final double TICK_SECONDS = 0.05;
 
 	private final Player player = new Player("session", "Marco");
-	private final Battle battle = new Battle("ABCD", List.of(player), Topic.ADDITION);
+	private final Battle battle = new Battle("ABCD", List.of(player), BattleTopic.LIMITS);
 
 	@Test
 	void optionsAreFourDifferentNumbersWithTheAnswer() {
-		for (Topic topic : Topic.values()) {
+		for (BattleTopic topic : BattleTopic.values()) {
 			Player player = new Player("session", "Marco");
 			Battle battle = new Battle("ABCD", List.of(player), topic);
 			// Answering right on every tick beats each goblin, so the battle lasts long enough for larger numbers.

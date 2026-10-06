@@ -12,13 +12,13 @@ class QuestionTest {
 
 	// From the start of a run, through medium, to large numbers.
 	private static final double[] SECONDS = { 0, 30, 60, 100, 150, 300 };
-	private static final Map<Topic, String> OPERATORS = Map.of(Topic.ADDITION, "+", Topic.SUBTRACTION, "-",
-			Topic.MULTIPLICATION, "×", Topic.DIVISION, "÷");
+	private static final Map<SurvivalTopic, String> OPERATORS = Map.of(SurvivalTopic.ADDITION, "+",
+			SurvivalTopic.SUBTRACTION, "-", SurvivalTopic.MULTIPLICATION, "×", SurvivalTopic.DIVISION, "÷");
 
 	@Test
 	void arithmeticResultsMatchTheirQuestion() {
 		Random random = new Random(1);
-		for (Topic topic : OPERATORS.keySet()) {
+		for (SurvivalTopic topic : OPERATORS.keySet()) {
 			for (double seconds : SECONDS) {
 				for (int i = 0; i < 1000; i++) {
 					Question question = Question.random(random, topic, seconds);
@@ -33,7 +33,7 @@ class QuestionTest {
 	@Test
 	void resultsAreAtLeastZero() {
 		Random random = new Random(1);
-		for (Topic topic : Topic.values()) {
+		for (SurvivalTopic topic : SurvivalTopic.values()) {
 			for (double seconds : SECONDS) {
 				for (int i = 0; i < 1000; i++) {
 					Question question = Question.random(random, topic, seconds);

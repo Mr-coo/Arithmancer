@@ -16,7 +16,8 @@ import com.arithmancer.battle.Battle;
 import com.arithmancer.battle.BattleManager;
 import com.arithmancer.game.Game;
 import com.arithmancer.game.GameManager;
-import com.arithmancer.math.Topic;
+import com.arithmancer.math.BattleTopic;
+import com.arithmancer.math.SurvivalTopic;
 import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
 import com.arithmancer.room.RoomRegistry;
@@ -193,18 +194,24 @@ public class GameGateway extends TextWebSocketHandler {
 			session.close(CloseStatus.BAD_DATA.withReason("Only the host can start"));
 			return;
 		}
+		boolean turnBased = startGame.mode() == Mode.TURN_BASED;
+		SurvivalTopic survivalTopic = topic(startGame.topic(), SurvivalTopic.class);
+		BattleTopic battleTopic = topic(startGame.topic(), BattleTopic.class);
+		if (turnBased ? battleTopic == null : survivalTopic == null) {
+			session.close(CloseStatus.BAD_DATA.withReason("Topic not in this mode"));
+			return;
+		}
 		if (!roomRegistry.remove(room)) {
 			session.close(CloseStatus.BAD_DATA.withReason("Not in a room"));
 			return;
 		}
-		Topic topic = startGame.topic() == null ? Topic.ADDITION : startGame.topic();
-		if (startGame.mode() == Mode.TURN_BASED) {
-			Battle battle = battleManager.start(room, topic);
+		if (turnBased) {
+			Battle battle = battleManager.start(room, battleTopic);
 			sendAll(battle.getPlayers(), "battleStarted",
 					new BattleStarted(battle.getCode(), nicknames(battle.getPlayers())));
 			return;
 		}
-		Game game = gameManager.start(room, topic);
+		Game game = gameManager.start(room, survivalTopic);
 		List<DecorationState> decorations = game.getDecorations().stream()
 				.map(decoration -> new DecorationState(decoration.type(), decoration.solid().center().x(),
 						decoration.solid().center().y(), decoration.solid().radius(), decoration.cover().center().x(),
@@ -225,6 +232,19 @@ public class GameGateway extends TextWebSocketHandler {
 		Player player = findInRun(session.getId());
 		if (player != null) {
 			player.submitAnswer(answer.value());
+		}
+	}
+
+	// The topic of this type that the name is written as, the first of them when there is no name, or null when none
+	// is.
+	private <T extends Enum<T>> T topic(String name, Class<T> type) {
+		if (name == null) {
+			return type.getEnumConstants()[0];
+		}
+		try {
+			return jsonMapper.convertValue(name, type);
+		} catch (JacksonException | IllegalArgumentException e) {
+			return null;
 		}
 	}
 

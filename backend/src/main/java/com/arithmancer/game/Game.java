@@ -12,7 +12,7 @@ import com.arithmancer.map.Decoration;
 import com.arithmancer.map.Detail;
 import com.arithmancer.map.PathFinder;
 import com.arithmancer.math.Question;
-import com.arithmancer.math.Topic;
+import com.arithmancer.math.SurvivalTopic;
 import com.arithmancer.room.Player;
 
 public class Game {
@@ -76,7 +76,7 @@ public class Game {
 
 	private final String code;
 	private final List<Player> players;
-	private final Topic topic;
+	private final SurvivalTopic topic;
 	private final List<Enemy> enemies = new ArrayList<>();
 	private final List<Shot> shots = new ArrayList<>();
 	private final List<Item> items = new ArrayList<>();
@@ -94,7 +94,7 @@ public class Game {
 	private int nextItemId;
 	private double elapsedSeconds;
 
-	public Game(String code, List<Player> players, Topic topic) {
+	public Game(String code, List<Player> players, SurvivalTopic topic) {
 		this.code = code;
 		this.players = List.copyOf(players);
 		this.topic = topic;

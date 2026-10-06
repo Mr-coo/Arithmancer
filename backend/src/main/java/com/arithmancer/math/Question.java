@@ -13,8 +13,8 @@ public record Question(String text, int result) {
 	private static final String SUBSCRIPTS = "₀₁₂₃₄₅₆₇₈₉";
 
 	// A question of the topic, as hard as the run has got. Sums and differences go up to 10, then 20 and 50; factors,
-	// divisors and quotients go up to 5, then 10 once hard. Powers, logarithms and limits keep theirs.
-	public static Question random(Random random, Topic topic, double elapsedSeconds) {
+	// divisors and quotients go up to 5, then 10 once hard. Powers and logarithms keep theirs.
+	public static Question random(Random random, SurvivalTopic topic, double elapsedSeconds) {
 		Difficulty difficulty = Difficulty.after(elapsedSeconds);
 		int sums = switch (difficulty) {
 			case EASY -> 10;
@@ -29,7 +29,6 @@ public record Question(String text, int result) {
 			case DIVISION -> divide(random, factors);
 			case POWERS -> power(random);
 			case LOGARITHMS -> log(random);
-			case LIMITS -> limit(random);
 		};
 	}
 
@@ -86,18 +85,6 @@ public record Question(String text, int result) {
 		int[] power = POWERS[random.nextInt(POWERS.length)];
 		int exponent = random.nextInt(power[1] + 1);
 		return of("log" + digits(power[0], SUBSCRIPTS) + " " + (int) Math.pow(power[0], exponent), exponent);
-	}
-
-	// As x approaches a, (x² - a²)/(x - a) approaches 2a, and bx + c approaches ab + c.
-	private static Question limit(Random random) {
-		int a = 1 + random.nextInt(9);
-		if (random.nextBoolean()) {
-			return of("lim x→" + a + " (x²-" + a * a + ")/(x-" + a + ")", 2 * a);
-		}
-		int b = 1 + random.nextInt(5);
-		int c = random.nextInt(10);
-		String linear = (b == 1 ? "" : b) + "x" + (c == 0 ? "" : "+" + c);
-		return of("lim x→" + a + " (" + linear + ")", a * b + c);
 	}
 
 	// Writes n with these characters for 0 to 9.
