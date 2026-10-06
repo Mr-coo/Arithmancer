@@ -39,6 +39,9 @@ public class GameGateway extends TextWebSocketHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(GameGateway.class);
 
+	// Short enough to fit over a character's head and in the score lists. The frontend's input stops there too.
+	private static final int MAX_NICKNAME_LENGTH = 16;
+
 	private final JsonMapper jsonMapper;
 	private final RoomRegistry roomRegistry;
 	private final GameManager gameManager;
@@ -114,6 +117,10 @@ public class GameGateway extends TextWebSocketHandler {
 			session.close(CloseStatus.BAD_DATA.withReason("Nickname required"));
 			return;
 		}
+		if (isTooLong(createRoom.nickname())) {
+			session.close(CloseStatus.BAD_DATA.withReason("Nickname too long"));
+			return;
+		}
 		Room room = roomRegistry.create(new Player(session.getId(), createRoom.nickname().strip()));
 		send(session, "roomCreated", new RoomCreated(room.code(), nicknames(room.players())));
 	}
@@ -125,6 +132,10 @@ public class GameGateway extends TextWebSocketHandler {
 		}
 		if (isBlank(joinRoom.nickname())) {
 			session.close(CloseStatus.BAD_DATA.withReason("Nickname required"));
+			return;
+		}
+		if (isTooLong(joinRoom.nickname())) {
+			session.close(CloseStatus.BAD_DATA.withReason("Nickname too long"));
 			return;
 		}
 		Room room = roomRegistry.find(joinRoom.code());
@@ -229,6 +240,11 @@ public class GameGateway extends TextWebSocketHandler {
 
 	private static boolean isBlank(String nickname) {
 		return nickname == null || nickname.isBlank();
+	}
+
+	private static boolean isTooLong(String nickname) {
+		String stripped = nickname.strip();
+		return stripped.codePointCount(0, stripped.length()) > MAX_NICKNAME_LENGTH;
 	}
 
 	private static List<String> nicknames(List<Player> players) {

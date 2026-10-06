@@ -21,6 +21,9 @@ type Screen =
   | { name: 'battle'; code: string }
   | { name: 'gameOver'; summary: string; players: FinalScore[] }
 
+// The server turns longer nicknames away.
+const MAX_NICKNAME_LENGTH = 16
+
 // "1 goblin", "4 goblins".
 const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? '' : 's'}`
 
@@ -157,7 +160,7 @@ function App() {
       {screen.name === 'home' && screen.error && <p className="error">{screen.error}</p>}
       <label>
         Nickname
-        <input value={nickname} onChange={(event) => setNickname(event.target.value)} />
+        <input value={nickname} maxLength={MAX_NICKNAME_LENGTH} onChange={(event) => setNickname(event.target.value)} />
       </label>
       <button type="button" disabled={!nickname.trim() || connecting} onClick={createRoom}>
         Create room
