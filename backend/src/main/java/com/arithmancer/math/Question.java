@@ -15,25 +15,35 @@ public record Question(String text, int result) {
 	private static final int[][] POWERS = { { 2, 8 }, { 3, 5 }, { 4, 4 }, { 5, 3 }, { 10, 3 } };
 	private static final String SUPERSCRIPTS = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 	private static final String SUBSCRIPTS = "₀₁₂₃₄₅₆₇₈₉";
+	// + and - come first, then × and ÷ join them.
+	private static final Topic[] ARITHMETIC = { Topic.ADDITION, Topic.SUBTRACTION, Topic.MULTIPLICATION,
+			Topic.DIVISION };
+	private static final Topic[] ADVANCED = { Topic.POWERS, Topic.LOGARITHMS, Topic.LIMITS };
 
 	public static Question random(Random random, double elapsedSeconds) {
-		if (elapsedSeconds < TIMES_TABLES_FROM_SECONDS) {
-			return addOrSubtract(random, 10);
-		}
-		boolean large = elapsedSeconds >= LARGE_NUMBERS_FROM_SECONDS;
-		return switch (random.nextInt(4)) {
-			case 0, 1 -> addOrSubtract(random, large ? 50 : 20);
-			case 2 -> multiply(random, large ? 10 : 5);
-			default -> divide(random, large ? 10 : 5);
-		};
+		int topics = elapsedSeconds < TIMES_TABLES_FROM_SECONDS ? 2 : ARITHMETIC.length;
+		return random(random, ARITHMETIC[random.nextInt(topics)], elapsedSeconds);
 	}
 
 	// Harder questions, for tougher enemies: powers, logarithms and limits.
 	public static Question advanced(Random random) {
-		return switch (random.nextInt(3)) {
-			case 0 -> power(random);
-			case 1 -> log(random);
-			default -> limit(random);
+		return random(random, ADVANCED[random.nextInt(ADVANCED.length)], 0);
+	}
+
+	// A question of the topic. Sums and differences go up to 10, then 20 and 50 as the run goes on; factors, divisors
+	// and quotients go up to 5, then 10. Powers, logarithms and limits keep theirs.
+	public static Question random(Random random, Topic topic, double elapsedSeconds) {
+		boolean large = elapsedSeconds >= LARGE_NUMBERS_FROM_SECONDS;
+		int sums = elapsedSeconds < TIMES_TABLES_FROM_SECONDS ? 10 : large ? 50 : 20;
+		int factors = large ? 10 : 5;
+		return switch (topic) {
+			case ADDITION -> add(random, sums);
+			case SUBTRACTION -> subtract(random, sums);
+			case MULTIPLICATION -> multiply(random, factors);
+			case DIVISION -> divide(random, factors);
+			case POWERS -> power(random);
+			case LOGARITHMS -> log(random);
+			case LIMITS -> limit(random);
 		};
 	}
 
@@ -47,12 +57,15 @@ public record Question(String text, int result) {
 	}
 
 	// Results and numbers from 0 to max.
-	private static Question addOrSubtract(Random random, int max) {
+	private static Question add(Random random, int max) {
 		int result = random.nextInt(max + 1);
-		if (random.nextBoolean()) {
-			int a = random.nextInt(result + 1);
-			return of(a + " + " + (result - a), result);
-		}
+		int a = random.nextInt(result + 1);
+		return of(a + " + " + (result - a), result);
+	}
+
+	// Results and numbers from 0 to max.
+	private static Question subtract(Random random, int max) {
+		int result = random.nextInt(max + 1);
 		int b = random.nextInt(max - result + 1);
 		return of((result + b) + " - " + b, result);
 	}
