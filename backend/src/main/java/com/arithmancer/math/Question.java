@@ -7,20 +7,21 @@ public record Question(String text, int result) {
 	// In real-time games, answers are one digit, so a single key press answers a question: bigger results count by
 	// their last digit.
 	private static final int DIGITS = 10;
-	// Starting values, to tune during development: numbers grow at these points of a run.
-	private static final double MEDIUM_NUMBERS_FROM_SECONDS = 60;
-	private static final double LARGE_NUMBERS_FROM_SECONDS = 150;
 	// Bases of powers and logarithms, each with its highest exponent.
 	private static final int[][] POWERS = { { 2, 8 }, { 3, 5 }, { 4, 4 }, { 5, 3 }, { 10, 3 } };
 	private static final String SUPERSCRIPTS = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 	private static final String SUBSCRIPTS = "₀₁₂₃₄₅₆₇₈₉";
 
-	// A question of the topic. Sums and differences go up to 10, then 20 and 50 as the run goes on; factors, divisors
-	// and quotients go up to 5, then 10. Powers, logarithms and limits keep theirs.
+	// A question of the topic, as hard as the run has got. Sums and differences go up to 10, then 20 and 50; factors,
+	// divisors and quotients go up to 5, then 10 once hard. Powers, logarithms and limits keep theirs.
 	public static Question random(Random random, Topic topic, double elapsedSeconds) {
-		boolean large = elapsedSeconds >= LARGE_NUMBERS_FROM_SECONDS;
-		int sums = elapsedSeconds < MEDIUM_NUMBERS_FROM_SECONDS ? 10 : large ? 50 : 20;
-		int factors = large ? 10 : 5;
+		Difficulty difficulty = Difficulty.after(elapsedSeconds);
+		int sums = switch (difficulty) {
+			case EASY -> 10;
+			case MEDIUM -> 20;
+			case HARD -> 50;
+		};
+		int factors = difficulty == Difficulty.HARD ? 10 : 5;
 		return switch (topic) {
 			case ADDITION -> add(random, sums);
 			case SUBTRACTION -> subtract(random, sums);
