@@ -35,7 +35,7 @@ Arithmancer is an endless co-op browser game. Players survive enemies by solving
 - Real-time answers are always whole numbers ≥ 0. Turn-based answers are exact and can be fractions, roots, π or expressions, as they are picked from options.
 - Each mode has its own topics, and the host picks one of them in the lobby. Every question in the run is of that topic.
   - Real-time (survival): arithmetic (+ − × ÷ mixed, with brackets), integers and fractions, algebra (solve ax + b = c), exponents and logarithms, or Pythagoras.
-  - Turn-based: trigonometry (exact values of special angles), limits, derivatives or integrals (of polynomials).
+  - Turn-based: trigonometry (exact values of special angles), limits, derivatives or integrals (of polynomials), or matrices (determinants).
 - Difficulty scales over time: questions go from easy to medium after 60 seconds and to hard after 150.
 
 ### Players

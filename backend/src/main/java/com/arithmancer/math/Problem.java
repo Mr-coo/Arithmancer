@@ -7,6 +7,7 @@ import java.util.Random;
 import com.arithmancer.math.turnbased.Derivatives;
 import com.arithmancer.math.turnbased.Integrals;
 import com.arithmancer.math.turnbased.Limits;
+import com.arithmancer.math.turnbased.Matrices;
 import com.arithmancer.math.turnbased.Trigonometry;
 import com.arithmancer.math.turnbased.WrongAnswers;
 
@@ -21,6 +22,7 @@ public record Problem(String text, String answer, List<String> wrong) {
 			case LIMITS -> Limits.pose(random, difficulty);
 			case DERIVATIVES -> Derivatives.pose(random, difficulty);
 			case INTEGRALS -> Integrals.pose(random, difficulty);
+			case MATRICES -> Matrices.pose(random, difficulty);
 		};
 	}
 

@@ -16,6 +16,9 @@ public enum BattleTopic {
 	DERIVATIVES,
 
 	@JsonProperty("integrals")
-	INTEGRALS
+	INTEGRALS,
+
+	@JsonProperty("matrices")
+	MATRICES
 
 }
