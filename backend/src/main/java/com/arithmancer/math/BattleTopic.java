@@ -10,6 +10,9 @@ public enum BattleTopic {
 	TRIGONOMETRY,
 
 	@JsonProperty("limits")
-	LIMITS
+	LIMITS,
+
+	@JsonProperty("derivatives")
+	DERIVATIVES
 
 }

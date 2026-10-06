@@ -43,6 +43,7 @@ const TOPICS: Record<Mode, Choice<Topic>[]> = {
   turnBased: [
     { value: 'trigonometry', label: 'Trigonometry' },
     { value: 'limits', label: 'Limits' },
+    { value: 'derivatives', label: 'Derivatives' },
   ],
 }
 

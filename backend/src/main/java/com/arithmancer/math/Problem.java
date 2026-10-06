@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
+import com.arithmancer.math.turnbased.Derivatives;
 import com.arithmancer.math.turnbased.Limits;
 import com.arithmancer.math.turnbased.Trigonometry;
 import com.arithmancer.math.turnbased.WrongAnswers;
@@ -17,6 +18,7 @@ public record Problem(String text, String answer, List<String> wrong) {
 		return switch (topic) {
 			case TRIGONOMETRY -> Trigonometry.pose(random, difficulty);
 			case LIMITS -> Limits.pose(random, difficulty);
+			case DERIVATIVES -> Derivatives.pose(random, difficulty);
 		};
 	}
 
