@@ -110,6 +110,8 @@ public class Battle {
 		secondsLeft -= deltaSeconds;
 		strikes.clear();
 		hits.clear();
+		// Players who left are downed for good.
+		players.stream().filter(Player::hasLeft).forEach(player -> player.setHealth(0));
 		players.forEach(player -> answer(player, deltaSeconds));
 		if (phase == Phase.PLAYERS && secondsLeft <= 0) {
 			strike();

@@ -35,6 +35,8 @@ public class Player extends Entity {
 	// Seconds left of each item boost.
 	private double hasteSeconds;
 	private double speedBoostSeconds;
+	// Set from the socket's thread when the player's connection closes during a run.
+	private volatile boolean left;
 
 	public Player(String sessionId, String nickname) {
 		super(MAX_HEALTH, ATTACK, SPEED, new Position(0, 0));
@@ -130,6 +132,14 @@ public class Player extends Entity {
 
 	public void setReviveProgress(double reviveProgress) {
 		this.reviveProgress = reviveProgress;
+	}
+
+	public void leave() {
+		left = true;
+	}
+
+	public boolean hasLeft() {
+		return left;
 	}
 
 	public int getScore() {

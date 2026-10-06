@@ -153,6 +153,8 @@ public class Game {
 		// One simulation step: movement, spawning, questions, damage and revives go here.
 		elapsedSeconds += deltaSeconds;
 		shots.clear();
+		// Players who left are downed for good.
+		players.stream().filter(Player::hasLeft).forEach(player -> player.setHealth(0));
 		players.forEach(player -> move(player, deltaSeconds));
 		pickUpItems(deltaSeconds);
 		players.forEach(player -> revive(player, deltaSeconds));
@@ -250,9 +252,10 @@ public class Game {
 		}
 	}
 
-	// A downed player is revived while a standing teammate stays next to them; progress is lost when nobody is.
+	// A downed player is revived while a standing teammate stays next to them; progress is lost when nobody is. Players
+	// who left cannot be revived.
 	private void revive(Player player, double deltaSeconds) {
-		if (player.getHealth() > 0) {
+		if (player.getHealth() > 0 || player.hasLeft()) {
 			return;
 		}
 		boolean helped = standingPlayers().stream()

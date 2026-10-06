@@ -98,6 +98,10 @@ public class GameGateway extends TextWebSocketHandler {
 		if (room != null) {
 			sendRoom(room);
 		}
+		Player player = findInRun(session.getId());
+		if (player != null) {
+			player.leave();
+		}
 		log.info("Disconnected: {} ({})", session.getId(), status);
 	}
 
@@ -158,7 +162,7 @@ public class GameGateway extends TextWebSocketHandler {
 
 	private void startGame(WebSocketSession session, StartGame startGame) throws IOException {
 		// A second click on start can arrive once the run has started: ignore it.
-		if (gameManager.findPlayer(session.getId()) != null || battleManager.findPlayer(session.getId()) != null) {
+		if (findInRun(session.getId()) != null) {
 			return;
 		}
 		Room room = roomRegistry.findBySession(session.getId());
@@ -198,13 +202,16 @@ public class GameGateway extends TextWebSocketHandler {
 			session.close(CloseStatus.BAD_DATA.withReason("Expected a whole number of at least 0"));
 			return;
 		}
-		Player player = gameManager.findPlayer(session.getId());
-		if (player == null) {
-			player = battleManager.findPlayer(session.getId());
-		}
+		Player player = findInRun(session.getId());
 		if (player != null) {
 			player.submitAnswer(answer.value());
 		}
+	}
+
+	// The session's player in a real-time game or a battle, or null when it is in neither.
+	private Player findInRun(String sessionId) {
+		Player player = gameManager.findPlayer(sessionId);
+		return player != null ? player : battleManager.findPlayer(sessionId);
 	}
 
 	private static boolean isBlank(String nickname) {
