@@ -1,15 +1,16 @@
-package com.arithmancer.math.turnbased;
+package com.arithmancer.math;
 
-// How numbers and terms are written in turn-based problems and answers.
-final class Written {
+// How numbers and terms are written in questions and answers.
+public final class Written {
 
 	private static final String SUPERSCRIPTS = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+	private static final String SUBSCRIPTS = "₀₁₂₃₄₅₆₇₈₉";
 
 	private Written() {
 	}
 
 	// n/d in lowest terms, or a whole number when it divides out, with the sign in front.
-	static String fraction(int n, int d) {
+	public static String fraction(int n, int d) {
 		int divisor = gcd(Math.abs(n), Math.abs(d));
 		int top = n / divisor * Integer.signum(d);
 		int bottom = Math.abs(d) / divisor;
@@ -17,7 +18,7 @@ final class Written {
 	}
 
 	// coefficient × xⁿ: 3x², x, -x³, 7. A coefficient of 1 is left out, as is x⁰.
-	static String term(int coefficient, int exponent) {
+	public static String term(int coefficient, int exponent) {
 		if (exponent == 0) {
 			return String.valueOf(coefficient);
 		}
@@ -25,10 +26,21 @@ final class Written {
 		return number + "x" + (exponent == 1 ? "" : superscript(exponent));
 	}
 
-	static String superscript(int n) {
+	// n written small and raised, as an exponent: ³ for 3.
+	public static String superscript(int n) {
+		return digits(n, SUPERSCRIPTS);
+	}
+
+	// n written small and lowered, as a logarithm's base: ₂ for 2.
+	public static String subscript(int n) {
+		return digits(n, SUBSCRIPTS);
+	}
+
+	// Writes n, at least 0, with these characters for 0 to 9.
+	private static String digits(int n, String characters) {
 		StringBuilder written = new StringBuilder();
 		for (char digit : String.valueOf(n).toCharArray()) {
-			written.append(SUPERSCRIPTS.charAt(digit - '0'));
+			written.append(characters.charAt(digit - '0'));
 		}
 		return written.toString();
 	}

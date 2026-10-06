@@ -5,6 +5,7 @@ import java.util.Random;
 
 import com.arithmancer.math.Difficulty;
 import com.arithmancer.math.Problem;
+import com.arithmancer.math.Written;
 
 // Limits: of a line at first, then of quotients that only settle once factored, then of quotients at infinity too.
 public final class Limits {

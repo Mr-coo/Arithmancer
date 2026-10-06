@@ -74,7 +74,7 @@ export type DetailState = { type: 'bush' | 'mushroom' | 'pebble' | 'pumpkin' | '
 export type Mode = 'realTime' | 'turnBased'
 
 // What every question in a run is about, picked by the host from the mode's own topics.
-export type SurvivalTopic = 'addition' | 'subtraction' | 'multiplication' | 'division' | 'powers' | 'logarithms'
+export type SurvivalTopic = 'arithmetic' | 'fractions' | 'algebra' | 'exponents' | 'pythagoras'
 export type BattleTopic = 'limits'
 export type Topic = SurvivalTopic | BattleTopic
 

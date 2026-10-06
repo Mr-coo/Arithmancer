@@ -34,12 +34,11 @@ const MODES: Choice<Mode>[] = [
 ]
 const TOPICS: Record<Mode, Choice<Topic>[]> = {
   realTime: [
-    { value: 'addition', label: 'Addition' },
-    { value: 'subtraction', label: 'Subtraction' },
-    { value: 'multiplication', label: 'Multiplication' },
-    { value: 'division', label: 'Division' },
-    { value: 'powers', label: 'Powers' },
-    { value: 'logarithms', label: 'Logarithms' },
+    { value: 'arithmetic', label: 'Arithmetic' },
+    { value: 'fractions', label: 'Integers & fractions' },
+    { value: 'algebra', label: 'Algebra' },
+    { value: 'exponents', label: 'Exponents & logarithms' },
+    { value: 'pythagoras', label: 'Pythagoras' },
   ],
   turnBased: [{ value: 'limits', label: 'Limits' }],
 }

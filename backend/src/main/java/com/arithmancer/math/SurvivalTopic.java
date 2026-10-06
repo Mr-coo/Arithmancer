@@ -6,22 +6,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 // the first is the default.
 public enum SurvivalTopic {
 
-	@JsonProperty("addition")
-	ADDITION,
+	@JsonProperty("arithmetic")
+	ARITHMETIC,
 
-	@JsonProperty("subtraction")
-	SUBTRACTION,
+	@JsonProperty("fractions")
+	FRACTIONS,
 
-	@JsonProperty("multiplication")
-	MULTIPLICATION,
+	@JsonProperty("algebra")
+	ALGEBRA,
 
-	@JsonProperty("division")
-	DIVISION,
+	@JsonProperty("exponents")
+	EXPONENTS,
 
-	@JsonProperty("powers")
-	POWERS,
-
-	@JsonProperty("logarithms")
-	LOGARITHMS
+	@JsonProperty("pythagoras")
+	PYTHAGORAS
 
 }
