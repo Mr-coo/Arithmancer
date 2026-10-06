@@ -447,7 +447,9 @@ export function BattleView({ connection, code }: { connection: Connection; code:
     })
     const stopState = connection.on('battleState', (state) => {
       scene.latest = state
-      if (state.strikes.length > 0 || state.hits.length > 0) {
+      // Phaser stops while the tab is hidden, so strikes and hits then are skipped rather than all played on coming
+      // back; the bars jump to the latest health.
+      if (!document.hidden && (state.strikes.length > 0 || state.hits.length > 0)) {
         scene.pending.push(state)
       }
       setState(state)
