@@ -106,6 +106,10 @@ public class GameGateway extends TextWebSocketHandler {
 	}
 
 	private void createRoom(WebSocketSession session, CreateRoom createRoom) throws IOException {
+		if (isInRoom(session.getId())) {
+			session.close(CloseStatus.BAD_DATA.withReason("Already in a room"));
+			return;
+		}
 		if (isBlank(createRoom.nickname())) {
 			session.close(CloseStatus.BAD_DATA.withReason("Nickname required"));
 			return;
@@ -115,6 +119,10 @@ public class GameGateway extends TextWebSocketHandler {
 	}
 
 	private void joinRoom(WebSocketSession session, JoinRoom joinRoom) throws IOException {
+		if (isInRoom(session.getId())) {
+			session.close(CloseStatus.BAD_DATA.withReason("Already in a room"));
+			return;
+		}
 		if (isBlank(joinRoom.nickname())) {
 			session.close(CloseStatus.BAD_DATA.withReason("Nickname required"));
 			return;
@@ -206,6 +214,11 @@ public class GameGateway extends TextWebSocketHandler {
 		if (player != null) {
 			player.submitAnswer(answer.value());
 		}
+	}
+
+	// A connection is in one room at a time, from its lobby to the end of its run.
+	private boolean isInRoom(String sessionId) {
+		return roomRegistry.findBySession(sessionId) != null || findInRun(sessionId) != null;
 	}
 
 	// The session's player in a real-time game or a battle, or null when it is in neither.

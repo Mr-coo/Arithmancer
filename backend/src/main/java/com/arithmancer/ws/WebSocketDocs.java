@@ -63,7 +63,8 @@ public class WebSocketDocs {
 						"Try it out" opens a real WebSocket, sends `message` and shows the reply.
 
 						Every message, both ways, is `{"type": "<eventName>", "content": {...}}`:
-						- `{"type":"createRoom","content":{"nickname":"Marco"}}` creates a room with you in it. \
+						- `{"type":"createRoom","content":{"nickname":"Marco"}}` creates a room with you in it. A connection \
+						is in one room at a time, until its run ends. \
 						Reply: `{"type":"roomCreated","content":{"code":"KQXB","players":["Marco"]}}`
 						- `{"type":"joinRoom","content":{"code":"KQXB","nickname":"Ana"}}` joins a room (max 4 players). \
 						Reply, to everyone in the room, with `host` true for the host (the first player): \
