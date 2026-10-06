@@ -40,7 +40,10 @@ const TOPICS: Record<Mode, Choice<Topic>[]> = {
     { value: 'exponents', label: 'Exponents & logarithms' },
     { value: 'pythagoras', label: 'Pythagoras' },
   ],
-  turnBased: [{ value: 'limits', label: 'Limits' }],
+  turnBased: [
+    { value: 'trigonometry', label: 'Trigonometry' },
+    { value: 'limits', label: 'Limits' },
+  ],
 }
 
 // "1 goblin", "4 goblins".

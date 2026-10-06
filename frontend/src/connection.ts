@@ -75,7 +75,7 @@ export type Mode = 'realTime' | 'turnBased'
 
 // What every question in a run is about, picked by the host from the mode's own topics.
 export type SurvivalTopic = 'arithmetic' | 'fractions' | 'algebra' | 'exponents' | 'pythagoras'
-export type BattleTopic = 'limits'
+export type BattleTopic = 'trigonometry' | 'limits'
 export type Topic = SurvivalTopic | BattleTopic
 
 // charge: the damage this player's right answers add up to this turn. score: damage dealt over the battle.

@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 // the first is the default.
 public enum BattleTopic {
 
+	@JsonProperty("trigonometry")
+	TRIGONOMETRY,
+
 	@JsonProperty("limits")
 	LIMITS
 

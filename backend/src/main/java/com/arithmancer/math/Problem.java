@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.arithmancer.math.turnbased.Limits;
+import com.arithmancer.math.turnbased.Trigonometry;
 import com.arithmancer.math.turnbased.WrongAnswers;
 
 // A turn-based problem: its text, its exact answer and WrongAnswers.COUNT wrong ones, all as shown.
@@ -14,6 +15,7 @@ public record Problem(String text, String answer, List<String> wrong) {
 	public static Problem random(Random random, BattleTopic topic, double elapsedSeconds) {
 		Difficulty difficulty = Difficulty.after(elapsedSeconds);
 		return switch (topic) {
+			case TRIGONOMETRY -> Trigonometry.pose(random, difficulty);
 			case LIMITS -> Limits.pose(random, difficulty);
 		};
 	}
