@@ -109,7 +109,8 @@ type RoomContent = { code: string; players: string[] }
 
 type ServerMessages = {
   roomCreated: RoomContent
-  roomJoined: RoomContent
+  // host: whether you are the host, the first of players.
+  roomJoined: RoomContent & { host: boolean }
   gameStarted: RoomContent & { decorations: DecorationState[]; details: DetailState[] }
   state: GameState
   gameOver: GameOver

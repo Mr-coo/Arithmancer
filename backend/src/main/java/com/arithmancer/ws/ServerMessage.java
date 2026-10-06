@@ -7,7 +7,8 @@ public sealed interface ServerMessage {
 	record RoomCreated(String code, List<String> players) implements ServerMessage {
 	}
 
-	record RoomJoined(String code, List<String> players) implements ServerMessage {
+	// host: whether the receiving player is the host, the first of players.
+	record RoomJoined(String code, List<String> players, boolean host) implements ServerMessage {
 	}
 
 	record Input(String key, KeyAction action) implements ServerMessage {

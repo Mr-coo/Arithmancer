@@ -40,6 +40,20 @@ public class RoomRegistry {
 		return rooms.remove(room.code(), room);
 	}
 
+	// Takes the player out of their lobby, and removes the room once nobody is left in it. The first player left is the
+	// host. Returns the room, or null when the session was in none.
+	public Room leave(String sessionId) {
+		Room room = findBySession(sessionId);
+		if (room == null) {
+			return null;
+		}
+		room.players().removeIf(player -> player.getSessionId().equals(sessionId));
+		if (room.players().isEmpty()) {
+			remove(room);
+		}
+		return room;
+	}
+
 	private String randomCode() {
 		StringBuilder code = new StringBuilder(CODE_LENGTH);
 		for (int i = 0; i < CODE_LENGTH; i++) {

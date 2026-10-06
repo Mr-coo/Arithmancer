@@ -66,7 +66,10 @@ public class WebSocketDocs {
 						- `{"type":"createRoom","content":{"nickname":"Marco"}}` creates a room with you in it. \
 						Reply: `{"type":"roomCreated","content":{"code":"KQXB","players":["Marco"]}}`
 						- `{"type":"joinRoom","content":{"code":"KQXB","nickname":"Ana"}}` joins a room (max 4 players). \
-						Reply, to everyone in the room: `{"type":"roomJoined","content":{"code":"KQXB","players":["Marco","Ana"]}}`
+						Reply, to everyone in the room, with `host` true for the host (the first player): \
+						`{"type":"roomJoined","content":{"code":"KQXB","players":["Marco","Ana"],"host":false}}`. \
+						Everyone left gets it again when a player leaves the lobby; if the host leaves, the next player is \
+						the host.
 						- `{"type":"input","content":{"key":"a","action":"down"}}` sends a key press (`down`) or release (`up`) \
 						of exactly one letter. \
 						Reply: the same message echoed back.

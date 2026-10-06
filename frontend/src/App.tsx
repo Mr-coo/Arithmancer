@@ -46,9 +46,9 @@ function App() {
       setConnecting(false)
       setScreen({ name: 'lobby', code, players, host: true })
     })
-    opened.on('roomJoined', ({ code, players }) => {
+    opened.on('roomJoined', ({ code, players, host }) => {
       setConnecting(false)
-      setScreen((current) => ({ name: 'lobby', code, players, host: current.name === 'lobby' && current.host }))
+      setScreen({ name: 'lobby', code, players, host })
     })
     opened.on('gameStarted', ({ decorations, details }) => setScreen({ name: 'game', decorations, details }))
     opened.on('gameOver', ({ time, players }) =>

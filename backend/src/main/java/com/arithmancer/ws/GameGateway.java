@@ -94,6 +94,10 @@ public class GameGateway extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
 		sessionRegistry.remove(session.getId());
+		Room room = roomRegistry.leave(session.getId());
+		if (room != null) {
+			sendRoom(room);
+		}
 		log.info("Disconnected: {} ({})", session.getId(), status);
 	}
 
@@ -120,7 +124,16 @@ public class GameGateway extends TextWebSocketHandler {
 			session.close(CloseStatus.BAD_DATA.withReason("Room is full"));
 			return;
 		}
-		sendAll(room.players(), "roomJoined", new RoomJoined(room.code(), nicknames(room.players())));
+		sendRoom(room);
+	}
+
+	// Everyone in the lobby gets its players, and whether they are the host: the first of them.
+	private void sendRoom(Room room) {
+		List<Player> players = List.copyOf(room.players());
+		for (int i = 0; i < players.size(); i++) {
+			sessionRegistry.send(players.get(i).getSessionId(), "roomJoined",
+					new RoomJoined(room.code(), nicknames(players), i == 0));
+		}
 	}
 
 	private void input(WebSocketSession session, Input input) throws IOException {
