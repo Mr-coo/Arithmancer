@@ -8,6 +8,7 @@ import com.arithmancer.math.turnbased.Derivatives;
 import com.arithmancer.math.turnbased.Integrals;
 import com.arithmancer.math.turnbased.Limits;
 import com.arithmancer.math.turnbased.Matrices;
+import com.arithmancer.math.turnbased.Statistics;
 import com.arithmancer.math.turnbased.Trigonometry;
 import com.arithmancer.math.turnbased.WrongAnswers;
 
@@ -23,6 +24,7 @@ public record Problem(String text, String answer, List<String> wrong) {
 			case DERIVATIVES -> Derivatives.pose(random, difficulty);
 			case INTEGRALS -> Integrals.pose(random, difficulty);
 			case MATRICES -> Matrices.pose(random, difficulty);
+			case STATISTICS -> Statistics.pose(random, difficulty);
 		};
 	}
 

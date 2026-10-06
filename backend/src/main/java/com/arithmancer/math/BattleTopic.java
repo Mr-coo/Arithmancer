@@ -19,6 +19,9 @@ public enum BattleTopic {
 	INTEGRALS,
 
 	@JsonProperty("matrices")
-	MATRICES
+	MATRICES,
+
+	@JsonProperty("statistics")
+	STATISTICS
 
 }

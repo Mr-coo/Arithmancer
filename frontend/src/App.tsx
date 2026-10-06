@@ -46,6 +46,7 @@ const TOPICS: Record<Mode, Choice<Topic>[]> = {
     { value: 'derivatives', label: 'Derivatives' },
     { value: 'integrals', label: 'Integrals' },
     { value: 'matrices', label: 'Matrices' },
+    { value: 'statistics', label: 'Statistics' },
   ],
 }
 
