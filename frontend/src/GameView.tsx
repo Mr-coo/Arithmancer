@@ -99,8 +99,10 @@ const EFFECT_DEPTH = 5
 const BEHIND_ALPHA = 0.5
 // The server sends the state 20 times per second.
 const TICKS_PER_SECOND = 20
-// Share of the remaining distance covered each frame, to smooth those updates.
+// Share of the remaining distance covered every 60th of a second, to smooth those updates.
 const SMOOTHING = 0.3
+// The share to cover in a frame of delta milliseconds, so it looks the same at any frame rate.
+const smoothing = (delta: number) => 1 - (1 - SMOOTHING) ** (delta / (1000 / 60))
 // Below this many pixels of movement per frame, a character plays its idle animation.
 const MOVING = 0.5
 // The server's logical view around each player: the camera zooms to fit it, so you see what you can hit.
@@ -212,8 +214,8 @@ class GameScene extends Phaser.Scene {
       const sprite = this.sprites[i] ?? this.addSprite(player, i)
       const dx = player.x - sprite.body.x
       const dy = player.y - sprite.body.y
-      sprite.body.x += dx * SMOOTHING
-      sprite.body.y += dy * SMOOTHING
+      sprite.body.x += dx * smoothing(delta)
+      sprite.body.y += dy * smoothing(delta)
       const isSkull = sprite.body.anims.currentAnim?.key === DEAD
       if (player.health <= 0) {
         if (!isSkull) {
@@ -351,8 +353,8 @@ class GameScene extends Phaser.Scene {
         sprite.target.x += (sprite.velocity.x * delta) / 1000
         sprite.target.y += (sprite.velocity.y * delta) / 1000
       }
-      sprite.body.x += (sprite.target.x - sprite.body.x) * SMOOTHING
-      sprite.body.y += (sprite.target.y - sprite.body.y) * SMOOTHING
+      sprite.body.x += (sprite.target.x - sprite.body.x) * smoothing(delta)
+      sprite.body.y += (sprite.target.y - sprite.body.y) * smoothing(delta)
       const behind =
         this.decorations.some((decoration) => isBehind(sprite.body, decoration)) || this.isBehindDetail(sprite.body)
       sprite.body.setDepth(behind ? BEHIND_DEPTH : ENEMY_DEPTH)
