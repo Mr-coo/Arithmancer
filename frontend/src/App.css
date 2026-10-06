@@ -68,8 +68,9 @@ label {
   color: var(--text-h);
 }
 
-/* Inputs are carved into wood, buttons are blue; both 3-slice images keep their 64x64 ends square. */
+/* Inputs and menus are carved into wood, buttons are blue; both 3-slice images keep their 64x64 ends square. */
 input,
+select,
 button {
   box-sizing: border-box;
   height: 56px;
@@ -78,7 +79,8 @@ button {
   border-width: 0 14px;
 }
 
-input {
+input,
+select {
   min-width: 0;
   padding: 0 4px;
   color: var(--text-h);
@@ -94,6 +96,30 @@ input {
     outline: 2px solid var(--accent);
     outline-offset: -4px;
     border-radius: 12px;
+  }
+}
+
+/* A menu shows an ink arrow, drawn by its wrapper, instead of the browser's. */
+select {
+  flex: 1;
+  appearance: none;
+  padding-right: 24px;
+}
+
+.select {
+  position: relative;
+  display: flex;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    margin-top: -3px;
+    border: 6px solid transparent;
+    border-bottom: 0;
+    border-top-color: var(--text-h);
+    pointer-events: none;
   }
 }
 

@@ -7,6 +7,7 @@ import {
   type DetailState,
   type FinalScore,
   type Mode,
+  type Topic,
 } from './connection'
 import { formatTime } from './format'
 import { GameView } from './GameView'
@@ -24,6 +25,17 @@ type Screen =
 // The server turns longer nicknames away.
 const MAX_NICKNAME_LENGTH = 16
 
+// The host's choices for the run's questions, in the menu's order.
+const TOPICS: { value: Topic; label: string }[] = [
+  { value: 'addition', label: 'Addition' },
+  { value: 'subtraction', label: 'Subtraction' },
+  { value: 'multiplication', label: 'Multiplication' },
+  { value: 'division', label: 'Division' },
+  { value: 'powers', label: 'Powers' },
+  { value: 'logarithms', label: 'Logarithms' },
+  { value: 'limits', label: 'Limits' },
+]
+
 // "1 goblin", "4 goblins".
 const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? '' : 's'}`
 
@@ -32,6 +44,7 @@ function App() {
   const [connection, setConnection] = useState<Connection>()
   const [nickname, setNickname] = useState('')
   const [code, setCode] = useState('')
+  const [topic, setTopic] = useState<Topic>('addition')
   // Set until the room answers or the socket closes, so a second click cannot open another socket.
   const [connecting, setConnecting] = useState(false)
   // Set once the host clicks start, so a second click cannot send another start.
@@ -74,7 +87,7 @@ function App() {
 
   function start(mode: Mode) {
     setStarting(true)
-    connection?.send('startGame', { mode })
+    connection?.send('startGame', { mode, topic })
   }
 
   async function createRoom() {
@@ -141,6 +154,22 @@ function App() {
         </ul>
         {screen.host ? (
           <>
+            <label>
+              Questions
+              <span className="select">
+                <select
+                  value={topic}
+                  disabled={starting}
+                  onChange={(event) => setTopic(event.target.value as Topic)}
+                >
+                  {TOPICS.map(({ value, label }) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </span>
+            </label>
             <button type="button" disabled={starting} onClick={() => start('realTime')}>
               Start real-time
             </button>

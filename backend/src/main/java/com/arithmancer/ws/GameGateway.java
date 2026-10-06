@@ -16,6 +16,7 @@ import com.arithmancer.battle.Battle;
 import com.arithmancer.battle.BattleManager;
 import com.arithmancer.game.Game;
 import com.arithmancer.game.GameManager;
+import com.arithmancer.math.Topic;
 import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
 import com.arithmancer.room.RoomRegistry;
@@ -196,13 +197,14 @@ public class GameGateway extends TextWebSocketHandler {
 			session.close(CloseStatus.BAD_DATA.withReason("Not in a room"));
 			return;
 		}
+		Topic topic = startGame.topic() == null ? Topic.ADDITION : startGame.topic();
 		if (startGame.mode() == Mode.TURN_BASED) {
-			Battle battle = battleManager.start(room);
+			Battle battle = battleManager.start(room, topic);
 			sendAll(battle.getPlayers(), "battleStarted",
 					new BattleStarted(battle.getCode(), nicknames(battle.getPlayers())));
 			return;
 		}
-		Game game = gameManager.start(room);
+		Game game = gameManager.start(room, topic);
 		List<DecorationState> decorations = game.getDecorations().stream()
 				.map(decoration -> new DecorationState(decoration.type(), decoration.solid().center().x(),
 						decoration.solid().center().y(), decoration.solid().radius(), decoration.cover().center().x(),

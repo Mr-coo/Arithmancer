@@ -73,6 +73,9 @@ export type DetailState = { type: 'bush' | 'mushroom' | 'pebble' | 'pumpkin' | '
 // What a room plays: the endless real-time game, or the turn-based battle.
 export type Mode = 'realTime' | 'turnBased'
 
+// What every question in a run is about, picked by the host.
+export type Topic = 'addition' | 'subtraction' | 'multiplication' | 'division' | 'powers' | 'logarithms' | 'limits'
+
 // charge: the damage this player's right answers add up to this turn. score: damage dealt over the battle.
 export type FighterState = {
   nickname: string
@@ -122,7 +125,7 @@ type ServerMessages = {
 type ClientMessages = {
   createRoom: { nickname: string }
   joinRoom: { code: string; nickname: string }
-  startGame: { mode: Mode }
+  startGame: { mode: Mode; topic: Topic }
   input: { key: string; action: 'down' | 'up' }
   answer: { value: number }
 }

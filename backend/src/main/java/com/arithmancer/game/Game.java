@@ -12,6 +12,7 @@ import com.arithmancer.map.Decoration;
 import com.arithmancer.map.Detail;
 import com.arithmancer.map.PathFinder;
 import com.arithmancer.math.Question;
+import com.arithmancer.math.Topic;
 import com.arithmancer.room.Player;
 
 public class Game {
@@ -75,6 +76,7 @@ public class Game {
 
 	private final String code;
 	private final List<Player> players;
+	private final Topic topic;
 	private final List<Enemy> enemies = new ArrayList<>();
 	private final List<Shot> shots = new ArrayList<>();
 	private final List<Item> items = new ArrayList<>();
@@ -92,9 +94,10 @@ public class Game {
 	private int nextItemId;
 	private double elapsedSeconds;
 
-	public Game(String code, List<Player> players) {
+	public Game(String code, List<Player> players, Topic topic) {
 		this.code = code;
 		this.players = List.copyOf(players);
+		this.topic = topic;
 		this.decorations = scatterDecorations();
 		this.details = scatterDetails();
 		this.pathFinder = new PathFinder(decorations, ENEMY_RADIUS);
@@ -308,7 +311,7 @@ public class Game {
 			player.addPoint();
 			dropItem(target.getPosition());
 		} else {
-			target.setQuestion(newQuestion(target.getType()));
+			target.setQuestion(newQuestion());
 		}
 		return true;
 	}
@@ -348,7 +351,7 @@ public class Game {
 				* Math.clamp((elapsedSeconds - TORCH_FROM_SECONDS) / TORCH_RAMP_SECONDS, 0.0, 1.0);
 		Enemy.Type type = random.nextDouble() < torchShare ? Enemy.Type.TORCH : Enemy.Type.GOBLIN;
 		int maxHealth = type == Enemy.Type.GOBLIN ? 1 : elapsedSeconds < TORCH_THREE_ANSWERS_FROM_SECONDS ? 2 : 3;
-		enemies.add(new Enemy(nextEnemyId++, type, maxHealth, position, newQuestion(type), speedFactor));
+		enemies.add(new Enemy(nextEnemyId++, type, maxHealth, position, newQuestion(), speedFactor));
 	}
 
 	// The next round's herd is bigger, and its first enemy comes as soon as the break is over.
@@ -359,9 +362,9 @@ public class Game {
 		secondsUntilSpawn = 0;
 	}
 
-	// Torch goblins ask powers, logarithms and limits; goblins ask sums that get harder over the run.
-	private Question newQuestion(Enemy.Type type) {
-		return type == Enemy.Type.TORCH ? Question.advanced(random) : Question.random(random, elapsedSeconds);
+	// Every enemy asks a question of the run's topic, with numbers that grow over the run.
+	private Question newQuestion() {
+		return Question.random(random, topic, elapsedSeconds);
 	}
 
 	private void chase(Enemy enemy, double deltaSeconds) {

@@ -9,6 +9,7 @@ import java.util.Random;
 
 import com.arithmancer.entity.Enemy;
 import com.arithmancer.math.Question;
+import com.arithmancer.math.Topic;
 import com.arithmancer.room.Player;
 
 // A turn-based battle against one goblin at a time. On the players' turn, everyone answers their own problems at
@@ -35,6 +36,7 @@ public class Battle {
 
 	private final String code;
 	private final List<Player> players;
+	private final Topic topic;
 	private final Map<Player, Fighter> fighters = new HashMap<>();
 	private final List<Player> strikes = new ArrayList<>();
 	private final List<Player> hits = new ArrayList<>();
@@ -49,9 +51,10 @@ public class Battle {
 	private int turn = 1;
 	private double elapsedSeconds;
 
-	public Battle(String code, List<Player> players) {
+	public Battle(String code, List<Player> players, Topic topic) {
 		this.code = code;
 		this.players = List.copyOf(players);
+		this.topic = topic;
 		this.players.forEach(player -> fighters.put(player, new Fighter()));
 		this.foe = nextFoe();
 		fighters.values().forEach(this::pose);
@@ -192,9 +195,9 @@ public class Battle {
 		return new Foe(nextFoeId++, Enemy.Type.TORCH, GOBLIN_HEALTH_PER_PLAYER * players.size(), GOBLIN_ATTACK);
 	}
 
-	// Problems follow the real-time ramp by how long the battle has lasted.
+	// Problems are of the battle's topic, their numbers growing as in real time by how long the battle has lasted.
 	private void pose(Fighter fighter) {
-		Question problem = Question.random(random, elapsedSeconds);
+		Question problem = Question.random(random, topic, elapsedSeconds);
 		fighter.pose(problem, options(problem.result()));
 	}
 

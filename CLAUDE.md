@@ -33,7 +33,8 @@ Arithmancer is an endless co-op browser game. Players survive enemies by solving
 
 ### Math
 - Answers are always whole numbers ≥ 0.
-- Difficulty scales over time. Runs start with small + and −, then × and ÷ and larger numbers are added.
+- The host picks one topic in the lobby: addition, subtraction, multiplication, division, powers, logarithms or limits. Every question in the run, for every enemy and in both modes, is of that topic.
+- Difficulty scales over time: the numbers grow as the run goes on.
 
 ### Players
 - 1–4 players per room.
@@ -54,7 +55,7 @@ Arithmancer is an endless co-op browser game. Players survive enemies by solving
 
 ### Rooms
 - A player creates a room and gets a short room code. Others use the code to join the lobby.
-- The host starts the run. Nobody can join mid-run.
+- The host picks the topic and starts the run. Nobody can join mid-run.
 
 ### Scores
 - There are no accounts. Players enter a nickname.

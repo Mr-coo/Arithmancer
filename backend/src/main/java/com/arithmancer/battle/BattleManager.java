@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.arithmancer.math.Topic;
 import com.arithmancer.room.Player;
 import com.arithmancer.room.Room;
 import com.arithmancer.ws.ServerMessage.BattleOver;
@@ -33,8 +34,8 @@ public class BattleManager {
 		this.sessionRegistry = sessionRegistry;
 	}
 
-	public Battle start(Room room) {
-		Battle battle = new Battle(room.code(), room.players());
+	public Battle start(Room room, Topic topic) {
+		Battle battle = new Battle(room.code(), room.players(), topic);
 		battles.add(battle);
 		log.info("Started battle {} with {} players", battle.getCode(), battle.getPlayers().size());
 		return battle;

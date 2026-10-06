@@ -3,33 +3,43 @@ package com.arithmancer.math;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Map;
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
 
 class QuestionTest {
 
-	// From the start of a run, through × and ÷, to the larger numbers.
+	// From the start of a run, through medium, to large numbers.
 	private static final double[] SECONDS = { 0, 30, 60, 100, 150, 300 };
+	private static final Map<Topic, String> OPERATORS = Map.of(Topic.ADDITION, "+", Topic.SUBTRACTION, "-",
+			Topic.MULTIPLICATION, "×", Topic.DIVISION, "÷");
 
 	@Test
-	void resultsMatchTheirQuestion() {
+	void arithmeticResultsMatchTheirQuestion() {
 		Random random = new Random(1);
-		for (double seconds : SECONDS) {
-			for (int i = 0; i < 1000; i++) {
-				Question question = Question.random(random, seconds);
-				assertTrue(question.result() >= 0, question.text());
-				assertEquals(evaluate(question.text()), question.result(), question.text());
+		for (Topic topic : OPERATORS.keySet()) {
+			for (double seconds : SECONDS) {
+				for (int i = 0; i < 1000; i++) {
+					Question question = Question.random(random, topic, seconds);
+					assertEquals(OPERATORS.get(topic), question.text().split(" ")[1], question.text());
+					assertTrue(question.result() >= 0, question.text());
+					assertEquals(evaluate(question.text()), question.result(), question.text());
+				}
 			}
 		}
 	}
 
 	@Test
-	void advancedResultsAreAtLeastZero() {
+	void resultsAreAtLeastZero() {
 		Random random = new Random(1);
-		for (int i = 0; i < 1000; i++) {
-			Question question = Question.advanced(random);
-			assertTrue(question.result() >= 0, question.text());
+		for (Topic topic : Topic.values()) {
+			for (double seconds : SECONDS) {
+				for (int i = 0; i < 1000; i++) {
+					Question question = Question.random(random, topic, seconds);
+					assertTrue(question.result() >= 0, question.text());
+				}
+			}
 		}
 	}
 

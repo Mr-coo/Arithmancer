@@ -73,8 +73,11 @@ public class WebSocketDocs {
 						the host.
 						- `{"type":"input","content":{"key":"a","action":"down"}}` sends a key press (`down`) or release (`up`) \
 						of exactly one letter. No reply.
-						- `{"type":"startGame","content":{"mode":"realTime"}}` starts the game. Only the host (room creator) can \
-						send it, and nobody can join after. `mode` is `realTime` (the default) or `turnBased`. \
+						- `{"type":"startGame","content":{"mode":"realTime","topic":"addition"}}` starts the game. Only the host \
+						(room creator) can send it, and nobody can join after. `mode` is `realTime` (the default) or \
+						`turnBased`. `topic` is `addition` (the default), `subtraction`, `multiplication`, `division`, \
+						`powers`, `logarithms` or `limits`: every question in the run is of it, with numbers that grow \
+						over time. \
 						For a real-time game, the reply, to every player, comes with the trees and stones on the map. Players and enemies cannot walk into a \
 						decoration's solid circle (`x`, `y`, `radius`); a character touching its cover circle is behind it. \
 						`details` are bushes, mushrooms, pebbles, pumpkins and bones on the ground, which characters walk over: \
