@@ -136,12 +136,14 @@ export type Connection = {
   close: () => void
 }
 
-// Opens the game WebSocket. Resolves once it is open; onClose gets the server's close reason.
+// Opens the game WebSocket. Resolves once it is open; onClose gets the server's close reason, or says the server could
+// not be reached when the socket never opened.
 export function connect(onClose: (reason: string) => void): Promise<Connection> {
   return new Promise((resolve) => {
     const protocol = location.protocol === 'https:' ? 'wss' : 'ws'
     const socket = new WebSocket(`${protocol}://${location.host}/ws`)
     const handlers = new Map<string, Set<Handler>>()
+    let opened = false
     let closedByUs = false
 
     socket.onmessage = (event) => {
@@ -150,10 +152,11 @@ export function connect(onClose: (reason: string) => void): Promise<Connection> 
     }
     socket.onclose = (event) => {
       if (!closedByUs) {
-        onClose(event.reason)
+        onClose(opened ? event.reason : 'Could not reach the server')
       }
     }
-    socket.onopen = () =>
+    socket.onopen = () => {
+      opened = true
       resolve({
         close: () => {
           closedByUs = true
@@ -166,5 +169,6 @@ export function connect(onClose: (reason: string) => void): Promise<Connection> 
           return () => set.delete(handler as Handler)
         },
       })
+    }
   })
 }
