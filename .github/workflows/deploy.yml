@@ -31,8 +31,25 @@ jobs:
           cache: maven
       - run: sh mvnw -B verify
 
+  # Lints, type-checks and bundles the frontend, so a broken build stops here rather than on the VPS.
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
   deploy:
-    needs: test
+    needs: [test, frontend]
     runs-on: ubuntu-latest
     steps:
       - uses: appleboy/ssh-action@v1
