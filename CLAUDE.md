@@ -35,7 +35,7 @@ Arithmancer is an endless co-op browser game. Players survive enemies by solving
 - Real-time answers are always whole numbers ≥ 0. Turn-based answers are exact and can be fractions, roots, π or expressions, as they are picked from options.
 - Each mode has its own topics, and the host picks one of them in the lobby. Every question in the run is of that topic.
   - Real-time (survival): arithmetic (+ − × ÷ mixed, with brackets), integers and fractions, algebra (solve ax + b = c), exponents and logarithms, or Pythagoras.
-  - Turn-based: trigonometry (exact values of special angles), limits, derivatives or integrals (of polynomials), matrices (determinants) or statistics (mean, median, mode and range).
+  - Turn-based: trigonometry (exact values of special angles), limits, derivatives or integrals (of polynomials), matrices (determinants), statistics (mean, median, mode and range) or geometry (areas, perimeters, angles and volumes).
 - Difficulty scales over time: questions go from easy to medium after 60 seconds and to hard after 150.
 
 ### Players
@@ -50,7 +50,7 @@ Arithmancer is an endless co-op browser game. Players survive enemies by solving
 ### Turn-based mode
 - A side-view battle: the players' warriors on the left, one goblin at a time on the right, with trees, rocks, bushes, mushrooms, pumpkins and bones scattered around them, the same for everyone in the room.
 - The players' turn and the goblin's turn alternate.
-- On the players' turn (15 seconds), everyone answers at once. Each player gets their own math problem with 4 options, picked with the keys 1–4 or a click. The options are the answer and 3 other numbers near it; the whole answer counts, not just its last digit.
+- On the players' turn (15 seconds), everyone answers at once. Each player gets their own math problem with 4 options, picked with the keys 1–4 or a click. The options are the exact answer and 3 likely mistakes, topped up with numbers near the answer; the whole answer counts, not just its last digit.
 - Each right answer adds to the player's charge, one more than the last: 1, then 2, then 3. A wrong answer locks that player's options for 3 seconds while the turn goes on. Every answer brings a new problem.
 - When the players' turn ends, every warrior with a charge strikes the goblin for it. A beaten goblin is replaced by the next one; otherwise the goblin strikes every standing player for 10.
 - Players have 100 health. A player at 0 is downed and cannot answer. The run ends when every player is downed, with the goblins beaten and turns lasted; each player's score is the damage they dealt.

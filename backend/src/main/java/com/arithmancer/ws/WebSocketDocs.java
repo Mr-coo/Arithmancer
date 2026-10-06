@@ -78,7 +78,7 @@ public class WebSocketDocs {
 						`turnBased`. `topic` is one of the mode's topics, the first by default, and every question in the \
 						run is of it, getting harder over time. Real-time: `arithmetic`, `fractions`, `algebra`, \
 						`exponents` or `pythagoras`. Turn-based: `trigonometry`, `limits`, `derivatives`, `integrals`, \
-						`matrices` or `statistics`. Any other topic closes the connection. \
+						`matrices`, `statistics` or `geometry`. Any other topic closes the connection. \
 						For a real-time game, the reply, to every player, comes with the trees and stones on the map. Players and enemies cannot walk into a \
 						decoration's solid circle (`x`, `y`, `radius`); a character touching its cover circle is behind it. \
 						`details` are bushes, mushrooms, pebbles, pumpkins and bones on the ground, which characters walk over: \

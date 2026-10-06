@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.arithmancer.math.turnbased.Derivatives;
+import com.arithmancer.math.turnbased.Geometry;
 import com.arithmancer.math.turnbased.Integrals;
 import com.arithmancer.math.turnbased.Limits;
 import com.arithmancer.math.turnbased.Matrices;
@@ -25,6 +26,7 @@ public record Problem(String text, String answer, List<String> wrong) {
 			case INTEGRALS -> Integrals.pose(random, difficulty);
 			case MATRICES -> Matrices.pose(random, difficulty);
 			case STATISTICS -> Statistics.pose(random, difficulty);
+			case GEOMETRY -> Geometry.pose(random, difficulty);
 		};
 	}
 

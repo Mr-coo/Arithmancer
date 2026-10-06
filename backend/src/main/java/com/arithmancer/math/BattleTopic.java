@@ -22,6 +22,9 @@ public enum BattleTopic {
 	MATRICES,
 
 	@JsonProperty("statistics")
-	STATISTICS
+	STATISTICS,
+
+	@JsonProperty("geometry")
+	GEOMETRY
 
 }
