@@ -52,9 +52,15 @@ public class GameManager {
 	@Scheduled(fixedRate = 1000 / TICKS_PER_SECOND)
 	void loop() {
 		for (Game game : games) {
-			game.tick(1.0 / TICKS_PER_SECOND);
-			sendState(game);
-			if (game.isOver()) {
+			// A game that fails is ended, so the others keep going.
+			try {
+				game.tick(1.0 / TICKS_PER_SECOND);
+				sendState(game);
+				if (game.isOver()) {
+					end(game);
+				}
+			} catch (RuntimeException e) {
+				log.error("Game {} failed", game.getCode(), e);
 				end(game);
 			}
 		}

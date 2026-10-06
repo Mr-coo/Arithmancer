@@ -51,9 +51,15 @@ public class BattleManager {
 	@Scheduled(fixedRate = 1000 / TICKS_PER_SECOND)
 	void loop() {
 		for (Battle battle : battles) {
-			battle.tick(1.0 / TICKS_PER_SECOND);
-			sendState(battle);
-			if (battle.isOver()) {
+			// A battle that fails is ended, so the others keep going.
+			try {
+				battle.tick(1.0 / TICKS_PER_SECOND);
+				sendState(battle);
+				if (battle.isOver()) {
+					end(battle);
+				}
+			} catch (RuntimeException e) {
+				log.error("Battle {} failed", battle.getCode(), e);
 				end(battle);
 			}
 		}
