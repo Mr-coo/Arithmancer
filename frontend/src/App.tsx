@@ -29,6 +29,7 @@ function App() {
   const [connection, setConnection] = useState<Connection>()
   const [nickname, setNickname] = useState('')
   const [code, setCode] = useState('')
+  // Set until the room answers or the socket closes, so a second click cannot open another socket.
   const [connecting, setConnecting] = useState(false)
   // Set once the host clicks start, so a second click cannot send another start.
   const [starting, setStarting] = useState(false)
@@ -41,10 +42,14 @@ function App() {
       setConnecting(false)
       setScreen({ name: 'home', error: reason || 'Disconnected from the server' })
     })
-    opened.on('roomCreated', ({ code, players }) => setScreen({ name: 'lobby', code, players, host: true }))
-    opened.on('roomJoined', ({ code, players }) =>
-      setScreen((current) => ({ name: 'lobby', code, players, host: current.name === 'lobby' && current.host })),
-    )
+    opened.on('roomCreated', ({ code, players }) => {
+      setConnecting(false)
+      setScreen({ name: 'lobby', code, players, host: true })
+    })
+    opened.on('roomJoined', ({ code, players }) => {
+      setConnecting(false)
+      setScreen((current) => ({ name: 'lobby', code, players, host: current.name === 'lobby' && current.host }))
+    })
     opened.on('gameStarted', ({ decorations, details }) => setScreen({ name: 'game', decorations, details }))
     opened.on('gameOver', ({ time, players }) =>
       setScreen({ name: 'gameOver', summary: `You survived ${formatTime(time)}.`, players }),
@@ -55,7 +60,6 @@ function App() {
       setScreen({ name: 'gameOver', summary, players })
     })
     setConnection(opened)
-    setConnecting(false)
     return opened
   }
 
