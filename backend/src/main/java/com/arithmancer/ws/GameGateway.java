@@ -176,7 +176,6 @@ public class GameGateway extends TextWebSocketHandler {
 				case UP -> player.release(key.toLowerCase(Locale.ROOT));
 			}
 		}
-		send(session, "input", new ServerMessage.Input(key, input.action()));
 	}
 
 	private void startGame(WebSocketSession session, StartGame startGame) throws IOException {

@@ -11,9 +11,6 @@ public sealed interface ServerMessage {
 	record RoomJoined(String code, List<String> players, boolean host) implements ServerMessage {
 	}
 
-	record Input(String key, KeyAction action) implements ServerMessage {
-	}
-
 	record GameStarted(String code, List<String> players, List<DecorationState> decorations,
 			List<DetailState> details) implements ServerMessage {
 	}

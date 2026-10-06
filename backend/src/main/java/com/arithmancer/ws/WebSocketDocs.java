@@ -72,8 +72,7 @@ public class WebSocketDocs {
 						Everyone left gets it again when a player leaves the lobby; if the host leaves, the next player is \
 						the host.
 						- `{"type":"input","content":{"key":"a","action":"down"}}` sends a key press (`down`) or release (`up`) \
-						of exactly one letter. \
-						Reply: the same message echoed back.
+						of exactly one letter. No reply.
 						- `{"type":"startGame","content":{"mode":"realTime"}}` starts the game. Only the host (room creator) can \
 						send it, and nobody can join after. `mode` is `realTime` (the default) or `turnBased`. \
 						For a real-time game, the reply, to every player, comes with the trees and stones on the map. Players and enemies cannot walk into a \
