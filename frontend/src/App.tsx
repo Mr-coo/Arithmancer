@@ -88,7 +88,7 @@ function App() {
     return (
       <>
         <GameView connection={connection} decorations={screen.decorations} details={screen.details} />
-        <p className="hint">Move with WASD. Press the last digit of an enemy's answer to shoot it.</p>
+        <p className="hint">Move with WASD or the arrow keys. Press the last digit of an enemy's answer to shoot it.</p>
       </>
     )
   }

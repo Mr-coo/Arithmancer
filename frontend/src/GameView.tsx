@@ -49,8 +49,17 @@ import type {
 } from './connection'
 import { formatTime } from './format'
 
-// Physical key positions, so WASD also works on other keyboard layouts.
-const MOVE_KEYS: Record<string, string> = { KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd' }
+// Physical key positions, so WASD also works on other keyboard layouts. The arrow keys move the same way.
+const MOVE_KEYS: Record<string, string> = {
+  KeyW: 'w',
+  KeyA: 'a',
+  KeyS: 's',
+  KeyD: 'd',
+  ArrowUp: 'w',
+  ArrowLeft: 'a',
+  ArrowDown: 's',
+  ArrowRight: 'd',
+}
 
 const PLAYER_RADIUS = 16
 // A downed player's bar fills green as a teammate revives them.
@@ -470,7 +479,9 @@ export function GameView({
       scene.pendingShots.push(...state.shots)
     })
 
+    // The physical keys held. A direction is down while any of its keys is, such as W and the up arrow together.
     const held = new Set<string>()
+    const isHeld = (key: string) => [...held].some((code) => MOVE_KEYS[code] === key)
     const onKeyDown = (event: KeyboardEvent) => {
       // Answers are one digit, so pressing it shoots. Ignore auto-repeat while the key is held.
       if (/^[0-9]$/.test(event.key)) {
@@ -480,20 +491,25 @@ export function GameView({
         return
       }
       const key = MOVE_KEYS[event.code]
-      if (key && !held.has(key)) {
-        held.add(key)
-        connection.send('input', { key, action: 'down' })
+      if (key) {
+        // The arrow keys would otherwise scroll the page.
+        event.preventDefault()
+        if (!isHeld(key)) {
+          connection.send('input', { key, action: 'down' })
+        }
+        held.add(event.code)
       }
     }
     const onKeyUp = (event: KeyboardEvent) => {
       const key = MOVE_KEYS[event.code]
-      if (key && held.delete(key)) {
+      if (key && held.delete(event.code) && !isHeld(key)) {
         connection.send('input', { key, action: 'up' })
       }
     }
     // Keyup never arrives if the window loses focus while a key is held, so release everything.
     const onBlur = () => {
-      held.forEach((key) => connection.send('input', { key, action: 'up' }))
+      const keys = new Set([...held].map((code) => MOVE_KEYS[code]))
+      keys.forEach((key) => connection.send('input', { key, action: 'up' }))
       held.clear()
     }
     window.addEventListener('keydown', onKeyDown)
