@@ -144,6 +144,10 @@ public class GameGateway extends TextWebSocketHandler {
 	}
 
 	private void startGame(WebSocketSession session, StartGame startGame) throws IOException {
+		// A second click on start can arrive once the run has started: ignore it.
+		if (gameManager.findPlayer(session.getId()) != null || battleManager.findPlayer(session.getId()) != null) {
+			return;
+		}
 		Room room = roomRegistry.findBySession(session.getId());
 		if (room == null) {
 			session.close(CloseStatus.BAD_DATA.withReason("Not in a room"));

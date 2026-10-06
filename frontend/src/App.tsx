@@ -1,6 +1,13 @@
 import { type ReactNode, useState } from 'react'
 import { BattleView } from './BattleView'
-import { connect, type Connection, type DecorationState, type DetailState, type FinalScore } from './connection'
+import {
+  connect,
+  type Connection,
+  type DecorationState,
+  type DetailState,
+  type FinalScore,
+  type Mode,
+} from './connection'
 import { formatTime } from './format'
 import { GameView } from './GameView'
 import { HeroScene } from './HeroScene'
@@ -23,9 +30,12 @@ function App() {
   const [nickname, setNickname] = useState('')
   const [code, setCode] = useState('')
   const [connecting, setConnecting] = useState(false)
+  // Set once the host clicks start, so a second click cannot send another start.
+  const [starting, setStarting] = useState(false)
 
   async function open() {
     setConnecting(true)
+    setStarting(false)
     const opened = await connect((reason) => {
       setConnection(undefined)
       setConnecting(false)
@@ -53,6 +63,11 @@ function App() {
     connection?.close()
     setConnection(undefined)
     setScreen({ name: 'home' })
+  }
+
+  function start(mode: Mode) {
+    setStarting(true)
+    connection?.send('startGame', { mode })
   }
 
   async function createRoom() {
@@ -119,10 +134,10 @@ function App() {
         </ul>
         {screen.host ? (
           <>
-            <button type="button" onClick={() => connection?.send('startGame', { mode: 'realTime' })}>
+            <button type="button" disabled={starting} onClick={() => start('realTime')}>
               Start real-time
             </button>
-            <button type="button" onClick={() => connection?.send('startGame', { mode: 'turnBased' })}>
+            <button type="button" disabled={starting} onClick={() => start('turnBased')}>
               Start turn-based
             </button>
           </>
