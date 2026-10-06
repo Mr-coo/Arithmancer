@@ -13,6 +13,9 @@ public enum BattleTopic {
 	LIMITS,
 
 	@JsonProperty("derivatives")
-	DERIVATIVES
+	DERIVATIVES,
+
+	@JsonProperty("integrals")
+	INTEGRALS
 
 }
