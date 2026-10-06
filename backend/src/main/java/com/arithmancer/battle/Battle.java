@@ -1,14 +1,13 @@
 package com.arithmancer.battle;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
 import com.arithmancer.entity.Enemy;
-import com.arithmancer.math.Question;
+import com.arithmancer.math.Problem;
 import com.arithmancer.math.Topic;
 import com.arithmancer.room.Player;
 
@@ -28,9 +27,6 @@ public class Battle {
 	private static final double ENEMY_ACTS_AT_SECONDS = 2.8;
 	// A wrong answer locks the player's options for this long, while the turn goes on.
 	private static final double WRONG_ANSWER_LOCK_SECONDS = 3;
-	// Each problem offers the answer and WRONG_OPTIONS other numbers, at least 0 and at most WRONG_OPTION_RANGE from it.
-	private static final int WRONG_OPTIONS = 3;
-	private static final int WRONG_OPTION_RANGE = 10;
 	private static final int GOBLIN_HEALTH_PER_PLAYER = 15;
 	private static final int GOBLIN_ATTACK = 10;
 
@@ -137,7 +133,7 @@ public class Battle {
 			if (phase != Phase.PLAYERS || player.getHealth() <= 0 || fighter.getLockSeconds() > 0) {
 				continue;
 			}
-			if (answer == fighter.getProblem().result()) {
+			if (answer == fighter.getRightOption()) {
 				fighter.answerRight();
 			} else {
 				fighter.lock(WRONG_ANSWER_LOCK_SECONDS);
@@ -195,25 +191,14 @@ public class Battle {
 		return new Foe(nextFoeId++, Enemy.Type.TORCH, GOBLIN_HEALTH_PER_PLAYER * players.size(), GOBLIN_ATTACK);
 	}
 
-	// Problems are of the battle's topic, their numbers growing as in real time by how long the battle has lasted.
+	// Problems are of the battle's topic, as hard as the battle has got. The answer goes in at a random place among the
+	// wrong ones.
 	private void pose(Fighter fighter) {
-		Question problem = Question.random(random, topic, elapsedSeconds);
-		fighter.pose(problem, options(problem.result()));
-	}
-
-	// The answer and WRONG_OPTIONS different numbers near it, in random order.
-	private List<Integer> options(int answer) {
-		List<Integer> wrong = new ArrayList<>();
-		for (int n = Math.max(0, answer - WRONG_OPTION_RANGE); n <= answer + WRONG_OPTION_RANGE; n++) {
-			if (n != answer) {
-				wrong.add(n);
-			}
-		}
-		Collections.shuffle(wrong, random);
-		List<Integer> options = new ArrayList<>(wrong.subList(0, WRONG_OPTIONS));
-		options.add(answer);
-		Collections.shuffle(options, random);
-		return List.copyOf(options);
+		Problem problem = Problem.random(random, topic, elapsedSeconds);
+		List<String> options = new ArrayList<>(problem.wrong());
+		int rightOption = random.nextInt(options.size() + 1);
+		options.add(rightOption, problem.answer());
+		fighter.pose(problem, List.copyOf(options), rightOption);
 	}
 
 }

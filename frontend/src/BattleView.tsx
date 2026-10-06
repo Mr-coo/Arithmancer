@@ -104,6 +104,9 @@ const WARRIOR_DEPTH = 2
 const TEXT_DEPTH = 3
 
 const OPTION_KEYS = ['1', '2', '3', '4']
+// Longer problems and options than these characters are drawn smaller, the options two to a row.
+const LONG_PROBLEM = 16
+const LONG_OPTION = 4
 
 type Character = {
   body: Phaser.GameObjects.Sprite
@@ -468,7 +471,7 @@ export function BattleView({ connection, code }: { connection: Connection; code:
     if (!state || !canAnswer) {
       return
     }
-    connection.send('answer', { value: state.problem.options[index] })
+    connection.send('answer', { value: index })
     setAnswered(state.problem.id)
   }
 
@@ -517,8 +520,14 @@ export function BattleView({ connection, code }: { connection: Connection; code:
                 <p className={state.locked > 0 ? 'status wrong' : 'status'}>
                   {state.locked > 0 ? `Wrong! Thinking… ${Math.ceil(state.locked)}s` : `Damage this turn: ${charge}`}
                 </p>
-                <p className="problem-text">{state.problem.text}</p>
-                <div className="options">
+                <p className={state.problem.text.length > LONG_PROBLEM ? 'problem-text long' : 'problem-text'}>
+                  {state.problem.text}
+                </p>
+                <div
+                  className={
+                    state.problem.options.some((option) => option.length > LONG_OPTION) ? 'options long' : 'options'
+                  }
+                >
                   {state.problem.options.map((option, i) => (
                     <button key={i} type="button" disabled={!canAnswer} onClick={() => pick(i)}>
                       <kbd>{OPTION_KEYS[i]}</kbd>

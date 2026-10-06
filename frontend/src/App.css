@@ -487,6 +487,10 @@ button {
   .problem-text {
     font-size: 44px;
     line-height: 1.15;
+
+    &.long {
+      font-size: 30px;
+    }
   }
 
   .options {
@@ -494,6 +498,15 @@ button {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
+
+    &.long {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .options.long button {
+    height: 56px;
+    font-size: 22px;
   }
 
   /* Square blue buttons, their 64px slices drawn at 24px. The number centers on the face of whichever image shows: the

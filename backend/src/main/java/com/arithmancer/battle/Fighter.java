@@ -2,13 +2,14 @@ package com.arithmancer.battle;
 
 import java.util.List;
 
-import com.arithmancer.math.Question;
+import com.arithmancer.math.Problem;
 
 // A player's side of a battle: their problem, and the damage their right answers have charged up this turn.
 public class Fighter {
 
-	private Question problem;
-	private List<Integer> options = List.of();
+	private Problem problem;
+	private List<String> options = List.of();
+	private int rightOption;
 	private int problemId;
 	// Right answers this turn, and the damage they add up to.
 	private int streak;
@@ -18,13 +19,18 @@ public class Fighter {
 	// Damage dealt over the battle.
 	private int damageDealt;
 
-	public Question getProblem() {
+	public Problem getProblem() {
 		return problem;
 	}
 
-	// The numbers to pick from, in the order shown.
-	public List<Integer> getOptions() {
+	// The answers to pick from, in the order shown.
+	public List<String> getOptions() {
 		return options;
+	}
+
+	// The index of the right answer in the options.
+	public int getRightOption() {
+		return rightOption;
 	}
 
 	public int getProblemId() {
@@ -43,9 +49,10 @@ public class Fighter {
 		return damageDealt;
 	}
 
-	void pose(Question problem, List<Integer> options) {
+	void pose(Problem problem, List<String> options, int rightOption) {
 		this.problem = problem;
 		this.options = options;
+		this.rightOption = rightOption;
 		problemId++;
 	}
 

@@ -88,8 +88,8 @@ export type FighterState = {
 
 export type FoeState = { id: number; type: EnemyType; health: number; maxHealth: number }
 
-// id changes with every new problem.
-export type ProblemState = { id: number; text: string; options: number[] }
+// id changes with every new problem. options: the answers to pick from, as shown; you answer with an index.
+export type ProblemState = { id: number; text: string; options: string[] }
 
 // problem and locked (seconds until a wrong answer stops locking your options) are yours. strikes: indices in players
 // of the warriors striking the goblin on this tick; hits: of the players the goblin strikes.

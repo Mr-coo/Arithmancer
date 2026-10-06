@@ -85,7 +85,7 @@ public class WebSocketDocs {
 						- `{"type":"answer","content":{"value":4}}` answers a question during a game. Of the enemies in your \
 						view with that answer, the nearest takes a hit. After any answer, right or wrong, your answers are \
 						ignored for a cooldown (1 second). No reply: the hit shows up in the next state. \
-						In a turn-based game, `value` is the option you pick for your problem.
+						In a turn-based game, `value` is the index (0 to 3) of the option you pick for your problem.
 
 						During a game, every player gets the state 20 times per second. `time` is the seconds since the run \
 						started. Enemies come in rounds: each `round` is a herd, bigger and spawning faster than the last, \
@@ -100,14 +100,15 @@ public class WebSocketDocs {
 
 						A turn-based game starts with `{"type":"battleStarted","content":{"code":"KQXB","players":["Marco","Ana"]}}`. \
 						Then every player gets the battle 20 times per second. On the players' turn (`phase` `players`), \
-						everyone answers their own `problem` by picking one of its `options`. Each right answer adds to your \
+						everyone answers their own `problem` by picking one of its `options`, answers written as text. Each \
+						right answer adds to your \
 						`charge`, one more than the last (1, 2, 3...); a wrong one locks your answers for `locked` seconds \
 						(3). The problem's `id` changes with every new problem. On the enemy's turn (`phase` `enemy`), the \
 						warriors with a charge strike the goblin for it: `strikes` lists them (indices in `players`) on that \
 						tick. 2.8 seconds into the enemy's turn (of 6), a beaten goblin is replaced by the next one; \
 						otherwise the goblin strikes every standing player, listed in `hits` on that tick. `score` is the \
 						damage a player dealt: \
-						`{"type":"battleState","content":{"turn":3,"phase":"players","secondsLeft":9.45,"players":[{"nickname":"Marco","health":100,"maxHealth":100,"charge":3,"score":12,"you":true}],"enemy":{"id":1,"type":"torch","health":20,"maxHealth":30},"problem":{"id":14,"text":"7 + 5","options":[11,12,4,17]},"locked":0.0,"strikes":[],"hits":[]}}`
+						`{"type":"battleState","content":{"turn":3,"phase":"players","secondsLeft":9.45,"players":[{"nickname":"Marco","health":100,"maxHealth":100,"charge":3,"score":12,"you":true}],"enemy":{"id":1,"type":"torch","health":20,"maxHealth":30},"problem":{"id":14,"text":"7 + 5","options":["11","12","4","17"]},"locked":0.0,"strikes":[],"hits":[]}}`
 
 						When every player is downed (health 0), the battle ends with that enemy's turn and every player gets \
 						the results: the \

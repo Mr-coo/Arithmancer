@@ -26,12 +26,11 @@ class BattleTest {
 			// Answering right on every tick beats each goblin, so the battle lasts long enough for larger numbers.
 			while (!battle.isOver() && battle.getTurn() <= 8) {
 				Fighter fighter = battle.getFighter(player);
-				List<Integer> options = fighter.getOptions();
+				List<String> options = fighter.getOptions();
 				assertEquals(4, options.size(), options::toString);
 				assertEquals(4, Set.copyOf(options).size(), options::toString);
-				assertTrue(options.stream().allMatch(option -> option >= 0), options::toString);
-				assertTrue(options.contains(fighter.getProblem().result()), options::toString);
-				player.submitAnswer(fighter.getProblem().result());
+				assertEquals(fighter.getProblem().answer(), options.get(fighter.getRightOption()), options::toString);
+				player.submitAnswer(fighter.getRightOption());
 				battle.tick(TICK_SECONDS);
 			}
 			assertTrue(battle.getTurn() > 8, topic::toString);
@@ -41,7 +40,7 @@ class BattleTest {
 	@Test
 	void aWrongAnswerLocksTheOptions() {
 		Fighter fighter = battle.getFighter(player);
-		player.submitAnswer(fighter.getProblem().result() + 1);
+		player.submitAnswer((fighter.getRightOption() + 1) % fighter.getOptions().size());
 		battle.tick(TICK_SECONDS);
 		assertTrue(fighter.getLockSeconds() > 0);
 		assertEquals(0, fighter.getCharge());
