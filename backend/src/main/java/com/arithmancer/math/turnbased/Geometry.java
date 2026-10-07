@@ -84,8 +84,10 @@ public final class Geometry {
 	private static Problem cone(Random random) {
 		int r = random.nextInt(1, 7);
 		int h = 3 * random.nextInt(1, 4);
-		return ask(random, "Cone r=" + r + " h=" + h + ": volume?", r * r * h / 3,
-				List.of(r * r * h, r * r * h / 2, r * h / 3), Geometry::pi);
+		String answer = pi(r * r * h / 3);
+		List<String> mistakes = List.of(pi(r * r * h), pi(r * r * h, 2), pi(r * h / 3));
+		return new Problem("Cone r=" + r + " h=" + h + ": volume?", answer,
+				WrongAnswers.pick(random, answer, mistakes, near(random, r * r * h / 3, Geometry::pi)));
 	}
 
 	// A problem with a whole answer written with a unit, such as ° or π. Its wrong answers are some of the mistakes,
