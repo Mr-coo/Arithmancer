@@ -105,13 +105,15 @@ public class WebSocketDocs {
 						Then every player gets the battle 20 times per second. On the players' turn (`phase` `players`), \
 						everyone answers their own `problem` by picking one of its `options`, answers written as text. Each \
 						right answer adds to your \
-						`charge`, one more than the last (1, 2, 3...); a wrong one locks your answers for `locked` seconds \
-						(3). The problem's `id` changes with every new problem. On the enemy's turn (`phase` `enemy`), the \
+						`charge`, one more than the last (1, 2, 3...) and brings a new problem; a wrong one locks your \
+						answers for `locked` seconds (3), then you try the same problem again: `wrong` lists the options \
+						you picked wrong on it (indices in `options`), which no longer count. The problem's `id` changes \
+						with every new problem. On the enemy's turn (`phase` `enemy`), the \
 						warriors with a charge strike the goblin for it: `strikes` lists them (indices in `players`) on that \
 						tick. 2.8 seconds into the enemy's turn (of 6), a beaten goblin is replaced by the next one; \
 						otherwise the goblin strikes every standing player, listed in `hits` on that tick. `score` is the \
 						damage a player dealt: \
-						`{"type":"battleState","content":{"turn":3,"phase":"players","secondsLeft":9.45,"players":[{"nickname":"Marco","health":100,"maxHealth":100,"charge":3,"score":12,"you":true}],"enemy":{"id":1,"type":"torch","health":20,"maxHealth":30},"problem":{"id":14,"text":"7 + 5","options":["11","12","4","17"]},"locked":0.0,"strikes":[],"hits":[]}}`
+						`{"type":"battleState","content":{"turn":3,"phase":"players","secondsLeft":9.45,"players":[{"nickname":"Marco","health":100,"maxHealth":100,"charge":3,"score":12,"you":true}],"enemy":{"id":1,"type":"torch","health":20,"maxHealth":30},"problem":{"id":14,"text":"7 + 5","options":["11","12","4","17"],"wrong":[]},"locked":0.0,"strikes":[],"hits":[]}}`
 
 						When every player is downed (health 0), the battle ends with that enemy's turn and every player gets \
 						the results: the \

@@ -1,5 +1,6 @@
 package com.arithmancer.battle;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.arithmancer.math.Problem;
@@ -10,6 +11,8 @@ public class Fighter {
 	private Problem problem;
 	private List<String> options = List.of();
 	private int rightOption;
+	// The options picked wrong on this problem, which no longer count.
+	private final List<Integer> wrongPicks = new ArrayList<>();
 	private int problemId;
 	// Right answers this turn, and the damage they add up to.
 	private int streak;
@@ -33,6 +36,10 @@ public class Fighter {
 		return rightOption;
 	}
 
+	public List<Integer> getWrongPicks() {
+		return List.copyOf(wrongPicks);
+	}
+
 	public int getProblemId() {
 		return problemId;
 	}
@@ -53,7 +60,12 @@ public class Fighter {
 		this.problem = problem;
 		this.options = options;
 		this.rightOption = rightOption;
+		wrongPicks.clear();
 		problemId++;
+	}
+
+	void pickWrong(int option) {
+		wrongPicks.add(option);
 	}
 
 	// Each right answer this turn adds one more than the last: 1, then 2, then 3...

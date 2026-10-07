@@ -529,6 +529,13 @@ button {
       padding-bottom: 3px;
       border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Disable_9Slides.png');
     }
+
+    /* An option picked wrong stays red and crossed out while you try the problem again. */
+    &.wrong {
+      color: #fff4d6;
+      text-decoration: line-through;
+      border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Red_9Slides_Pressed.png');
+    }
   }
 
   /* The key that picks the option, small in the button's corner, apart from the number. */

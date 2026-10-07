@@ -38,12 +38,35 @@ class BattleTest {
 	}
 
 	@Test
-	void aWrongAnswerLocksTheOptions() {
+	void aWrongAnswerLocksTheOptionsAndKeepsTheProblem() {
 		Fighter fighter = battle.getFighter(player);
-		player.submitAnswer((fighter.getRightOption() + 1) % fighter.getOptions().size());
+		int problemId = fighter.getProblemId();
+		int wrong = (fighter.getRightOption() + 1) % fighter.getOptions().size();
+		player.submitAnswer(wrong);
 		battle.tick(TICK_SECONDS);
 		assertTrue(fighter.getLockSeconds() > 0);
 		assertEquals(0, fighter.getCharge());
+		assertEquals(problemId, fighter.getProblemId());
+		assertEquals(List.of(wrong), fighter.getWrongPicks());
+	}
+
+	@Test
+	void theRightAnswerCountsOnceTheLockIsOver() {
+		Fighter fighter = battle.getFighter(player);
+		int wrong = (fighter.getRightOption() + 1) % fighter.getOptions().size();
+		player.submitAnswer(wrong);
+		battle.tick(TICK_SECONDS);
+		while (fighter.getLockSeconds() > 0) {
+			battle.tick(TICK_SECONDS);
+		}
+		// The option picked wrong no longer counts, not even as another wrong answer.
+		player.submitAnswer(wrong);
+		battle.tick(TICK_SECONDS);
+		assertEquals(0, fighter.getLockSeconds());
+		player.submitAnswer(fighter.getRightOption());
+		battle.tick(TICK_SECONDS);
+		assertEquals(1, fighter.getCharge());
+		assertEquals(List.of(), fighter.getWrongPicks());
 	}
 
 	@Test

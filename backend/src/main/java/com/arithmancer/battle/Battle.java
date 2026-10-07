@@ -129,16 +129,20 @@ public class Battle {
 		Fighter fighter = fighters.get(player);
 		fighter.coolDown(deltaSeconds);
 		for (Integer answer = player.pollAnswer(); answer != null; answer = player.pollAnswer()) {
-			// Answers only count on the players' turn, from standing players whose options are not locked.
-			if (phase != Phase.PLAYERS || player.getHealth() <= 0 || fighter.getLockSeconds() > 0) {
+			// Answers only count on the players' turn, from standing players whose options are not locked, and not for
+			// an option already picked wrong.
+			if (phase != Phase.PLAYERS || player.getHealth() <= 0 || fighter.getLockSeconds() > 0
+					|| fighter.getWrongPicks().contains(answer)) {
 				continue;
 			}
 			if (answer == fighter.getRightOption()) {
 				fighter.answerRight();
+				pose(fighter);
 			} else {
+				// A wrong answer keeps the problem: once the lock is over, the player tries again without that option.
+				fighter.pickWrong(answer);
 				fighter.lock(WRONG_ANSWER_LOCK_SECONDS);
 			}
-			pose(fighter);
 		}
 	}
 

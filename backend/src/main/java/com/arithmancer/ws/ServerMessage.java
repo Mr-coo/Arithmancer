@@ -78,8 +78,9 @@ public sealed interface ServerMessage {
 	record FoeState(int id, String type, int health, int maxHealth) {
 	}
 
-	// id: changes with every new problem. options: the answers to pick from, as shown.
-	record ProblemState(int id, String text, List<String> options) {
+	// id: changes with every new problem. options: the answers to pick from, as shown. wrong: indices in options picked
+	// wrong on this problem, which no longer count.
+	record ProblemState(int id, String text, List<String> options, List<Integer> wrong) {
 	}
 
 	// turns: the turns the team lasted. beaten: goblins beaten. Each player's score is the damage they dealt.

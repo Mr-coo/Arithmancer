@@ -435,8 +435,9 @@ class BattleScene extends Phaser.Scene {
 export function BattleView({ connection, code }: { connection: Connection; code: string }) {
   const parent = useRef<HTMLDivElement>(null)
   const [state, setState] = useState<BattleState>()
-  // The problem you last answered: the options wait for the next one, so a second press cannot land on it.
-  const [answered, setAnswered] = useState<number>()
+  // The problem you last answered, with how many wrong picks it had: the options wait for the server's reply, so a
+  // second press cannot land on it.
+  const [answered, setAnswered] = useState<string>()
 
   useEffect(() => {
     const scene = new BattleScene('battle')
@@ -464,15 +465,16 @@ export function BattleView({ connection, code }: { connection: Connection; code:
   }, [connection, code])
 
   const you = state?.players.find((player) => player.you)
+  const answering = state && `${state.problem.id}:${state.problem.wrong.length}`
   const canAnswer =
-    state?.phase === 'players' && state.locked <= 0 && state.problem.id !== answered && (you?.health ?? 0) > 0
+    state?.phase === 'players' && state.locked <= 0 && answering !== answered && (you?.health ?? 0) > 0
 
   function pick(index: number) {
-    if (!state || !canAnswer) {
+    if (!state || !canAnswer || state.problem.wrong.includes(index)) {
       return
     }
     connection.send('answer', { value: index })
-    setAnswered(state.problem.id)
+    setAnswered(answering)
   }
 
   // Keys 1 to 4 pick an option, through the latest pick so they see the latest state. Auto-repeat is ignored.
@@ -529,7 +531,13 @@ export function BattleView({ connection, code }: { connection: Connection; code:
                   }
                 >
                   {state.problem.options.map((option, i) => (
-                    <button key={i} type="button" disabled={!canAnswer} onClick={() => pick(i)}>
+                    <button
+                      key={i}
+                      type="button"
+                      className={state.problem.wrong.includes(i) ? 'wrong' : undefined}
+                      disabled={!canAnswer || state.problem.wrong.includes(i)}
+                      onClick={() => pick(i)}
+                    >
                       <kbd>{OPTION_KEYS[i]}</kbd>
                       {option}
                     </button>
