@@ -6,7 +6,8 @@ import com.arithmancer.math.Difficulty;
 import com.arithmancer.math.Question;
 
 // Integers and fractions: a fraction that comes out whole, then +, -, × or ÷ an integer, as in the reference. From
-// medium on, a subtraction can take away a negative integer. Results are whole and at least 0.
+// medium on, a subtraction can take away a negative integer. Results are whole and at least 0. Unlike the reference,
+// a division's quotient is kept small, so its fraction is no bigger than the others'.
 public final class Fractions {
 
 	private Fractions() {
@@ -37,7 +38,10 @@ public final class Fractions {
 				yield new Question(fraction + " - " + taken, whole - taken);
 			}
 			case 2 -> new Question(fraction + " × " + factor, whole * factor);
-			default -> new Question(denominator * whole * factor + "/" + denominator + " ÷ " + factor, whole);
+			default -> {
+				int quotient = random.nextInt(1, maxWhole / factor + 1);
+				yield new Question(denominator * quotient * factor + "/" + denominator + " ÷ " + factor, quotient);
+			}
 		};
 	}
 

@@ -78,6 +78,7 @@ class QuestionTest {
 			int b = sides.get("b");
 			int c = sides.get("c");
 			assertTrue(a > 0 && b > 0, question.text());
+			assertTrue(c <= 100, question.text());
 			assertEquals(c * c, a * a + b * b, question.text());
 		});
 	}
