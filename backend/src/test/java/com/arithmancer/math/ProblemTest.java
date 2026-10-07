@@ -37,4 +37,19 @@ class ProblemTest {
 		}
 	}
 
+	@Test
+	void statisticsWrongAnswersAreDecimalWhenTheAnswerIs() {
+		Random random = new Random(1);
+		for (double seconds : SECONDS) {
+			for (int i = 0; i < 1000; i++) {
+				Problem problem = Problem.random(random, BattleTopic.STATISTICS, seconds);
+				boolean decimal = problem.answer().contains(".");
+				for (String wrong : problem.wrong()) {
+					assertEquals(decimal, wrong.contains("."), problem.text() + " → " + problem.answer() + " "
+							+ problem.wrong());
+				}
+			}
+		}
+	}
+
 }

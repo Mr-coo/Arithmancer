@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.arithmancer.math.Difficulty;
@@ -15,6 +16,9 @@ import com.arithmancer.math.Problem;
 // Statistics of a list of numbers, shown unsorted: the mean or range of 3 to 5 at first, then the median or mode, then
 // the median of 6 or 7, or a mean that comes out as a decimal.
 public final class Statistics {
+
+	// Decimals near an answer are at most this far from it.
+	private static final int NEAR = 10;
 
 	private Statistics() {
 	}
@@ -30,7 +34,8 @@ public final class Statistics {
 		};
 	}
 
-	// The mistakes give another statistic of the same numbers, the middle one before sorting, or the largest.
+	// The mistakes give another statistic of the same numbers, the middle one before sorting, or the largest. Wrong
+	// answers look like the answer, whole or decimal, so a decimal answer does not stand out among whole ones.
 	private static Problem ask(Random random, String statistic, List<Integer> numbers) {
 		String mean = mean(numbers);
 		String median = median(numbers);
@@ -50,9 +55,17 @@ public final class Statistics {
 		if (mode != null) {
 			mistakes.add(String.valueOf(mode));
 		}
+		boolean whole = !answer.contains(".");
+		mistakes.removeIf(mistake -> mistake.contains(".") == whole);
 		String text = statistic + " of " + numbers.stream().map(String::valueOf).collect(Collectors.joining(", "));
 		return new Problem(text, answer, WrongAnswers.pick(random, answer, mistakes,
-				WrongAnswers.near(random, (int) Math.round(Double.parseDouble(answer)))));
+				whole ? WrongAnswers.near(random, Integer.parseInt(answer)) : nearDecimal(random, new BigDecimal(answer))));
+	}
+
+	// Decimals a whole number away from the answer, with its decimal places, not below 0.
+	private static Supplier<String> nearDecimal(Random random, BigDecimal answer) {
+		int lowest = -Math.min(NEAR, answer.intValue());
+		return () -> answer.add(BigDecimal.valueOf(random.nextInt(lowest, NEAR + 1))).toPlainString();
 	}
 
 	// count numbers from 1 to max.
