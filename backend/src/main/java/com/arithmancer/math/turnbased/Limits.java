@@ -6,6 +6,7 @@ import java.util.Random;
 import com.arithmancer.math.Difficulty;
 import com.arithmancer.math.Problem;
 import com.arithmancer.math.Written;
+import com.arithmancer.math.turnbased.Polynomial.Term;
 
 // Limits: of a line at first, then of quotients that only settle once factored, then of quotients at infinity too.
 public final class Limits {
@@ -30,22 +31,28 @@ public final class Limits {
 				List.of(a + c, b + c, a * b));
 	}
 
-	// As x approaches a, (x² - a²)/(x - a) = x + a approaches 2a. The mistakes stop at a or a², or read 0/0 as 0.
+	// As x approaches a, (x - a)(x + b)/(x - a) = x + b approaches a + b, with the top multiplied out. The mistakes
+	// stop at b, factor with the signs the other way round, take ab, or read 0/0 as 0.
 	private static Problem factored(Random random) {
 		int a = random.nextInt(1, 10);
-		return Problem.number(random, "lim x→" + a + " (x² - " + a * a + ")/(x - " + a + ")", 2 * a,
-				List.of(a, a * a, 0));
+		int b = random.nextInt(1, 10);
+		Polynomial top = Polynomial.of(new Term(1, 2), new Term(b - a, 1), new Term(-a * b, 0)).map(term -> term);
+		return Problem.number(random, "lim x→" + a + " (" + top + ")/(x - " + a + ")", a + b,
+				List.of(b, a - b, a * b, 0));
 	}
 
-	// As x grows, (px² + q)/(rx² + s) approaches p/r. The mistakes flip it, take the constants instead, or give 0 or ∞.
+	// As x grows, (pxⁿ + q)/(rx² + s) approaches 0 when n is below 2, p/r when it is 2, and ∞ above. The mistakes
+	// give one of the others, flip p/r, or take the constants instead.
 	private static Problem atInfinity(Random random) {
+		int n = random.nextInt(1, 4);
 		int p = random.nextInt(1, 10);
 		int q = random.nextInt(1, 10);
 		int r = random.nextInt(2, 10);
 		int s = random.nextInt(1, 10);
-		String answer = Written.fraction(p, r);
-		return new Problem("lim x→∞ (" + Written.term(p, 2) + " + " + q + ")/(" + Written.term(r, 2) + " + " + s + ")",
-				answer, WrongAnswers.pick(random, answer, List.of(Written.fraction(r, p), Written.fraction(q, s), "0", "∞"),
+		String answer = n < 2 ? "0" : n == 2 ? Written.fraction(p, r) : "∞";
+		return new Problem("lim x→∞ (" + Written.term(p, n) + " + " + q + ")/(" + Written.term(r, 2) + " + " + s + ")",
+				answer, WrongAnswers.pick(random, answer, List.of(Written.fraction(p, r), Written.fraction(r, p),
+						Written.fraction(q, s), "0", "∞"),
 						() -> Written.fraction(random.nextInt(1, 10), random.nextInt(2, 10))));
 	}
 
