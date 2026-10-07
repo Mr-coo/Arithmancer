@@ -8,12 +8,17 @@ import com.arithmancer.math.survival.Exponents;
 import com.arithmancer.math.survival.Fractions;
 import com.arithmancer.math.survival.Pythagoras;
 
-// A survival question: its text and its whole result, at least 0.
-public record Question(String text, int result) {
+// A survival question: its text, its whole result, at least 0, and for Pythagoras the triangle to draw instead of the
+// text, otherwise null.
+public record Question(String text, int result, Triangle triangle) {
 
 	// In real-time games, answers are one digit, so a single key press answers a question: bigger results count by
 	// their last digit.
 	private static final int DIGITS = 10;
+
+	public Question(String text, int result) {
+		this(text, result, null);
+	}
 
 	// A question of the topic, as hard as the run has got.
 	public static Question random(Random random, SurvivalTopic topic, double elapsedSeconds) {

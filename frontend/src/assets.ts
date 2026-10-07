@@ -192,7 +192,7 @@ export const SKULL_SCALE = 0.6
 // Texts are drawn at this many pixels per unit, so they stay sharp when zoomed in.
 const TEXT_RESOLUTION = 2
 // Texts are outlined in the menus' dark ink, so they read on grass, trees and stones alike.
-const TEXT_OUTLINE = '#3d2a1e'
+export const TEXT_OUTLINE = '#3d2a1e'
 
 export const archerKey = (color: string, action: 'idle' | 'run' | 'shoot') => `archer-${color}-${action}`
 export const warriorKey = (color: string, action: WarriorAction) => `warrior-${color}-${action}`

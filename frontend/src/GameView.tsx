@@ -35,6 +35,7 @@ import {
   TREE,
   TREE_BASE,
   TREE_SCALE,
+  TEXT_OUTLINE,
   textStyle,
   UNIT_SCALE,
 } from './assets'
@@ -46,6 +47,7 @@ import type {
   GameState,
   PlayerState,
   ShotState,
+  Triangle,
 } from './connection'
 import { formatTime } from './format'
 
@@ -107,6 +109,13 @@ const smoothing = (delta: number) => 1 - (1 - SMOOTHING) ** (delta / (1000 / 60)
 const MOVING = 0.5
 // The server's logical view around each player: the camera zooms to fit it, so you see what you can hit.
 const VIEW = { width: 960, height: 540 }
+// A Pythagoras question is drawn as a right triangle this big, whatever its sides, with the right angle at the bottom
+// right marked by a small square, and each side's number, or ? for the one to find, beside it.
+const FIGURE = { width: 44, height: 30 }
+const RIGHT_ANGLE_MARK = 6
+const LABEL_GAP = 3
+// The figure ends this far above an enemy's head, or its health bar, about where a question's text does.
+const FIGURE_GAP = 2
 
 type Sprite = {
   body: Phaser.GameObjects.Sprite
@@ -120,6 +129,8 @@ type EnemySprite = {
   type: EnemyType
   body: Phaser.GameObjects.Sprite
   question: Phaser.GameObjects.Text
+  // Shown instead of the question for Pythagoras.
+  figure?: Figure
   // Enemies that take more than one answer show how many are left.
   healthBar?: HealthBar
   // Latest server position, and how fast it moved (units per second).
@@ -128,6 +139,39 @@ type EnemySprite = {
 }
 
 type DecorationSprite = { decoration: DecorationState; object: Phaser.GameObjects.Image }
+
+// A right triangle centered on the container, with a label beside each side: legs a and b, hypotenuse c.
+type Figure = {
+  container: Phaser.GameObjects.Container
+  labels: Record<keyof Triangle, Phaser.GameObjects.Text>
+}
+
+function addFigure(scene: Phaser.Scene): Figure {
+  const left = -FIGURE.width / 2
+  const right = FIGURE.width / 2
+  const top = -FIGURE.height / 2
+  const bottom = FIGURE.height / 2
+  const lines = scene.add.graphics()
+  // The outline first, then the white lines over it, as texts are drawn.
+  for (const [width, color] of [
+    [4, Phaser.Display.Color.HexStringToColor(TEXT_OUTLINE).color],
+    [2, 0xffffff],
+  ]) {
+    lines.lineStyle(width, color)
+    lines.strokeTriangle(left, bottom, right, bottom, right, top)
+    lines.strokeRect(right - RIGHT_ANGLE_MARK, bottom - RIGHT_ANGLE_MARK, RIGHT_ANGLE_MARK, RIGHT_ANGLE_MARK)
+  }
+  const label = (x: number, y: number, originX: number, originY: number) =>
+    scene.add.text(x, y, '', textStyle(14, 3)).setOrigin(originX, originY)
+  const labels = {
+    // Under the bottom leg, right of the upright one, and above left of the hypotenuse's middle.
+    a: label(0, bottom + LABEL_GAP, 0.5, 0),
+    b: label(right + LABEL_GAP, 0, 0, 0.5),
+    c: label(-LABEL_GAP, -LABEL_GAP, 1, 1),
+  }
+  const container = scene.add.container(0, 0, [lines, labels.a, labels.b, labels.c]).setDepth(ENEMY_DEPTH)
+  return { container, labels }
+}
 
 // A character touching a decoration's cover circle is behind it.
 function isBehind(point: Point, decoration: DecorationState) {
@@ -328,7 +372,15 @@ class GameScene extends Phaser.Scene {
         }
         sprite.target = { x: enemy.x, y: enemy.y }
       }
-      sprite.question.setText(enemy.question)
+      const triangle = enemy.triangle
+      if (triangle) {
+        sprite.figure ??= addFigure(this)
+        for (const side of ['a', 'b', 'c'] as const) {
+          sprite.figure.labels[side].setText(String(triangle[side] ?? '?'))
+        }
+      }
+      sprite.figure?.container.setVisible(triangle !== null)
+      sprite.question.setText(triangle ? '' : enemy.question)
       sprite.healthBar?.fill.setScale(Phaser.Math.Clamp(enemy.health / enemy.maxHealth, 0, 1), 1)
     }
     for (const [id, sprite] of this.enemySprites) {
@@ -344,6 +396,7 @@ class GameScene extends Phaser.Scene {
           }
           sprite.body.destroy()
           sprite.question.destroy()
+          sprite.figure?.container.destroy()
           sprite.healthBar?.frame.destroy()
           sprite.healthBar?.fill.destroy()
           this.enemySprites.delete(id)
@@ -370,6 +423,11 @@ class GameScene extends Phaser.Scene {
         placeHealthBar(sprite.healthBar, sprite.body.x, top)
       }
       sprite.question.setPosition(sprite.body.x, top - 12)
+      if (sprite.figure) {
+        // The figure ends with the label under its bottom leg.
+        const below = FIGURE.height / 2 + LABEL_GAP + sprite.figure.labels.a.height
+        sprite.figure.container.setPosition(sprite.body.x, top - FIGURE_GAP - below)
+      }
     }
   }
 

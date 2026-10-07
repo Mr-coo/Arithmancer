@@ -92,8 +92,10 @@ public class WebSocketDocs {
 						started. Enemies come in rounds: each `round` is a herd, bigger and spawning faster than the last, \
 						that starts coming once `roundStartsIn` counts down to 0 (5 seconds), and the next round starts once \
 						the herd is all gone. `score` counts the enemies a player killed, `you` marks the receiving player, \
-						and `shots` lists the hits from that tick (`player` is an index in `players`): \
-						`{"type":"state","content":{"time":12.35,"round":2,"roundStartsIn":0.0,"players":[{"nickname":"Marco","x":0.0,"y":-10.0,"health":100,"maxHealth":100,"cooldown":0.25,"maxCooldown":0.5,"score":3,"revive":0.0,"haste":0.0,"speedBoost":0.0,"you":true}],"enemies":[{"id":0,"type":"goblin","x":420.0,"y":-310.0,"question":"7 - 3","health":1,"maxHealth":1}],"items":[{"id":0,"type":"heal","x":120.0,"y":40.0}],"shots":[{"player":0,"enemy":1}]}}`
+						and `shots` lists the hits from that tick (`player` is an index in `players`). On Pythagoras \
+						questions, an enemy's `triangle` gives the legs `a` and `b` and the hypotenuse `c`, with `null` for \
+						the one to find, and is drawn instead of `question`; otherwise it is `null`: \
+						`{"type":"state","content":{"time":12.35,"round":2,"roundStartsIn":0.0,"players":[{"nickname":"Marco","x":0.0,"y":-10.0,"health":100,"maxHealth":100,"cooldown":0.25,"maxCooldown":0.5,"score":3,"revive":0.0,"haste":0.0,"speedBoost":0.0,"you":true}],"enemies":[{"id":0,"type":"goblin","x":420.0,"y":-310.0,"question":"7 - 3","triangle":null,"health":1,"maxHealth":1}],"items":[{"id":0,"type":"heal","x":120.0,"y":40.0}],"shots":[{"player":0,"enemy":1}]}}`
 
 						When every player is dead (health 0), the game ends and every player gets the results. \
 						`time` is how long the team survived: \

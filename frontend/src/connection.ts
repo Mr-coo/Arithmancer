@@ -19,13 +19,18 @@ export type PlayerState = {
 
 export type EnemyType = 'goblin' | 'torch'
 
-// health: answers still needed to kill it, out of maxHealth.
+// A Pythagoras question's right triangle: legs a and b and hypotenuse c, with null for the side to find.
+export type Triangle = { a: number | null; b: number | null; c: number | null }
+
+// triangle: drawn instead of the question for Pythagoras, otherwise null. health: answers still needed to kill it, out
+// of maxHealth.
 export type EnemyState = {
   id: number
   type: EnemyType
   x: number
   y: number
   question: string
+  triangle: Triangle | null
   health: number
   maxHealth: number
 }

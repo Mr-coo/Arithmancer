@@ -2,6 +2,8 @@ package com.arithmancer.ws;
 
 import java.util.List;
 
+import com.arithmancer.math.Triangle;
+
 public sealed interface ServerMessage {
 
 	record RoomCreated(String code, List<String> players) implements ServerMessage {
@@ -37,8 +39,10 @@ public sealed interface ServerMessage {
 			double maxCooldown, int score, double revive, double haste, double speedBoost, boolean you) {
 	}
 
-	// type: goblin or torch. health: answers still needed to kill it, out of maxHealth.
-	record EnemyState(int id, String type, double x, double y, String question, int health, int maxHealth) {
+	// type: goblin or torch. triangle: drawn instead of the question for Pythagoras, otherwise null. health: answers
+	// still needed to kill it, out of maxHealth.
+	record EnemyState(int id, String type, double x, double y, String question, Triangle triangle, int health,
+			int maxHealth) {
 	}
 
 	// type: heal, haste or speed.

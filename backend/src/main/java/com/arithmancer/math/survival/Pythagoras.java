@@ -4,6 +4,7 @@ import java.util.Random;
 
 import com.arithmancer.math.Difficulty;
 import com.arithmancer.math.Question;
+import com.arithmancer.math.Triangle;
 
 // Pythagoras: two sides of a right triangle and the third to find, with legs a and b and hypotenuse c. As in the
 // reference, Euclid's formula makes them whole: for m > n, m² - n², 2mn and m² + n². Unlike the reference, the triangle
@@ -30,9 +31,9 @@ public final class Pythagoras {
 		int b = k * 2 * m * n;
 		int c = k * (m * m + n * n);
 		return switch (random.nextInt(3)) {
-			case 0 -> new Question("a=" + a + " b=" + b + " c=?", c);
-			case 1 -> new Question("a=" + a + " c=" + c + " b=?", b);
-			default -> new Question("b=" + b + " c=" + c + " a=?", a);
+			case 0 -> new Question("a=" + a + " b=" + b + " c=?", c, new Triangle(a, b, null));
+			case 1 -> new Question("a=" + a + " c=" + c + " b=?", b, new Triangle(a, null, c));
+			default -> new Question("b=" + b + " c=" + c + " a=?", a, new Triangle(null, b, c));
 		};
 	}
 

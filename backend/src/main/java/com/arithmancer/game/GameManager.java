@@ -81,8 +81,8 @@ public class GameManager {
 	private void sendState(Game game) {
 		List<EnemyState> enemies = game.getEnemies().stream()
 				.map(enemy -> new EnemyState(enemy.getId(), enemy.getType().name().toLowerCase(Locale.ROOT),
-						enemy.getPosition().x(), enemy.getPosition().y(), enemy.getQuestion().text(), enemy.getHealth(),
-						enemy.getMaxHealth()))
+						enemy.getPosition().x(), enemy.getPosition().y(), enemy.getQuestion().text(),
+						enemy.getQuestion().triangle(), enemy.getHealth(), enemy.getMaxHealth()))
 				.toList();
 		List<ItemState> items = game.getItems().stream()
 				.map(item -> new ItemState(item.getId(), item.getType().name().toLowerCase(Locale.ROOT),
