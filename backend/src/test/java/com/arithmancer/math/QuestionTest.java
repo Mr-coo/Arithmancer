@@ -20,6 +20,8 @@ class QuestionTest {
 	private static final Pattern SIDE = Pattern.compile("([abc])=(\\d+|\\?)");
 	private static final String SUPERSCRIPTS = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 	private static final String SUBSCRIPTS = "₀₁₂₃₄₅₆₇₈₉";
+	// Fractions such as 2/3 are worked out as decimals, so results only come out whole to this.
+	private static final double PRECISION = 1e-9;
 
 	@Test
 	void resultsAreAtLeastZero() {
@@ -32,7 +34,7 @@ class QuestionTest {
 	void arithmeticAndFractionsWorkOutToTheirResult() {
 		for (SurvivalTopic topic : new SurvivalTopic[] { SurvivalTopic.ARITHMETIC, SurvivalTopic.FRACTIONS }) {
 			forEachQuestion(topic, question -> assertEquals(question.result(), new Evaluator(question.text()).evaluate(),
-					question.text()));
+					PRECISION, question.text()));
 		}
 	}
 
@@ -101,7 +103,7 @@ class QuestionTest {
 	}
 
 	// Works out +, -, ×, ÷ and / (from left to right, × ÷ / before + -), brackets and negative numbers, checking that
-	// every division comes out whole.
+	// every ÷ comes out whole. A / is a fraction, which need not be.
 	private static class Evaluator {
 
 		private final String text;
@@ -111,43 +113,45 @@ class QuestionTest {
 			this.text = text.replace(" ", "");
 		}
 
-		int evaluate() {
-			int value = sum();
+		double evaluate() {
+			double value = sum();
 			assertEquals(text.length(), at, "Left over in " + text);
 			return value;
 		}
 
-		private int sum() {
-			int value = product();
+		private double sum() {
+			double value = product();
 			while (at < text.length() && (peek() == '+' || peek() == '-')) {
 				value = text.charAt(at++) == '+' ? value + product() : value - product();
 			}
 			return value;
 		}
 
-		private int product() {
-			int value = factor();
+		private double product() {
+			double value = factor();
 			while (at < text.length() && (peek() == '×' || peek() == '÷' || peek() == '/')) {
 				char operator = text.charAt(at++);
-				int right = factor();
+				double right = factor();
 				if (operator == '×') {
 					value *= right;
 				} else {
-					assertEquals(0, value % right, "Not whole in " + text);
+					if (operator == '÷') {
+						assertEquals(0, value % right, PRECISION, "Not whole in " + text);
+					}
 					value /= right;
 				}
 			}
 			return value;
 		}
 
-		private int factor() {
+		private double factor() {
 			if (peek() == '-') {
 				at++;
 				return -factor();
 			}
 			if (peek() == '(') {
 				at++;
-				int value = sum();
+				double value = sum();
 				assertEquals(')', text.charAt(at++), text);
 				return value;
 			}
