@@ -17,6 +17,7 @@ class QuestionTest {
 	// Easy, medium and hard.
 	private static final double[] SECONDS = { 0, 100, 300 };
 	private static final Pattern EQUATION = Pattern.compile("(\\d+)x(?: ([+-]) (\\d+))? = (-?\\d+)");
+	private static final Pattern BRACKETED = Pattern.compile("(\\d+)\\(x ([+-]) (\\d+)\\) = (-?\\d+)");
 	private static final Pattern SIDE = Pattern.compile("([abc])=(\\d+|\\?)");
 	private static final String SUPERSCRIPTS = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 	private static final String SUBSCRIPTS = "₀₁₂₃₄₅₆₇₈₉";
@@ -42,9 +43,17 @@ class QuestionTest {
 	void algebraResultsSolveTheirEquation() {
 		forEachQuestion(SurvivalTopic.ALGEBRA, question -> {
 			Matcher matcher = EQUATION.matcher(question.text());
+			if (matcher.matches()) {
+				int b = matcher.group(3) == null ? 0 : Integer.parseInt(matcher.group(3));
+				int left = Integer.parseInt(matcher.group(1)) * question.result()
+						+ ("-".equals(matcher.group(2)) ? -b : b);
+				assertEquals(Integer.parseInt(matcher.group(4)), left, question.text());
+				return;
+			}
+			matcher = BRACKETED.matcher(question.text());
 			assertTrue(matcher.matches(), question.text());
-			int b = matcher.group(3) == null ? 0 : Integer.parseInt(matcher.group(3));
-			int left = Integer.parseInt(matcher.group(1)) * question.result() + ("-".equals(matcher.group(2)) ? -b : b);
+			int b = Integer.parseInt(matcher.group(3));
+			int left = Integer.parseInt(matcher.group(1)) * (question.result() + ("-".equals(matcher.group(2)) ? -b : b));
 			assertEquals(Integer.parseInt(matcher.group(4)), left, question.text());
 		});
 	}
