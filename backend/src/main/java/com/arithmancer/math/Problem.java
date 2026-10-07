@@ -13,8 +13,13 @@ import com.arithmancer.math.turnbased.Statistics;
 import com.arithmancer.math.turnbased.Trigonometry;
 import com.arithmancer.math.turnbased.WrongAnswers;
 
-// A turn-based problem: its text, its exact answer and WrongAnswers.COUNT wrong ones, all as shown.
-public record Problem(String text, String answer, List<String> wrong) {
+// A turn-based problem: its text, its exact answer and WrongAnswers.COUNT wrong ones, all as shown, and for matrices
+// the rows of the matrix to draw instead of the text, otherwise null.
+public record Problem(String text, String answer, List<String> wrong, List<List<Integer>> matrix) {
+
+	public Problem(String text, String answer, List<String> wrong) {
+		this(text, answer, wrong, null);
+	}
 
 	// A problem of the topic, as hard as the battle has got.
 	public static Problem random(Random random, BattleTopic topic, double elapsedSeconds) {

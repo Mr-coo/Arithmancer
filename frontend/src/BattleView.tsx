@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { useEffect, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import {
   addHealthBar,
   BAR_SCALE,
@@ -522,9 +522,21 @@ export function BattleView({ connection, code }: { connection: Connection; code:
                 <p className={state.locked > 0 ? 'status wrong' : 'status'}>
                   {state.locked > 0 ? `Wrong! Thinking… ${Math.ceil(state.locked)}s` : `Damage this turn: ${charge}`}
                 </p>
-                <p className={state.problem.text.length > LONG_PROBLEM ? 'problem-text long' : 'problem-text'}>
-                  {state.problem.text}
-                </p>
+                {state.problem.matrix ? (
+                  // det, then the matrix's numbers in rows between square brackets.
+                  <div className="problem-text determinant">
+                    det
+                    <span className="matrix" style={{ '--size': state.problem.matrix.length } as CSSProperties}>
+                      {state.problem.matrix.flat().map((n, i) => (
+                        <span key={i}>{n}</span>
+                      ))}
+                    </span>
+                  </div>
+                ) : (
+                  <p className={state.problem.text.length > LONG_PROBLEM ? 'problem-text long' : 'problem-text'}>
+                    {state.problem.text}
+                  </p>
+                )}
                 <div
                   className={
                     state.problem.options.some((option) => option.length > LONG_OPTION) ? 'options long' : 'options'

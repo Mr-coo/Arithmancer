@@ -102,9 +102,16 @@ export type FighterState = {
 
 export type FoeState = { id: number; type: EnemyType; health: number; maxHealth: number }
 
-// id changes with every new problem. options: the answers to pick from, as shown; you answer with an index. wrong:
-// indices in options you picked wrong on this problem, which no longer count.
-export type ProblemState = { id: number; text: string; options: string[]; wrong: number[] }
+// id changes with every new problem. matrix: for matrices, the rows to draw instead of the text, otherwise null.
+// options: the answers to pick from, as shown; you answer with an index. wrong: indices in options you picked wrong on
+// this problem, which no longer count.
+export type ProblemState = {
+  id: number
+  text: string
+  matrix: number[][] | null
+  options: string[]
+  wrong: number[]
+}
 
 // problem and locked (seconds until a wrong answer stops locking your options) are yours. strikes: indices in players
 // of the warriors striking the goblin on this tick; hits: of the players the goblin strikes.

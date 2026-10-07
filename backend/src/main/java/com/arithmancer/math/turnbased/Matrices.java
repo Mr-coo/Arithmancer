@@ -33,7 +33,7 @@ public final class Matrices {
 			ad = m[0][0] * m[1][1];
 			bc = m[0][1] * m[1][0];
 		} while (ad == bc);
-		return Problem.number(random, "det " + written(m), ad - bc, List.of(ad + bc, bc - ad, ad));
+		return drawn(Problem.number(random, "det " + written(m), ad - bc, List.of(ad + bc, bc - ad, ad)), m);
 	}
 
 	// The sum of the products down to the right, less those down to the left. The mistakes add them all, take them
@@ -51,7 +51,14 @@ public final class Matrices {
 				left += m[0][i] * m[1][(i + 2) % 3] * m[2][(i + 1) % 3];
 			}
 		} while (right == left);
-		return Problem.number(random, "det " + written(m), right - left, List.of(right + left, left - right, right));
+		return drawn(Problem.number(random, "det " + written(m), right - left, List.of(right + left, left - right, right)),
+				m);
+	}
+
+	// The problem with its matrix, drawn instead of its text.
+	private static Problem drawn(Problem problem, int[][] matrix) {
+		return new Problem(problem.text(), problem.answer(), problem.wrong(),
+				Arrays.stream(matrix).map(row -> Arrays.stream(row).boxed().toList()).toList());
 	}
 
 	private static int[][] entries(Random random, int size, int min, int max) {

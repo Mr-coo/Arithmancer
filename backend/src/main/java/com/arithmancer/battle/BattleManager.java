@@ -95,8 +95,8 @@ public class BattleManager {
 						fighter.getCharge(), fighter.getDamageDealt(), player == recipient);
 			}).toList();
 			Fighter you = battle.getFighter(recipient);
-			ProblemState problem = new ProblemState(you.getProblemId(), you.getProblem().text(), you.getOptions(),
-					you.getWrongPicks());
+			ProblemState problem = new ProblemState(you.getProblemId(), you.getProblem().text(),
+					you.getProblem().matrix(), you.getOptions(), you.getWrongPicks());
 			sessionRegistry.send(recipient.getSessionId(), "battleState",
 					new BattleState(battle.getTurn(), battle.getPhase().name().toLowerCase(Locale.ROOT),
 							battle.getSecondsLeft(), fighters, enemy, problem, you.getLockSeconds(), strikes, hits));

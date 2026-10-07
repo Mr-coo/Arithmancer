@@ -493,6 +493,45 @@ button {
     }
   }
 
+  /* A determinant: det, then the matrix's --size columns of numbers between square brackets, drawn as borders on its
+     sides with short arms top and bottom. Numbers line up on the right, as negatives are wider. */
+  .determinant {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .matrix {
+    position: relative;
+    display: inline-grid;
+    grid-template-columns: repeat(var(--size), auto);
+    justify-items: end;
+    gap: 0 22px;
+    padding: 4px 16px;
+    font-size: 30px;
+    line-height: 1.2;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 8px;
+      border: 3px solid currentColor;
+    }
+
+    &::before {
+      left: 0;
+      border-right: none;
+    }
+
+    &::after {
+      right: 0;
+      border-left: none;
+    }
+  }
+
   .options {
     align-self: stretch;
     display: grid;
