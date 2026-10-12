@@ -136,7 +136,8 @@ type ServerMessages = {
   roomCreated: RoomContent
   // host: whether you are the host, the first of players.
   roomJoined: RoomContent & { host: boolean }
-  gameStarted: RoomContent & { decorations: DecorationState[]; details: DetailState[] }
+  // topic: the run's, which every enemy is drawn in the color of.
+  gameStarted: RoomContent & { topic: SurvivalTopic; decorations: DecorationState[]; details: DetailState[] }
   state: GameState
   gameOver: GameOver
   battleStarted: RoomContent

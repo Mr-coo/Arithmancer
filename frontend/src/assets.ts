@@ -37,8 +37,14 @@ import purpleWarriorRun from '../asset/Tiny Swords (Free Pack)/Units/Purple Unit
 import purpleWarriorAttack1 from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Warrior/Warrior_Attack1.png'
 import purpleWarriorAttack2 from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Warrior/Warrior_Attack2.png'
 import purpleWarriorGuard from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Warrior/Warrior_Guard.png'
-import tntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Red/TNT_Red.png'
-import torchGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/Torch/Purple/Torch_Purple.png'
+import blueTntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Blue/TNT_Blue.png'
+import redTntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Red/TNT_Red.png'
+import yellowTntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Yellow/TNT_Yellow.png'
+import purpleTntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Purple/TNT_Purple.png'
+import blueTorchGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/Torch/Blue/Torch_Blue.png'
+import redTorchGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/Torch/Red/Torch_Red.png'
+import yellowTorchGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/Torch/Yellow/Torch_Yellow.png'
+import purpleTorchGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/Torch/Purple/Torch_Purple.png'
 import explosion from '../Tiny Swords/Tiny Swords (Update 010)/Effects/Explosion/Explosions.png'
 import dead from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Knights/Troops/Dead/Dead.png'
 import dust from '../asset/Tiny Swords (Free Pack)/Particle FX/Dust_02.png'
@@ -60,7 +66,7 @@ import smallBar from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/B
 import meatIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_04.png'
 import swordIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_05.png'
 import arrowIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_07.png'
-import type { DetailState, EnemyType, ItemType } from './connection'
+import type { DetailState, EnemyType, ItemType, SurvivalTopic } from './connection'
 
 // Players are archers, one color each (a room has up to 4 players).
 export const PLAYER_COLORS = ['blue', 'red', 'yellow', 'purple'] as const
@@ -112,8 +118,23 @@ export const WARRIOR_FEET = { x: 95 / 192, y: 129 / 192 }
 // attacks, the first of them to the side. Goblins are TNT goblins, with 6 idle frames and 7 swinging their dynamite;
 // torch goblins have 7 idle and 6 swinging their torch.
 export const ENEMIES: Record<EnemyType, { sheet: string; idle: number; attack: number }> = {
-  goblin: { sheet: tntGoblin, idle: 6, attack: 7 },
-  torch: { sheet: torchGoblin, idle: 7, attack: 6 },
+  goblin: { sheet: redTntGoblin, idle: 6, attack: 7 },
+  torch: { sheet: purpleTorchGoblin, idle: 7, attack: 6 },
+}
+
+// Goblins come in four colors, each sheet laid out the same. In survival, every enemy is drawn in the color of the
+// run's topic instead of its own; there are more topics than colors, so Pythagoras shares arithmetic's blue.
+export type GoblinColor = 'blue' | 'red' | 'yellow' | 'purple'
+export const ENEMY_SHEETS: Record<EnemyType, Record<GoblinColor, string>> = {
+  goblin: { blue: blueTntGoblin, red: redTntGoblin, yellow: yellowTntGoblin, purple: purpleTntGoblin },
+  torch: { blue: blueTorchGoblin, red: redTorchGoblin, yellow: yellowTorchGoblin, purple: purpleTorchGoblin },
+}
+export const ENEMY_COLORS: Record<SurvivalTopic, GoblinColor> = {
+  arithmetic: 'blue',
+  fractions: 'red',
+  algebra: 'yellow',
+  exponents: 'purple',
+  pythagoras: 'blue',
 }
 
 export const GROUND = 'ground'
@@ -201,7 +222,8 @@ export const detailKey = (type: string, variant: number) => `${type}-${variant}`
 
 const UNIT_FRAME = { frameWidth: 192, frameHeight: 192 }
 
-export function preloadAssets(scene: Phaser.Scene) {
+// Enemies load in enemyColor when given, otherwise in their own colors.
+export function preloadAssets(scene: Phaser.Scene, enemyColor?: GoblinColor) {
   scene.load.spritesheet(GROUND, tilemap, { frameWidth: 64, frameHeight: 64 })
   scene.load.spritesheet(TREE, tree, { frameWidth: 192, frameHeight: 256 })
   scene.load.image(ROCKS[0], rock2)
@@ -220,7 +242,7 @@ export function preloadAssets(scene: Phaser.Scene) {
     }
   }
   for (const [type, { sheet }] of Object.entries(ENEMIES)) {
-    scene.load.spritesheet(type, sheet, UNIT_FRAME)
+    scene.load.spritesheet(type, enemyColor ? ENEMY_SHEETS[type as EnemyType][enemyColor] : sheet, UNIT_FRAME)
   }
   scene.load.spritesheet(EXPLOSION, explosion, UNIT_FRAME)
   scene.load.spritesheet(DUST, dust, { frameWidth: 64, frameHeight: 64 })

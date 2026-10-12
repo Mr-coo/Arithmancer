@@ -7,6 +7,7 @@ import {
   type DetailState,
   type FinalScore,
   type Mode,
+  type SurvivalTopic,
   type Topic,
 } from './connection'
 import { formatTime } from './format'
@@ -18,7 +19,7 @@ import './App.css'
 type Screen =
   | { name: 'home'; error?: string }
   | { name: 'lobby'; code: string; players: string[]; host: boolean }
-  | { name: 'game'; decorations: DecorationState[]; details: DetailState[] }
+  | { name: 'game'; topic: SurvivalTopic; decorations: DecorationState[]; details: DetailState[] }
   | { name: 'battle'; code: string }
   | { name: 'gameOver'; summary: string; players: FinalScore[] }
 
@@ -82,7 +83,9 @@ function App() {
       setConnecting(false)
       setScreen({ name: 'lobby', code, players, host })
     })
-    opened.on('gameStarted', ({ decorations, details }) => setScreen({ name: 'game', decorations, details }))
+    opened.on('gameStarted', ({ topic, decorations, details }) =>
+      setScreen({ name: 'game', topic, decorations, details }),
+    )
     opened.on('gameOver', ({ time, players }) =>
       setScreen({ name: 'gameOver', summary: `You survived ${formatTime(time)}.`, players }),
     )
@@ -125,7 +128,12 @@ function App() {
   if (screen.name === 'game' && connection) {
     return (
       <>
-        <GameView connection={connection} decorations={screen.decorations} details={screen.details} />
+        <GameView
+          connection={connection}
+          topic={screen.topic}
+          decorations={screen.decorations}
+          details={screen.details}
+        />
         <p className="hint">Move with WASD or the arrow keys. Press the last digit of an enemy's answer to shoot it.</p>
       </>
     )

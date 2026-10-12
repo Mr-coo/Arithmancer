@@ -221,7 +221,7 @@ public class GameGateway extends TextWebSocketHandler {
 				.map(detail -> new DetailState(detail.type(), detail.position().x(), detail.position().y()))
 				.toList();
 		sendAll(game.getPlayers(), "gameStarted",
-				new GameStarted(game.getCode(), nicknames(game.getPlayers()), decorations, details));
+				new GameStarted(game.getCode(), nicknames(game.getPlayers()), survivalTopic, decorations, details));
 	}
 
 	private void answer(WebSocketSession session, Answer answer) throws IOException {

@@ -14,6 +14,7 @@ import {
   detailKey,
   DUST,
   ENEMY_BODIES,
+  ENEMY_COLORS,
   EXPLOSION,
   enemyKey,
   GRASS_FRAME,
@@ -47,6 +48,7 @@ import type {
   GameState,
   PlayerState,
   ShotState,
+  SurvivalTopic,
   Triangle,
 } from './connection'
 import { formatTime } from './format'
@@ -185,6 +187,8 @@ const colorOf = (player: number) => PLAYER_COLORS[player % PLAYER_COLORS.length]
 class GameScene extends Phaser.Scene {
   latest: GameState = { time: 0, round: 0, roundStartsIn: 0, players: [], enemies: [], items: [], shots: [] }
   pendingShots: ShotState[] = []
+  // The run's topic, which every enemy is drawn in the color of.
+  topic: SurvivalTopic = 'arithmetic'
   decorations: DecorationState[] = []
   details: DetailState[] = []
   // Where a character's feet are behind each detail.
@@ -202,7 +206,7 @@ class GameScene extends Phaser.Scene {
   private ground?: Phaser.GameObjects.TileSprite
 
   preload() {
-    preloadAssets(this)
+    preloadAssets(this, ENEMY_COLORS[this.topic])
   }
 
   create() {
@@ -512,10 +516,12 @@ class GameScene extends Phaser.Scene {
 
 export function GameView({
   connection,
+  topic,
   decorations,
   details,
 }: {
   connection: Connection
+  topic: SurvivalTopic
   decorations: DecorationState[]
   details: DetailState[]
 }) {
@@ -524,6 +530,7 @@ export function GameView({
 
   useEffect(() => {
     const scene = new GameScene('game')
+    scene.topic = topic
     scene.decorations = decorations
     scene.details = details
     const game = new Phaser.Game({
@@ -583,7 +590,7 @@ export function GameView({
       stopState()
       game.destroy(true)
     }
-  }, [connection, decorations, details])
+  }, [connection, topic, decorations, details])
 
   return (
     <>

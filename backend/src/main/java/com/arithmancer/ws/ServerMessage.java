@@ -2,6 +2,7 @@ package com.arithmancer.ws;
 
 import java.util.List;
 
+import com.arithmancer.math.SurvivalTopic;
 import com.arithmancer.math.Triangle;
 
 public sealed interface ServerMessage {
@@ -13,7 +14,8 @@ public sealed interface ServerMessage {
 	record RoomJoined(String code, List<String> players, boolean host) implements ServerMessage {
 	}
 
-	record GameStarted(String code, List<String> players, List<DecorationState> decorations,
+	// topic: the run's, which every enemy is drawn in the color of.
+	record GameStarted(String code, List<String> players, SurvivalTopic topic, List<DecorationState> decorations,
 			List<DetailState> details) implements ServerMessage {
 	}
 
