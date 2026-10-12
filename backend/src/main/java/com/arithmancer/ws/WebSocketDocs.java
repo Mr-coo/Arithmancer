@@ -101,7 +101,8 @@ public class WebSocketDocs {
 						`time` is how long the team survived: \
 						`{"type":"gameOver","content":{"time":83.2,"players":[{"nickname":"Marco","score":5,"you":true},{"nickname":"Ana","score":3,"you":false}]}}`
 
-						A turn-based game starts with `{"type":"battleStarted","content":{"code":"KQXB","players":["Marco","Ana"]}}`. \
+						A turn-based game starts with the battle's `topic`: \
+						`{"type":"battleStarted","content":{"code":"KQXB","players":["Marco","Ana"],"topic":"trigonometry"}}`. \
 						Then every player gets the battle 20 times per second. On the players' turn (`phase` `players`), \
 						everyone answers their own `problem` by picking one of its `options`, answers written as text. Each \
 						right answer adds to your \

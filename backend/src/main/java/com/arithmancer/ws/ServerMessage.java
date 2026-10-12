@@ -2,6 +2,7 @@ package com.arithmancer.ws;
 
 import java.util.List;
 
+import com.arithmancer.math.BattleTopic;
 import com.arithmancer.math.SurvivalTopic;
 import com.arithmancer.math.Triangle;
 
@@ -62,7 +63,8 @@ public sealed interface ServerMessage {
 	record FinalScore(String nickname, int score, boolean you) {
 	}
 
-	record BattleStarted(String code, List<String> players) implements ServerMessage {
+	// topic: the battle's, which every warrior is drawn in the color of.
+	record BattleStarted(String code, List<String> players, BattleTopic topic) implements ServerMessage {
 	}
 
 	// phase: players or enemy, with secondsLeft in it. problem and locked (seconds until a wrong answer stops locking

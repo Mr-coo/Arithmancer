@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from 'react'
 import { BattleView } from './BattleView'
 import {
+  type BattleTopic,
   connect,
   type Connection,
   type DecorationState,
@@ -20,7 +21,7 @@ type Screen =
   | { name: 'home'; error?: string }
   | { name: 'lobby'; code: string; players: string[]; host: boolean }
   | { name: 'game'; topic: SurvivalTopic; decorations: DecorationState[]; details: DetailState[] }
-  | { name: 'battle'; code: string }
+  | { name: 'battle'; code: string; topic: BattleTopic }
   | { name: 'gameOver'; summary: string; players: FinalScore[] }
 
 // The server turns longer nicknames away.
@@ -89,7 +90,7 @@ function App() {
     opened.on('gameOver', ({ time, players }) =>
       setScreen({ name: 'gameOver', summary: `You survived ${formatTime(time)}.`, players }),
     )
-    opened.on('battleStarted', ({ code }) => setScreen({ name: 'battle', code }))
+    opened.on('battleStarted', ({ code, topic }) => setScreen({ name: 'battle', code, topic }))
     opened.on('battleOver', ({ turns, beaten, players }) => {
       const summary = `You beat ${count(beaten, 'goblin')} in ${count(turns, 'turn')}.`
       setScreen({ name: 'gameOver', summary, players })
@@ -142,7 +143,7 @@ function App() {
   if (screen.name === 'battle' && connection) {
     return (
       <>
-        <BattleView connection={connection} code={screen.code} />
+        <BattleView connection={connection} code={screen.code} topic={screen.topic} />
         <p className="hint">Pick with 1–4 or a click. Right answers hit harder; wrong ones cost you 3 seconds.</p>
       </>
     )

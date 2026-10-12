@@ -37,6 +37,11 @@ import purpleWarriorRun from '../asset/Tiny Swords (Free Pack)/Units/Purple Unit
 import purpleWarriorAttack1 from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Warrior/Warrior_Attack1.png'
 import purpleWarriorAttack2 from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Warrior/Warrior_Attack2.png'
 import purpleWarriorGuard from '../asset/Tiny Swords (Free Pack)/Units/Purple Units/Warrior/Warrior_Guard.png'
+import blackWarriorIdle from '../asset/Tiny Swords (Free Pack)/Units/Black Units/Warrior/Warrior_Idle.png'
+import blackWarriorRun from '../asset/Tiny Swords (Free Pack)/Units/Black Units/Warrior/Warrior_Run.png'
+import blackWarriorAttack1 from '../asset/Tiny Swords (Free Pack)/Units/Black Units/Warrior/Warrior_Attack1.png'
+import blackWarriorAttack2 from '../asset/Tiny Swords (Free Pack)/Units/Black Units/Warrior/Warrior_Attack2.png'
+import blackWarriorGuard from '../asset/Tiny Swords (Free Pack)/Units/Black Units/Warrior/Warrior_Guard.png'
 import blueTntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Blue/TNT_Blue.png'
 import redTntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Red/TNT_Red.png'
 import yellowTntGoblin from '../Tiny Swords/Tiny Swords (Update 010)/Factions/Goblins/Troops/TNT/Yellow/TNT_Yellow.png'
@@ -66,7 +71,7 @@ import smallBar from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/B
 import meatIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_04.png'
 import swordIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_05.png'
 import arrowIcon from '../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_07.png'
-import type { DetailState, EnemyType, ItemType, SurvivalTopic } from './connection'
+import type { BattleTopic, DetailState, EnemyType, ItemType, SurvivalTopic } from './connection'
 
 // Players are archers, one color each (a room has up to 4 players).
 export const PLAYER_COLORS = ['blue', 'red', 'yellow', 'purple'] as const
@@ -109,8 +114,26 @@ export const WARRIORS = {
     attack2: purpleWarriorAttack2,
     guard: purpleWarriorGuard,
   },
+  black: {
+    idle: blackWarriorIdle,
+    run: blackWarriorRun,
+    attack1: blackWarriorAttack1,
+    attack2: blackWarriorAttack2,
+    guard: blackWarriorGuard,
+  },
 }
 export type WarriorAction = keyof (typeof WARRIORS)['blue']
+// Every warrior is drawn in the color of the battle's topic. There are more topics than colors, so statistics shares
+// trigonometry's blue and geometry shares limits' red.
+export const WARRIOR_COLORS: Record<BattleTopic, keyof typeof WARRIORS> = {
+  trigonometry: 'blue',
+  limits: 'red',
+  derivatives: 'yellow',
+  integrals: 'purple',
+  matrices: 'black',
+  statistics: 'blue',
+  geometry: 'red',
+}
 // The warrior's feet in its frame.
 export const WARRIOR_FEET = { x: 95 / 192, y: 129 / 192 }
 
@@ -237,7 +260,9 @@ export function preloadAssets(scene: Phaser.Scene, enemyColor?: GoblinColor) {
     for (const [action, url] of Object.entries(ARCHERS[color])) {
       scene.load.spritesheet(archerKey(color, action as 'idle' | 'run' | 'shoot'), url, UNIT_FRAME)
     }
-    for (const [action, url] of Object.entries(WARRIORS[color])) {
+  }
+  for (const [color, actions] of Object.entries(WARRIORS)) {
+    for (const [action, url] of Object.entries(actions)) {
       scene.load.spritesheet(warriorKey(color, action as WarriorAction), url, UNIT_FRAME)
     }
   }
@@ -311,6 +336,8 @@ export function createAnimations(scene: Phaser.Scene) {
     loop(archerKey(color, 'idle'), 8)
     loop(archerKey(color, 'run'), 10)
     loop(archerKey(color, 'shoot'), 24, 0)
+  }
+  for (const color of Object.keys(WARRIORS)) {
     loop(warriorKey(color, 'idle'), 10)
     loop(warriorKey(color, 'run'), 10)
     // Swings and guards are slow enough to follow.

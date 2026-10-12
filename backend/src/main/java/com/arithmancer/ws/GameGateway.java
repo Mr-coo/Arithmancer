@@ -208,7 +208,7 @@ public class GameGateway extends TextWebSocketHandler {
 		if (turnBased) {
 			Battle battle = battleManager.start(room, battleTopic);
 			sendAll(battle.getPlayers(), "battleStarted",
-					new BattleStarted(battle.getCode(), nicknames(battle.getPlayers())));
+					new BattleStarted(battle.getCode(), nicknames(battle.getPlayers()), battleTopic));
 			return;
 		}
 		Game game = gameManager.start(room, survivalTopic);

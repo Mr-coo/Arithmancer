@@ -16,7 +16,6 @@ import {
   GROUND,
   HEALTH_BAR_SIZE,
   type HealthBar,
-  PLAYER_COLORS,
   type Point,
   placeHealthBar,
   playEffect,
@@ -29,10 +28,11 @@ import {
   TREE_SCALE,
   textStyle,
   UNIT_SCALE,
+  WARRIOR_COLORS,
   WARRIOR_FEET,
   warriorKey,
 } from './assets'
-import type { BattleState, Connection, DetailState, EnemyType, FoeState } from './connection'
+import type { BattleState, BattleTopic, Connection, DetailState, EnemyType, FoeState } from './connection'
 
 // The battle is drawn on a fixed stage that the camera zooms to fit: the warriors in a column on the left, the goblin
 // on the right. Characters stand above the middle, leaving the bottom to the problem.
@@ -120,8 +120,6 @@ type Warrior = Character & { label: Phaser.GameObjects.Text; home: Point }
 
 type Goblin = Character & { id: number; type: EnemyType; gone: boolean }
 
-const colorOf = (player: number) => PLAYER_COLORS[player % PLAYER_COLORS.length]
-
 type Box = { left: number; top: number; right: number; bottom: number }
 
 // Random numbers from 0 to 1 that are the same for the same seed: an FNV-1a hash of it, fed to mulberry32.
@@ -138,11 +136,17 @@ function seededRandom(seed: string) {
 class BattleScene extends Phaser.Scene {
   // The room's code, which lays out the decorations.
   code = ''
+  // The battle's topic, which every warrior is drawn in the color of.
+  topic: BattleTopic = 'trigonometry'
   latest?: BattleState
   // States with strikes or hits, played once the scene is running.
   pending: BattleState[] = []
   private warriors: Warrior[] = []
   private goblin?: Goblin
+
+  private get color() {
+    return WARRIOR_COLORS[this.topic]
+  }
 
   preload() {
     preloadAssets(this)
@@ -194,7 +198,7 @@ class BattleScene extends Phaser.Scene {
       if (downed && !isSkull) {
         warrior.body.setOrigin(SKULL_FEET.x, SKULL_FEET.y).setScale(SKULL_SCALE).play(DEAD)
       } else if (!downed && isSkull) {
-        warrior.body.setOrigin(WARRIOR_FEET.x, WARRIOR_FEET.y).setScale(UNIT_SCALE).play(warriorKey(colorOf(i), 'idle'))
+        warrior.body.setOrigin(WARRIOR_FEET.x, WARRIOR_FEET.y).setScale(UNIT_SCALE).play(warriorKey(this.color, 'idle'))
       }
       const barY = warrior.body.y - WARRIOR_HEIGHT - HEALTH_BAR_SIZE.height * BAR_SCALE
       placeHealthBar(warrior.healthBar, warrior.body.x, barY)
@@ -227,22 +231,21 @@ class BattleScene extends Phaser.Scene {
 
   private strike(player: number, order: number, count: number) {
     const warrior = this.warriors[player]
-    const color = colorOf(player)
     const target = { x: GOBLIN_X - REACH, y: MIDDLE_Y + (order - (count - 1) / 2) * STRIKE_SPACING }
-    warrior.body.setFlipX(false).play(warriorKey(color, 'run'))
+    warrior.body.setFlipX(false).play(warriorKey(this.color, 'run'))
     this.tweens.add({
       targets: warrior.body,
       ...target,
       duration: RUN_MS,
       onComplete: () => {
-        warrior.body.play(warriorKey(color, player % 2 === 0 ? 'attack1' : 'attack2'))
+        warrior.body.play(warriorKey(this.color, player % 2 === 0 ? 'attack1' : 'attack2'))
         this.time.delayedCall(SWING_MS, () => {
-          warrior.body.setFlipX(true).play(warriorKey(color, 'run'))
+          warrior.body.setFlipX(true).play(warriorKey(this.color, 'run'))
           this.tweens.add({
             targets: warrior.body,
             ...warrior.home,
             duration: RUN_MS,
-            onComplete: () => warrior.body.setFlipX(false).play(warriorKey(color, 'idle')),
+            onComplete: () => warrior.body.setFlipX(false).play(warriorKey(this.color, 'idle')),
           })
         })
       },
@@ -281,11 +284,11 @@ class BattleScene extends Phaser.Scene {
       const damage = warrior.shownHealth - state.players[player].health
       warrior.holdUntil = this.time.now + landsIn
       this.time.delayedCall(landsIn, () => {
-        warrior.body.play(warriorKey(colorOf(player), 'guard')).setTint(HIT_TINT)
+        warrior.body.play(warriorKey(this.color, 'guard')).setTint(HIT_TINT)
         this.time.delayedCall(FLASH_MS, () => warrior.body.clearTint())
         this.time.delayedCall(GUARD_MS, () => {
           if (warrior.shownHealth > 0) {
-            warrior.body.play(warriorKey(colorOf(player), 'idle'))
+            warrior.body.play(warriorKey(this.color, 'idle'))
           }
         })
         this.pop({ x: warrior.body.x, y: warrior.body.y - WARRIOR_HEIGHT }, `-${damage}`, HIT_COLOR)
@@ -325,11 +328,11 @@ class BattleScene extends Phaser.Scene {
     const home = { x: WARRIOR_X, y: MIDDLE_Y + (index - (count - 1) / 2) * ROW_SPACING }
     return {
       body: this.add
-        .sprite(home.x, home.y, warriorKey(colorOf(index), 'idle'))
+        .sprite(home.x, home.y, warriorKey(this.color, 'idle'))
         .setOrigin(WARRIOR_FEET.x, WARRIOR_FEET.y)
         .setScale(UNIT_SCALE)
         .setDepth(WARRIOR_DEPTH)
-        .play(warriorKey(colorOf(index), 'idle')),
+        .play(warriorKey(this.color, 'idle')),
       label: this.add.text(home.x, home.y, nickname, textStyle(14, 3)).setOrigin(0.5).setDepth(WARRIOR_DEPTH),
       healthBar: addHealthBar(this, WARRIOR_DEPTH),
       shownHealth: health,
@@ -432,7 +435,7 @@ class BattleScene extends Phaser.Scene {
   }
 }
 
-export function BattleView({ connection, code }: { connection: Connection; code: string }) {
+export function BattleView({ connection, code, topic }: { connection: Connection; code: string; topic: BattleTopic }) {
   const parent = useRef<HTMLDivElement>(null)
   const [state, setState] = useState<BattleState>()
   // The problem you last answered, with how many wrong picks it had: the options wait for the server's reply, so a
@@ -442,6 +445,7 @@ export function BattleView({ connection, code }: { connection: Connection; code:
   useEffect(() => {
     const scene = new BattleScene('battle')
     scene.code = code
+    scene.topic = topic
     const game = new Phaser.Game({
       type: Phaser.AUTO,
       parent: parent.current!,
@@ -462,7 +466,7 @@ export function BattleView({ connection, code }: { connection: Connection; code:
       stopState()
       game.destroy(true)
     }
-  }, [connection, code])
+  }, [connection, code, topic])
 
   const you = state?.players.find((player) => player.you)
   const answering = state && `${state.problem.id}:${state.problem.wrong.length}`

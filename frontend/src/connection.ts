@@ -140,7 +140,8 @@ type ServerMessages = {
   gameStarted: RoomContent & { topic: SurvivalTopic; decorations: DecorationState[]; details: DetailState[] }
   state: GameState
   gameOver: GameOver
-  battleStarted: RoomContent
+  // topic: the battle's, which every warrior is drawn in the color of.
+  battleStarted: RoomContent & { topic: BattleTopic }
   battleState: BattleState
   battleOver: BattleOver
 }
