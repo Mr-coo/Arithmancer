@@ -290,11 +290,12 @@ button {
     0 12px rgba(61, 42, 30, 0.35);
 }
 
-/* No wider than the page, so the scroll shrinks to fit narrow screens. */
+/* No wider than the page, so the scroll shrinks to fit narrow screens. When the scene and the scroll do not fit side by
+   side, the scroll comes first, so the form is in view on short screens. */
 .home-body {
   max-width: 100%;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: wrap-reverse;
   align-items: center;
   justify-content: center;
   gap: 24px;
