@@ -609,3 +609,113 @@ button {
   border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Banners/Carved_3Slides.png') 0 64 fill / 0 48px round;
   pointer-events: none;
 }
+
+/* Survival's touch controls, only where the main pointer is a finger: a stick at the bottom left to move, and the
+   digits at the bottom right to shoot. The keyboard hints are hidden there. */
+.touch {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 16px;
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+
+  > * {
+    pointer-events: auto;
+  }
+}
+
+@media (pointer: coarse) {
+  .touch {
+    display: flex;
+  }
+
+  .hint {
+    display: none;
+  }
+}
+
+/* In portrait the digits take the bottom's whole width, with the stick above them. */
+@media (pointer: coarse) and (orientation: portrait) {
+  .touch {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stick {
+    align-self: flex-start;
+  }
+
+  .digits > div {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.stick {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  width: 136px;
+  height: 136px;
+  border: 3px solid rgba(255, 244, 214, 0.6);
+  border-radius: 50%;
+  background: rgba(61, 42, 30, 0.35);
+}
+
+/* The Free Pack's round blue button, its circle about 100 of its 128px. */
+.knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  margin: -40px 0 0 -40px;
+  background: url('../asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Buttons/SmallBlueRoundButton_Regular.png')
+    center / contain no-repeat;
+  pointer-events: none;
+}
+
+.digits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  p {
+    font-size: 14px;
+    text-align: center;
+    color: #fff4d6;
+    text-shadow:
+      2px 0 #3d2a1e,
+      -2px 0 #3d2a1e,
+      0 2px #3d2a1e,
+      0 -2px #3d2a1e;
+  }
+
+  > div {
+    display: grid;
+    grid-template-columns: repeat(5, 56px);
+    gap: 8px;
+  }
+
+  /* Square blue buttons like the battle's options, their 64px slices drawn at 20px. */
+  button {
+    height: 56px;
+    padding: 0 0 6px;
+    font-size: 26px;
+    border-width: 0;
+    border-image: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Blue_9Slides.png') 64 fill / 20px;
+
+    &:active:not(:disabled) {
+      padding-bottom: 3px;
+      border-image-source: url('../Tiny Swords/Tiny Swords (Update 010)/UI/Buttons/Button_Blue_9Slides_Pressed.png');
+    }
+  }
+}

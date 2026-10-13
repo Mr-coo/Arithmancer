@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { useEffect, useRef, useState } from 'react'
+import { type PointerEvent, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ARROW,
   addHealthBar,
@@ -63,6 +63,37 @@ const MOVE_KEYS: Record<string, string> = {
   ArrowLeft: 'a',
   ArrowDown: 's',
   ArrowRight: 'd',
+}
+// The touch digits, in the order of a keyboard's number row.
+const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+// The touch stick moves once the finger is this share of the base's radius from its center. The knob follows the
+// finger up to halfway to the base's edge.
+const STICK_DEAD_ZONE = 0.25
+const KNOB_REACH = 0.5
+
+type Movement = ReturnType<typeof createMovement>
+
+// What holds each direction down: physical keys, by code, and the touch stick. A direction is down while anything holds
+// it, such as W and the up arrow together, so its down is sent when the first holds it and its up when the last lets go.
+function createMovement(connection: Connection) {
+  const held = new Map<string, string>()
+  const isHeld = (key: string) => [...held.values()].includes(key)
+  const release = (source: string) => {
+    const key = held.get(source)
+    if (key && held.delete(source) && !isHeld(key)) {
+      connection.send('input', { key, action: 'up' })
+    }
+  }
+  return {
+    hold: (source: string, key: string) => {
+      if (!isHeld(key)) {
+        connection.send('input', { key, action: 'down' })
+      }
+      held.set(source, key)
+    },
+    release,
+    releaseAll: () => [...held.keys()].forEach(release),
+  }
 }
 
 const PLAYER_RADIUS = 16
@@ -527,6 +558,7 @@ export function GameView({
 }) {
   const parent = useRef<HTMLDivElement>(null)
   const [hud, setHud] = useState<GameState>()
+  const movement = useMemo(() => createMovement(connection), [connection])
 
   useEffect(() => {
     const scene = new GameScene('game')
@@ -546,9 +578,6 @@ export function GameView({
       scene.pendingShots.push(...state.shots)
     })
 
-    // The physical keys held. A direction is down while any of its keys is, such as W and the up arrow together.
-    const held = new Set<string>()
-    const isHeld = (key: string) => [...held].some((code) => MOVE_KEYS[code] === key)
     const onKeyDown = (event: KeyboardEvent) => {
       // Answers are one digit, so pressing it shoots. Ignore auto-repeat while the key is held.
       if (/^[0-9]$/.test(event.key)) {
@@ -561,24 +590,12 @@ export function GameView({
       if (key) {
         // The arrow keys would otherwise scroll the page.
         event.preventDefault()
-        if (!isHeld(key)) {
-          connection.send('input', { key, action: 'down' })
-        }
-        held.add(event.code)
+        movement.hold(event.code, key)
       }
     }
-    const onKeyUp = (event: KeyboardEvent) => {
-      const key = MOVE_KEYS[event.code]
-      if (key && held.delete(event.code) && !isHeld(key)) {
-        connection.send('input', { key, action: 'up' })
-      }
-    }
+    const onKeyUp = (event: KeyboardEvent) => movement.release(event.code)
     // Keyup never arrives if the window loses focus while a key is held, so release everything.
-    const onBlur = () => {
-      const keys = new Set([...held].map((code) => MOVE_KEYS[code]))
-      keys.forEach((key) => connection.send('input', { key, action: 'up' }))
-      held.clear()
-    }
+    const onBlur = () => movement.releaseAll()
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
     window.addEventListener('blur', onBlur)
@@ -590,11 +607,24 @@ export function GameView({
       stopState()
       game.destroy(true)
     }
-  }, [connection, topic, decorations, details])
+  }, [connection, movement, topic, decorations, details])
 
   return (
     <>
       <div ref={parent} className="game" />
+      <div className="touch">
+        <Stick movement={movement} />
+        <div className="digits">
+          <p>Tap an answer's last digit</p>
+          <div>
+            {DIGITS.map((digit) => (
+              <button key={digit} type="button" onPointerDown={() => connection.send('answer', { value: digit })}>
+                {digit}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
       {hud && (
         <div className="hud">
           <p className="time">
@@ -614,6 +644,67 @@ export function GameView({
         </div>
       )}
     </>
+  )
+}
+
+// Moves like WASD while a finger holds it: the direction from the base's center holds down one or two of the keys, in 8
+// directions of 45° each, and the knob follows the finger.
+function Stick({ movement }: { movement: Movement }) {
+  const knob = useRef<HTMLDivElement>(null)
+  // The finger steering, so a second one on the stick is ignored.
+  const finger = useRef<number>(undefined)
+
+  function steer(event: PointerEvent<HTMLDivElement>) {
+    if (event.pointerId !== finger.current) {
+      return
+    }
+    const base = event.currentTarget.getBoundingClientRect()
+    const radius = base.width / 2
+    const x = event.clientX - base.left - radius
+    const y = event.clientY - base.top - radius
+    const distance = Math.hypot(x, y)
+    const moving = distance > radius * STICK_DEAD_ZONE
+    // A key is held while the finger is within 67.5° of its direction.
+    const along = { w: -y, a: -x, s: y, d: x }
+    for (const [key, length] of Object.entries(along)) {
+      if (moving && length > distance * Math.sin(Math.PI / 8)) {
+        movement.hold(`stick-${key}`, key)
+      } else {
+        movement.release(`stick-${key}`)
+      }
+    }
+    const scale = Math.min(1, (radius * KNOB_REACH) / distance)
+    knob.current!.style.transform = `translate(${x * scale}px, ${y * scale}px)`
+  }
+
+  function letGo(event: PointerEvent<HTMLDivElement>) {
+    if (event.pointerId !== finger.current) {
+      return
+    }
+    finger.current = undefined
+    for (const key of ['w', 'a', 's', 'd']) {
+      movement.release(`stick-${key}`)
+    }
+    knob.current!.style.transform = ''
+  }
+
+  return (
+    <div
+      className="stick"
+      onPointerDown={(event) => {
+        if (finger.current === undefined) {
+          finger.current = event.pointerId
+          event.currentTarget.setPointerCapture(event.pointerId)
+          steer(event)
+        }
+      }}
+      onPointerMove={steer}
+      onPointerUp={letGo}
+      onPointerCancel={letGo}
+      onLostPointerCapture={letGo}
+    >
+      <div ref={knob} className="knob" />
+    </div>
   )
 }
 
