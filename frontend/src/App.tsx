@@ -1,4 +1,5 @@
 import { type ReactNode, useState } from 'react'
+import { ITEM_ICONS } from './assets'
 import { BattleView } from './BattleView'
 import {
   type BattleTopic,
@@ -19,6 +20,7 @@ import './App.css'
 
 type Screen =
   | { name: 'home'; error?: string }
+  | { name: 'howToPlay' }
   | { name: 'lobby'; code: string; players: string[]; host: boolean }
   | { name: 'game'; topic: SurvivalTopic; decorations: DecorationState[]; details: DetailState[] }
   | { name: 'battle'; code: string; topic: BattleTopic }
@@ -198,6 +200,17 @@ function App() {
     )
   }
 
+  if (screen.name === 'howToPlay') {
+    return (
+      <Home>
+        <HowToPlay />
+        <button type="button" onClick={() => setScreen({ name: 'home' })}>
+          Back
+        </button>
+      </Home>
+    )
+  }
+
   return (
     <Home>
       {screen.name === 'home' && screen.error && <p className="error">{screen.error}</p>}
@@ -219,7 +232,59 @@ function App() {
           Join room
         </button>
       </div>
+      <button type="button" onClick={() => setScreen({ name: 'howToPlay' })}>
+        How to play
+      </button>
     </Home>
+  )
+}
+
+// The rules and controls of both modes, so nobody needs to be taught.
+function HowToPlay() {
+  return (
+    <>
+      <h2>How to play</h2>
+      <p>Beat the goblins by solving the math above their heads. Play alone or with up to 3 friends.</p>
+      <section className="how">
+        <h3>Start</h3>
+        <ul>
+          <li>Enter a nickname, then create a room, or join a friend's room with its code.</li>
+          <li>The host picks a mode and a math topic, then starts the run.</li>
+        </ul>
+      </section>
+      <section className="how">
+        <h3>Survival</h3>
+        <ul>
+          <li>Move with WASD or the arrow keys. On a touch screen, use the stick.</li>
+          <li>
+            Press the last digit of a goblin's answer to shoot it, or tap it on a touch screen. For 7 × 8 = 56,
+            press 6.
+          </li>
+          <li>You can only shoot goblins on your screen. A wrong digit stops your shots for 1 second.</li>
+          <li>Goblins hurt you when they reach you. Stand by a downed teammate for 3 seconds to revive them.</li>
+          <li>
+            Pick up what goblins drop: <img src={ITEM_ICONS.heal} alt="" /> meat heals,{' '}
+            <img src={ITEM_ICONS.haste} alt="" /> a sword shoots faster and <img src={ITEM_ICONS.speed} alt="" /> an
+            arrow moves faster.
+          </li>
+        </ul>
+      </section>
+      <section className="how">
+        <h3>Turn-based</h3>
+        <ul>
+          <li>Each of you gets a problem with 4 options. Pick one with the keys 1–4, a click or a tap.</li>
+          <li>
+            Every right answer in your 15 seconds hits harder than the last: 1, then 2, then 3 damage. A wrong one
+            locks you for 3 seconds, then you try again.
+          </li>
+          <li>Then your warriors strike. A goblin left standing hits everyone for 10 of their 100 health.</li>
+        </ul>
+      </section>
+      <p>
+        The run ends when everyone is down. Your score is the goblins you beat in survival, and the damage you dealt in
+        turn-based.
+      </p>
+    </>
   )
 }
 
