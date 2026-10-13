@@ -640,9 +640,18 @@ button {
   }
 }
 
+/* On narrow screens the options go two to a row, and problems are written smaller so they fit their line. */
 @media (max-width: 600px) {
   .problem .options {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .problem .problem-text {
+    font-size: 30px;
+
+    &.long {
+      font-size: 24px;
+    }
   }
 }
 
@@ -692,6 +701,11 @@ button {
 
   .hint {
     display: none;
+  }
+
+  /* With no hint under it, the battle's problem sits lower, leaving more room for the characters. */
+  .problem {
+    bottom: 12px;
   }
 }
 

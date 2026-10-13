@@ -41,6 +41,11 @@ const WARRIOR_X = 200
 const GOBLIN_X = 440
 const MIDDLE_Y = 170
 const ROW_SPACING = 56
+// The camera keeps the characters above the problem: from where damage floats up over the top warrior's name to
+// below the bottom warrior's feet, and across the middle of the stage, where they fight.
+const BAND_ABOVE = 100
+const BAND_BELOW = 16
+const BAND_WIDTH = 400
 const GOBLIN_SCALE = 0.8
 // From the warrior's feet to the top of its head.
 const WARRIOR_HEIGHT = 40
@@ -143,6 +148,16 @@ class BattleScene extends Phaser.Scene {
   pending: BattleState[] = []
   private warriors: Warrior[] = []
   private goblin?: Goblin
+  // How far down the screen the problem leaves room for the characters, in pixels.
+  private free = Infinity
+
+  setFree(free: number) {
+    this.free = free
+    // Until the scene is created there is no camera; create fits it.
+    if (this.cameras?.main) {
+      this.fitCamera()
+    }
+  }
 
   private get color() {
     return WARRIOR_COLORS[this.topic]
@@ -427,16 +442,24 @@ class BattleScene extends Phaser.Scene {
     })
   }
 
+  // The stage fills the screen's height, unless the characters would then not fit across it or above the problem. It
+  // is centered, but moved up when that leaves the characters behind the problem.
   private fitCamera() {
     const { width, height } = this.scale
-    this.cameras.main
-      .setZoom(Math.min(width / STAGE.width, height / STAGE.height))
-      .centerOn(STAGE.width / 2, STAGE.height / 2)
+    const free = Math.min(this.free, height)
+    const spread = (((this.latest?.players.length ?? 1) - 1) / 2) * ROW_SPACING
+    const top = MIDDLE_Y - spread - BAND_ABOVE
+    const bottom = MIDDLE_Y + spread + BAND_BELOW
+    const zoom = Math.min(width / BAND_WIDTH, height / STAGE.height, free / (bottom - top))
+    const behind = height / 2 + (bottom - STAGE.height / 2) * zoom - free
+    this.cameras.main.setZoom(zoom).centerOn(STAGE.width / 2, STAGE.height / 2 + Math.max(0, behind) / zoom)
   }
 }
 
 export function BattleView({ connection, code, topic }: { connection: Connection; code: string; topic: BattleTopic }) {
   const parent = useRef<HTMLDivElement>(null)
+  const problem = useRef<HTMLElement>(null)
+  const sceneRef = useRef<BattleScene>(undefined)
   const [state, setState] = useState<BattleState>()
   // The problem you last answered, with how many wrong picks it had: the options wait for the server's reply, so a
   // second press cannot land on it.
@@ -444,6 +467,7 @@ export function BattleView({ connection, code, topic }: { connection: Connection
 
   useEffect(() => {
     const scene = new BattleScene('battle')
+    sceneRef.current = scene
     scene.code = code
     scene.topic = topic
     const game = new Phaser.Game({
@@ -467,6 +491,32 @@ export function BattleView({ connection, code, topic }: { connection: Connection
       game.destroy(true)
     }
   }, [connection, code, topic])
+
+  // The scene keeps the characters in the room above the problem, up to its turn ribbon. The room only shrinks, so the
+  // stage stays put when the goblin's turn shows a smaller problem; a resized window measures it afresh.
+  const shown = state !== undefined
+  useEffect(() => {
+    const section = problem.current
+    if (!section) {
+      return
+    }
+    let free = Infinity
+    const measure = () => {
+      free = Math.min(free, section.querySelector('.turn')!.getBoundingClientRect().top)
+      sceneRef.current?.setFree(free)
+    }
+    const resized = () => {
+      free = Infinity
+      measure()
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(section)
+    window.addEventListener('resize', resized)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', resized)
+    }
+  }, [shown])
 
   const you = state?.players.find((player) => player.you)
   const answering = state && `${state.problem.id}:${state.problem.wrong.length}`
@@ -514,7 +564,7 @@ export function BattleView({ connection, code, topic }: { connection: Connection
               ))}
             </ul>
           </div>
-          <section className="problem">
+          <section ref={problem} className="problem">
             <p className="turn">
               Turn {state.turn}
               {state.phase === 'players' && ` · ${Math.ceil(state.secondsLeft)}s`}
