@@ -290,7 +290,9 @@ button {
     0 12px rgba(61, 42, 30, 0.35);
 }
 
+/* No wider than the page, so the scroll shrinks to fit narrow screens. */
 .home-body {
+  max-width: 100%;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -299,6 +301,22 @@ button {
 
   .panel {
     margin: 0;
+    max-width: 100%;
+  }
+}
+
+/* On narrow phones the scroll's edges are thinner and its text a little smaller, so the menus keep room for their
+   longest topic. */
+@media (max-width: 480px) {
+  .home {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .panel {
+    padding: 0;
+    font-size: 18px;
+    border-width: 40px;
   }
 }
 
