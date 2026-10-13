@@ -202,7 +202,7 @@ function App() {
 
   if (screen.name === 'howToPlay') {
     return (
-      <Home>
+      <Home wide>
         <HowToPlay />
         <button type="button" onClick={() => setScreen({ name: 'home' })}>
           Back
@@ -257,8 +257,8 @@ function HowToPlay() {
         <ul>
           <li>Move with WASD or the arrow keys. On a touch screen, use the stick.</li>
           <li>
-            Press the last digit of a goblin's answer to shoot it, or tap it on a touch screen. For 7 × 8 = 56,
-            press 6.
+            Press the last digit of a goblin's answer to shoot it, or tap it on a touch screen. For
+            7&nbsp;×&nbsp;8&nbsp;=&nbsp;56, press 6.
           </li>
           <li>You can only shoot goblins on your screen. A wrong digit stops your shots for 1 second.</li>
           <li>Goblins hurt you when they reach you. Stand by a downed teammate for 3 seconds to revive them.</li>
@@ -316,15 +316,16 @@ function Menu<T extends string>(props: {
   )
 }
 
-// The home page: the game's name, then archers facing goblins beside a scroll holding the form or the lobby.
-function Home({ children }: { children: ReactNode }) {
+// The home page: the game's name, then archers facing goblins beside a scroll holding the form or the lobby. A wide
+// scroll, for the rules, takes the whole width instead.
+function Home({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   return (
     <main className="home">
       <HomeBackdrop />
       <h1 className="title">Arithmancer</h1>
       <div className="home-body">
-        <HeroScene />
-        <section className="panel">{children}</section>
+        {!wide && <HeroScene />}
+        <section className={wide ? 'panel wide' : 'panel'}>{children}</section>
       </div>
     </main>
   )
