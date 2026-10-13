@@ -7,6 +7,7 @@ import {
   BAR_SCALE,
   createAnimations,
   createHealthBar,
+  createItemGlows,
   DEAD,
   DETAIL_SCALE,
   DETAIL_SIZE,
@@ -24,6 +25,7 @@ import {
   HEALTH_BAR_SIZE,
   type HealthBar,
   ITEM_ICONS,
+  itemGlowKey,
   itemKey,
   PLAYER_COLORS,
   type Point,
@@ -119,9 +121,8 @@ const EXPLOSION_SCALE = 0.7
 // Items lie on the ground with a gold glow that brightens and dims, bobbing up and down, so they catch the eye.
 const ITEM_SCALE = 0.65
 const ITEM_BOB = 4
-const ITEM_GLOW_COLOR = 0xfff1a8
-// How far the glow reaches, and its strength as it dims and brightens.
-const ITEM_GLOW = { scale: 1.6, dim: 2, bright: 7 }
+// The glow's opacity when dimmest; it brightens back to full.
+const ITEM_GLOW_DIM = 0.3
 // Draw order, bottom to top: characters behind a decoration or detail, decorations and details, enemies, then the
 // other players, so an enemy on top of a player does not hide their name or health. Enemies' questions always stay
 // above decorations, so they can be read.
@@ -229,7 +230,7 @@ class GameScene extends Phaser.Scene {
   // When each player's shoot animation ends, by player index.
   private shootingUntil: number[] = []
   private enemySprites = new Map<number, EnemySprite>()
-  private itemSprites = new Map<number, { image: Phaser.GameObjects.Image; glow?: Phaser.Filters.Glow }>()
+  private itemSprites = new Map<number, { image: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Image }>()
   // Enemies with a projectile on the way, kept on screen until it arrives.
   private targeted = new Set<number>()
   // Enemies killed by an arrow. Any other enemy the server drops reached a player and blew up.
@@ -243,6 +244,7 @@ class GameScene extends Phaser.Scene {
   create() {
     createAnimations(this)
     createHealthBar(this)
+    createItemGlows(this)
     this.ground = this.add
       .tileSprite(0, 0, this.scale.width, this.scale.height, GROUND, GRASS_FRAME)
       .setOrigin(0)
@@ -472,41 +474,37 @@ class GameScene extends Phaser.Scene {
     for (const item of this.latest.items) {
       ids.add(item.id)
       if (!this.itemSprites.has(item.id)) {
-        const image = this.add
-          .image(item.x, item.y, itemKey(item.type))
+        // The glow first, so it is drawn behind the item.
+        const glow = this.add
+          .image(item.x, item.y, itemGlowKey(item.type))
           .setScale(ITEM_SCALE)
           .setDepth(DECORATION_DEPTH)
-          .enableFilters()
-        // Filters need WebGL; with the canvas renderer the item just has no glow.
-        const glow = image.filters?.internal.addGlow(ITEM_GLOW_COLOR, ITEM_GLOW.bright, 0, ITEM_GLOW.scale)
-        // Pad the image so the glow is not cut off at its edges.
-        glow?.setPaddingOverride(null)
+        const image = this.add.image(item.x, item.y, itemKey(item.type)).setScale(ITEM_SCALE).setDepth(DECORATION_DEPTH)
         this.tweens.add({
-          targets: image,
+          targets: [glow, image],
           y: item.y - ITEM_BOB,
           duration: 600,
           yoyo: true,
           repeat: -1,
           ease: 'Sine.easeInOut',
         })
-        if (glow) {
-          this.tweens.add({
-            targets: glow,
-            outerStrength: ITEM_GLOW.dim,
-            duration: 800,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut',
-          })
-        }
+        this.tweens.add({
+          targets: glow,
+          alpha: ITEM_GLOW_DIM,
+          duration: 800,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        })
         this.itemSprites.set(item.id, { image, glow })
       }
     }
     for (const [id, { image, glow }] of this.itemSprites) {
       if (!ids.has(id)) {
         playEffect(this, DUST, image, 0.6, EFFECT_DEPTH)
-        this.tweens.killTweensOf([image, ...(glow ? [glow] : [])])
+        this.tweens.killTweensOf([image, glow])
         image.destroy()
+        glow.destroy()
         this.itemSprites.delete(id)
       }
     }

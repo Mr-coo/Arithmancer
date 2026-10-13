@@ -210,6 +210,12 @@ export const DUST = 'dust'
 // its itemKey, and the HUD shows the same pictures for the boosts you have.
 export const ITEM_ICONS: Record<ItemType, string> = { heal: meatIcon, haste: swordIcon, speed: arrowIcon }
 export const itemKey = (type: ItemType) => `item-${type}`
+// Each item's gold glow, drawn behind it: the icon's blurred shadow, ITEM_GLOW_PADDING wider on every side.
+export const itemGlowKey = (type: ItemType) => `item-glow-${type}`
+const ITEM_GLOW_COLOR = '#fff1a8'
+const ITEM_GLOW_BLUR = 16
+const ITEM_GLOW_PADDING = 24
+const ITEM_GLOW_LAYERS = 3
 export const DEAD = 'dead'
 // Health bars are the Free Pack's small bar. Its sheet spaces the pieces 64px apart, so they are put together into
 // one texture: the 15x19 ends at (49, 22) and (256, 22), with the 64x19 middle at (128, 22) stretched between them.
@@ -290,7 +296,26 @@ export function createHealthBar(scene: Phaser.Scene) {
   bar.refresh()
 }
 
-export type HealthBar = { frame: Phaser.GameObjects.Image; fill: Phaser.GameObjects.Rectangle }
+// The glows are drawn on canvases rather than by Phaser's glow filter, whose shader breaks on phones' lower precision
+// GPUs and fills a box around the item. The icon is drawn a canvas width off to the left, with its shadow shifted back
+// onto the canvas, so only the shadow shows; layers of it make it brighter.
+export function createItemGlows(scene: Phaser.Scene) {
+  for (const type of Object.keys(ITEM_ICONS) as ItemType[]) {
+    const icon = scene.textures.get(itemKey(type)).getSourceImage() as HTMLImageElement
+    const width = icon.width + 2 * ITEM_GLOW_PADDING
+    const glow = scene.textures.createCanvas(itemGlowKey(type), width, icon.height + 2 * ITEM_GLOW_PADDING)!
+    const context = glow.getContext()
+    context.shadowColor = ITEM_GLOW_COLOR
+    context.shadowBlur = ITEM_GLOW_BLUR
+    context.shadowOffsetX = width
+    for (let layer = 0; layer < ITEM_GLOW_LAYERS; layer++) {
+      context.drawImage(icon, ITEM_GLOW_PADDING - width, ITEM_GLOW_PADDING)
+    }
+    glow.refresh()
+  }
+}
+
+export type HealthBar ={ frame: Phaser.GameObjects.Image; fill: Phaser.GameObjects.Rectangle }
 
 // A Tiny Swords health bar: the frame, and the fill in its channel, which is scaled to the share of health left.
 export function addHealthBar(scene: Phaser.Scene, depth: number): HealthBar {
